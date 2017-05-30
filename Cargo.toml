@@ -10,5 +10,6 @@ license = "MIT"
 
 [dependencies]
 imgui = "0.0.11"
+imgui-sys = "0.0.11"
 glium = "0.16"
 clap = "2"

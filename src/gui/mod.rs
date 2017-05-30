@@ -1,4 +1,4 @@
-use glium::{DisplayBuild, Surface};
+use glium::{DisplayBuild, Surface, Frame};
 use glium::backend::glutin_backend::GlutinFacade;
 use glium::glutin;
 use glium::glutin::{ElementState, Event, MouseButton, MouseScrollDelta, VirtualKeyCode, TouchPhase};
@@ -7,7 +7,7 @@ use imgui::glium_renderer::Renderer;
 use std::time::Instant;
 
 pub struct GUI {
-    display: GlutinFacade,
+    pub display: GlutinFacade,
     imgui: ImGui,
     renderer: Renderer,
     last_frame: Instant,
@@ -20,6 +20,7 @@ pub struct GUI {
 impl GUI {
     pub fn init(window_size: (u32, u32)) -> GUI {
         let display = glutin::WindowBuilder::new()
+            .with_title("Lameboy - v0.1")
             .with_dimensions(window_size.0, window_size.1)
             .build_glium()
             .unwrap();
@@ -74,7 +75,7 @@ impl GUI {
         self.mouse_wheel = 0.0;
     }
 
-    pub fn render<F: FnMut(&Ui)>(&mut self, clear_color: (f32, f32, f32, f32), mut run_ui: F) {
+    pub fn render<F: FnMut(&Ui), F2: FnMut(&mut Frame)>(&mut self, clear_color: (f32, f32, f32, f32), mut run_glium: F2, mut run_ui: F) {
         let now = Instant::now();
         let delta = now - self.last_frame;
         let delta_s = delta.as_secs() as f32 + delta.subsec_nanos() as f32 / 1_000_000_000.0;
@@ -84,6 +85,8 @@ impl GUI {
 
         let mut target = self.display.draw();
         target.clear_color(clear_color.0, clear_color.1, clear_color.2, clear_color.3);
+
+        run_glium(&mut target);
 
         let window = self.display.get_window().unwrap();
         let size_points = window.get_inner_size_points().unwrap();
@@ -126,6 +129,7 @@ impl GUI {
                         Some(VirtualKeyCode::X) => self.imgui.set_key(16, pressed),
                         Some(VirtualKeyCode::Y) => self.imgui.set_key(17, pressed),
                         Some(VirtualKeyCode::Z) => self.imgui.set_key(18, pressed),
+                        Some(VirtualKeyCode::Space) => self.imgui.set_key(20, pressed),
                         Some(VirtualKeyCode::LControl) |
                         Some(VirtualKeyCode::RControl) => self.imgui.set_key_ctrl(pressed),
                         Some(VirtualKeyCode::LShift) |
