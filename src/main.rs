@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 
 #[macro_use]
+extern crate bitflags;
+
+#[macro_use]
 extern crate glium;
 
 #[macro_use]
@@ -22,6 +25,8 @@ mod memoryeditor;
 
 mod cart;
 use cart::Cart;
+mod cpu;
+use cpu::CPU;
 
 // glium
 #[derive(Copy, Clone)]
@@ -65,6 +70,8 @@ fn main() {
     println!("File length: {}", data.len());
 
     let cart = Cart::new(data);
+
+    let mut cpu = CPU::new(&cart);
 
     let mut gui = GUI::init((640, 576));
 
@@ -116,7 +123,7 @@ let fragment_shader_src = r#"
                t.draw(&vertex_buffer, &indices, &program, &glium::uniforms::EmptyUniforms, &Default::default()).unwrap()
            },
            |ui| {
-               imgui_display(ui, &cart, &mut gui_state);
+               imgui_display(ui, &cart, &mut cpu, &mut gui_state);
            }
         );
 
@@ -127,7 +134,7 @@ let fragment_shader_src = r#"
     }
 }
 
-fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, mut gui_state: &mut GUIState) {
+fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mut GUIState) {
     ui.main_menu_bar(|| {
         ui.menu(im_str!("File"))
             .build(|| {
@@ -173,6 +180,9 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, mut gui_state: &mut GUIState) {
             .size((300.0, 200.0), ImGuiSetCond_FirstUseEver)
             .build(|| {
                 ui.input_text(im_str!("=buf"), &mut gui_state.test_str).build();
+                if ui.small_button(im_str!("test")) {
+                    cpu.cycle();
+                }
             });
         ui.window(im_str!("buf-display"))
             .size((100.0, 100.0), ImGuiSetCond_FirstUseEver)
