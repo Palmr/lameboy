@@ -41,6 +41,7 @@ use glium::Surface;
 const CLEAR_COLOR: (f32, f32, f32, f32) = (0.8784, 0.9725, 0.8156, 1.0);
 
 struct GUIState {
+    active: bool,
     show_imgui_metrics: bool,
     show_memory: bool,
     mem_editor: memoryeditor::HexEditor,
@@ -107,6 +108,7 @@ let fragment_shader_src = r#"
     //
 
     let mut gui_state = GUIState{
+        active: true,
         show_imgui_metrics: false,
         show_memory: false,
         mem_editor: memoryeditor::HexEditor::default(),
@@ -127,8 +129,8 @@ let fragment_shader_src = r#"
            }
         );
 
-        let active = gui.update_events();
-        if !active {
+        gui_state.active &= gui.update_events();
+        if !gui_state.active {
             break;
         }
     }
@@ -148,7 +150,9 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mu
                     .selected(&mut gui_state.show_memory)
                     .build();
                 ui.separator();
-                ui.checkbox(im_str!("test"), &mut gui_state.show_memory);
+                ui.menu_item(im_str!("Exit"))
+                    .selected(&mut gui_state.active)
+                    .build();
             });
         ui.menu(im_str!("Options"))
             .build(|| {  });
