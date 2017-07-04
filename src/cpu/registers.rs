@@ -54,37 +54,37 @@ impl Registers {
         }
     }
 
-    pub fn read16(&self, reg: Reg16) -> u16 {
+    pub fn read16(&self, reg: &Reg16) -> u16 {
         use self::Reg16::*;
         match reg {
-            AF => ((self.a as u16) << 8) | (self.f.bits() as u16),
-            BC => ((self.b as u16) << 8) | (self.c as u16),
-            DE => ((self.d as u16) << 8) | (self.e as u16),
-            HL => ((self.h as u16) << 8) | (self.l as u16),
-            SP => self.sp,
+            &AF => ((self.a as u16) << 8) | (self.f.bits() as u16),
+            &BC => ((self.b as u16) << 8) | (self.c as u16),
+            &DE => ((self.d as u16) << 8) | (self.e as u16),
+            &HL => ((self.h as u16) << 8) | (self.l as u16),
+            &SP => self.sp,
         }
     }
 
-    pub fn write16(&mut self, reg: Reg16, value: u16) {
+    pub fn write16(&mut self, reg: &Reg16, value: u16) {
         use self::Reg16::*;
         match reg {
-            AF => {
+            &AF => {
                 self.a = (value >> 8) as u8;
                 self.f = Flags::from_bits_truncate(value as u8)
             }
-            BC => {
+            &BC => {
                 self.b = (value >> 8) as u8;
                 self.c = value as u8
             }
-            DE => {
+            &DE => {
                 self.d = (value >> 8) as u8;
                 self.e = value as u8
             }
-            HL => {
+            &HL => {
                 self.h = (value >> 8) as u8;
                 self.l = value as u8
             }
-            SP => self.sp = value
+            &SP => self.sp = value
         }
     }
 }

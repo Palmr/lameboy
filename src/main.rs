@@ -216,4 +216,18 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mu
             });
         //gui_state.mem_editor.render(ui, "Memory Editor", &data);
     }
+    if gui_state.show_cpu{
+        ui.window(im_str!("CPU"))
+            .size((175.0, 300.0), ImGuiSetCond_Always)
+            .resizable(false)
+            .build(|| {
+                ui.text(im_str!("PC: 0x{:04X} - SP: 0x{:04X}", cpu.registers.pc, cpu.registers.sp));
+                ui.text(im_str!(" A: 0x{:02X}   -  B: 0x{:02X}", cpu.registers.a, cpu.registers.b));
+                ui.text(im_str!(" C: 0x{:02X}   -  D: 0x{:02X}", cpu.registers.c, cpu.registers.d));
+                ui.text(im_str!(" E: 0x{:02X}   -  F: 0x{:02X}", cpu.registers.e, cpu.registers.f.bits()));
+                ui.text(im_str!(" H: 0x{:02X}   -  L: 0x{:02X}", cpu.registers.h, cpu.registers.l));
+                ui.text(im_str!("Flags: {:?}", cpu.registers.f));
+                ui.separator();
+            });
+    }
 }
