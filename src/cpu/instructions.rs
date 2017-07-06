@@ -227,7 +227,7 @@ pub fn load_r16_d16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
     let value: u16 = cpu.mmu.read16(cpu.registers.pc);
 
     // Move PC on
-    cpu.registers.pc += 1;
+    cpu.registers.pc += 2;
 
     // Write it to the register
     cpu.registers.write16(r16, value);
