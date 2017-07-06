@@ -219,8 +219,8 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mu
     }
     if gui_state.show_cpu{
         ui.window(im_str!("CPU"))
-            .size((175.0, 300.0), ImGuiSetCond_Always)
-            .resizable(false)
+            .size((260.0, 150.0), ImGuiSetCond_FirstUseEver)
+            .resizable(true)
             .build(|| {
                 ui.text(im_str!("PC: 0x{:04X} - SP: 0x{:04X}", cpu.registers.pc, cpu.registers.sp));
                 ui.text(im_str!(" A: 0x{:02X}   -  B: 0x{:02X}", cpu.registers.a, cpu.registers.b));
