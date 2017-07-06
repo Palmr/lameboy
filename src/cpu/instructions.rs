@@ -234,3 +234,114 @@ pub fn load_r16_d16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     return 12
 }
+
+/// Jump to a different address using 16-bit data as an address.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// JP $0150 ; PC <- 0x0150
+/// ```
+pub fn jump_d16(mut cpu: &mut CPU) -> u8 {
+    // Read 16-bit value
+    let value: u16 = cpu.mmu.read16(cpu.registers.pc);
+
+    // Jump PC to that value
+    cpu.registers.pc = value;
+
+    return 16
+}
+
+/// ADD 8-bit register with register A, storing the result in A.
+///
+/// Takes 4 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// ADD B ; A <- A + B
+/// ```
+pub fn add_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
+    let value = match r8 {
+        &Reg8::A => cpu.registers.a,
+        &Reg8::B => cpu.registers.b,
+        &Reg8::C => cpu.registers.c,
+        &Reg8::D => cpu.registers.d,
+        &Reg8::E => cpu.registers.e,
+        &Reg8::H => cpu.registers.h,
+        &Reg8::L => cpu.registers.l,
+    };
+
+    cpu.registers.a = cpu.registers.a.wrapping_add(value);
+
+    cpu.registers.f.set(ZERO, cpu.registers.a == 0);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, ((cpu.registers.a & 0x0F) + (value & 0x0F)) > 0x0F);
+    cpu.registers.f.set(CARRY, ((cpu.registers.a as u16) + (value as u16)) > 0xFF);
+
+    return 4
+}
+
+/// ADD 8-bit register plus the carry flag with register A, storing the result in A.
+///
+/// Takes 4 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// ADC B ; A <- A + B + Flag::CARRY
+/// ```
+pub fn adc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
+    let value = match r8 {
+        &Reg8::A => cpu.registers.a,
+        &Reg8::B => cpu.registers.b,
+        &Reg8::C => cpu.registers.c,
+        &Reg8::D => cpu.registers.d,
+        &Reg8::E => cpu.registers.e,
+        &Reg8::H => cpu.registers.h,
+        &Reg8::L => cpu.registers.l,
+    };
+
+    let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
+
+    cpu.registers.a = cpu.registers.a.wrapping_add(value).wrapping_add(cy);
+
+    cpu.registers.f.set(ZERO, cpu.registers.a == 0);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, ((cpu.registers.a & 0x0F) + (value & 0x0F) + cy) > 0x0F);
+    cpu.registers.f.set(CARRY, (cpu.registers.a as u16 + value as u16 + cy as u16) > 0xFF);
+
+    return 4
+}
+
+/// XOR 8-bit register with register A, storing the result in A.
+///
+/// Takes 4 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// XOR B ; A <- A ^ B
+/// ```
+pub fn xor_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
+    let value = match r8 {
+        &Reg8::A => cpu.registers.a,
+        &Reg8::B => cpu.registers.b,
+        &Reg8::C => cpu.registers.c,
+        &Reg8::D => cpu.registers.d,
+        &Reg8::E => cpu.registers.e,
+        &Reg8::H => cpu.registers.h,
+        &Reg8::L => cpu.registers.l,
+    };
+
+    cpu.registers.a = cpu.registers.a ^ value;
+
+    cpu.registers.f.set(ZERO, cpu.registers.a == 0);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, false);
+    cpu.registers.f.set(CARRY, false);
+
+    return 4
+}
