@@ -19,6 +19,10 @@ impl<'c> CPU<'c> {
         }
     }
 
+    pub fn post_boot_reset(&mut self) {
+        self.registers.post_boot_reset();
+    }
+
     pub fn cycle(&mut self) {
         // Fetch
         let op = self.cart.read(self.registers.pc);

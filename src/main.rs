@@ -73,6 +73,7 @@ fn main() {
     let cart = Cart::new(data);
 
     let mut cpu = CPU::new(&cart);
+    cpu.post_boot_reset();
 
     let mut gui = GUI::init((640, 576));
 
@@ -164,7 +165,7 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mu
                 ui.menu_item(im_str!("CPU"))
                     .selected(&mut gui_state.show_cpu)
                     .build();
-                ui.menu_item(im_str!("VRAM"))
+                ui.menu_item(im_str!("vram"))
                     .selected(&mut gui_state.show_vram)
                     .build();
             });
@@ -228,6 +229,9 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mu
                 ui.text(im_str!(" H: 0x{:02X}   -  L: 0x{:02X}", cpu.registers.h, cpu.registers.l));
                 ui.text(im_str!("Flags: {:?}", cpu.registers.f));
                 ui.separator();
+                if ui.small_button(im_str!("cycle")) {
+                    cpu.cycle();
+                }
             });
     }
 }

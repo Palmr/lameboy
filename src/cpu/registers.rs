@@ -54,6 +54,19 @@ impl Registers {
         }
     }
 
+    pub fn post_boot_reset(&mut self) {
+        self.a = 0x01;
+        self.f = ZERO | HALF_CARRY | CARRY;
+        self.b = 0x00;
+        self.c = 0x13;
+        self.d = 0x00;
+        self.e = 0xD8;
+        self.h = 0x01;
+        self.l = 0x4D;
+        self.pc = 0x0100;
+        self.sp = 0x0100;
+    }
+
     pub fn read16(&self, reg: &Reg16) -> u16 {
         use self::Reg16::*;
         match reg {
