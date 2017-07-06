@@ -25,6 +25,7 @@ mod memoryeditor;
 
 mod cart;
 use cart::Cart;
+mod mmu;
 mod cpu;
 use cpu::CPU;
 
@@ -211,7 +212,7 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mu
 
                 ui.input_int(im_str!("Addr"), &mut gui_state.i0).build();
                 if ui.small_button(im_str!("print")) {
-                    let byte = cart.read(gui_state.i0 as u16);
+                    let byte = cpu.mmu.read8(gui_state.i0 as u16);
                     println!("Memory[{:04X}] = {:02X}", gui_state.i0, byte);
                 }
             });

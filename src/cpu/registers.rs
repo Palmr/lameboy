@@ -67,9 +67,35 @@ impl Registers {
         self.sp = 0x0100;
     }
 
-    pub fn read16(&self, reg: &Reg16) -> u16 {
+    pub fn read8(&self, r8: &Reg8) -> u8 {
+        use self::Reg8::*;
+        match r8 {
+            &A => self.a,
+            &B => self.b,
+            &C => self.c,
+            &D => self.d,
+            &E => self.e,
+            &H => self.h,
+            &L => self.l,
+        }
+    }
+
+    pub fn write8(&mut self, r8: &Reg8, value: u8) {
+        use self::Reg8::*;
+        match r8 {
+            &A => self.a = value,
+            &B => self.b = value,
+            &C => self.c = value,
+            &D => self.d = value,
+            &E => self.e = value,
+            &H => self.h = value,
+            &L => self.l = value,
+        }
+    }
+
+    pub fn read16(&self, r16: &Reg16) -> u16 {
         use self::Reg16::*;
-        match reg {
+        match r16 {
             &AF => ((self.a as u16) << 8) | (self.f.bits() as u16),
             &BC => ((self.b as u16) << 8) | (self.c as u16),
             &DE => ((self.d as u16) << 8) | (self.e as u16),
@@ -78,9 +104,9 @@ impl Registers {
         }
     }
 
-    pub fn write16(&mut self, reg: &Reg16, value: u16) {
+    pub fn write16(&mut self, r16: &Reg16, value: u16) {
         use self::Reg16::*;
-        match reg {
+        match r16 {
             &AF => {
                 self.a = (value >> 8) as u8;
                 self.f = Flags::from_bits_truncate(value as u8)

@@ -11,12 +11,13 @@ impl Cart {
         }
     }
 
-    pub fn read(&self, address: u16) -> u8 {
-        self.data[address as usize]
+    pub fn read(&self, addr: u16) -> u8 {
+        self.data[addr as usize]
     }
 
-    pub fn write(&self) {
+    pub fn write(&self, addr: u16, data: u8) {
         // Deal with MBC
+        println!("Write to cart [0x{:04X}] = 0x{:02X}", addr, data);
     }
 
     pub fn get_size(&self) -> usize {

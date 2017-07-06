@@ -1,4 +1,3 @@
-#![allow(unused_mut)]
 #![allow(unused_variables)]
 
 use cpu::CPU;
@@ -13,7 +12,7 @@ use cpu::registers::*;
 /// ```asm
 /// NOP
 /// ```
-pub fn nop(mut cpu: &mut CPU) -> u8 {
+pub fn nop(cpu: &CPU) -> u8 {
     // Do nothing
     return 4
 }
@@ -29,15 +28,31 @@ pub fn nop(mut cpu: &mut CPU) -> u8 {
 /// INC B
 /// ```
 pub fn inc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
+    let mut value = match r8 {
+        &Reg8::A => cpu.registers.a,
+        &Reg8::B => cpu.registers.b,
+        &Reg8::C => cpu.registers.c,
+        &Reg8::D => cpu.registers.d,
+        &Reg8::E => cpu.registers.e,
+        &Reg8::H => cpu.registers.h,
+        &Reg8::L => cpu.registers.l,
+    };
+
+    value = value.wrapping_add(1);
+
+    cpu.registers.f.set(ZERO, value == 0);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, value  & 0xf == 0xf);
+
     match r8 {
-        &Reg8::A => cpu.registers.a = cpu.registers.a + 1,
-        &Reg8::B => cpu.registers.b = cpu.registers.b + 1,
-        &Reg8::C => cpu.registers.c = cpu.registers.c + 1,
-        &Reg8::D => cpu.registers.d = cpu.registers.d + 1,
-        &Reg8::E => cpu.registers.e = cpu.registers.e + 1,
-        &Reg8::H => cpu.registers.h = cpu.registers.h + 1,
-        &Reg8::L => cpu.registers.l = cpu.registers.l + 1,
-    }
+        &Reg8::A => cpu.registers.a = value,
+        &Reg8::B => cpu.registers.b = value,
+        &Reg8::C => cpu.registers.c = value,
+        &Reg8::D => cpu.registers.d = value,
+        &Reg8::E => cpu.registers.e = value,
+        &Reg8::H => cpu.registers.h = value,
+        &Reg8::L => cpu.registers.l = value,
+    };
 
     return 4
 }
@@ -53,15 +68,31 @@ pub fn inc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// DEC B
 /// ```
 pub fn dec_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
+    let mut value = match r8 {
+        &Reg8::A => cpu.registers.a,
+        &Reg8::B => cpu.registers.b,
+        &Reg8::C => cpu.registers.c,
+        &Reg8::D => cpu.registers.d,
+        &Reg8::E => cpu.registers.e,
+        &Reg8::H => cpu.registers.h,
+        &Reg8::L => cpu.registers.l,
+    };
+
+    value = value.wrapping_sub(1);
+
+    cpu.registers.f.set(ZERO, value == 0);
+    cpu.registers.f.set(SUBTRACT, true);
+    cpu.registers.f.set(HALF_CARRY, value  & 0xf == 0x0);
+
     match r8 {
-        &Reg8::A => cpu.registers.a = cpu.registers.a - 1,
-        &Reg8::B => cpu.registers.b = cpu.registers.b - 1,
-        &Reg8::C => cpu.registers.c = cpu.registers.c - 1,
-        &Reg8::D => cpu.registers.d = cpu.registers.d - 1,
-        &Reg8::E => cpu.registers.e = cpu.registers.e - 1,
-        &Reg8::H => cpu.registers.h = cpu.registers.h - 1,
-        &Reg8::L => cpu.registers.l = cpu.registers.l - 1,
-    }
+        &Reg8::A => cpu.registers.a = value,
+        &Reg8::B => cpu.registers.b = value,
+        &Reg8::C => cpu.registers.c = value,
+        &Reg8::D => cpu.registers.d = value,
+        &Reg8::E => cpu.registers.e = value,
+        &Reg8::H => cpu.registers.h = value,
+        &Reg8::L => cpu.registers.l = value,
+    };
 
     return 4
 }
@@ -77,8 +108,11 @@ pub fn dec_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// INC CD
 /// ```
 pub fn inc_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
-    let inc = cpu.registers.read16(r16) + 1;
-    cpu.registers.write16(r16, inc);
+    let mut value = cpu.registers.read16(r16);
+
+    value = value.wrapping_add(1);
+
+    cpu.registers.write16(r16, value);
 
     return 8
 }
@@ -94,8 +128,86 @@ pub fn inc_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// DEC CD
 /// ```
 pub fn dec_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
-    let dec = cpu.registers.read16(r16) - 1;
-    cpu.registers.write16(r16, dec);
+    let mut value = cpu.registers.read16(r16);
+
+    value = value.wrapping_sub(1);
+
+    cpu.registers.write16(r16, value);
+
+    return 8
+}
+
+/// Load an 8-bit register into another 8-bit register.
+///
+/// Takes 4 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD A, B ; A <- B
+/// LD B, D ; B <- D
+/// ```
+pub fn load_r8_r8(mut cpu: &mut CPU, r8_target: &Reg8, r8_source: &Reg8) -> u8 {
+    // Copy from source register to target register
+    let value = cpu.registers.read8(r8_source);
+    cpu.registers.write8(r8_target, value);
+
+    return 4
+}
+
+/// Load an 8-bit value into a 8-bit register.
+///
+/// Takes 8 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD A, $FF
+/// LD B, $9F
+/// ```
+pub fn load_r8_d8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
+    // Read 8-bit value
+    let value = cpu.mmu.read8(cpu.registers.pc);
+
+    // Move PC on
+    cpu.registers.pc += 1;
+
+    // Write it to the register
+    cpu.registers.write8(r8, value);
+
+    return 8
+}
+
+/// Load an 8-bit register with an indirect value, taken from memory using a 16-bit register as an
+/// address.
+///
+/// Takes 8 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD A, (HL) ; A <- memory[HL]
+/// ```
+pub fn load_r8_indirect_r16(mut cpu: &mut CPU, r8_target: &Reg8, r16_indirect_addr: &Reg16) -> u8 {
+    // Copy from memory using indirect register to target register
+    let value = cpu.mmu.read8(cpu.registers.read16(r16_indirect_addr));
+    cpu.registers.write8(r8_target, value);
+
+    return 8
+}
+
+/// Load memory, using a 16-bit register as an address, with an 8-bit register value.
+///
+/// Takes 8 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD (HL), A ; memory[HL] <- A
+/// ```
+pub fn load_indirect_r16_r8(mut cpu: &mut CPU, r16_indirect_addr: &Reg16, r8_source: &Reg8) -> u8 {
+    // Copy from source register to memory using indirect register
+    cpu.mmu.write8(cpu.registers.read16(r16_indirect_addr), cpu.registers.read8(r8_source));
 
     return 8
 }
@@ -112,7 +224,10 @@ pub fn dec_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```
 pub fn load_r16_d16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
     // Read 16-bit value
-    let value: u16 = 0xFFFF;
+    let value: u16 = cpu.mmu.read16(cpu.registers.pc);
+
+    // Move PC on
+    cpu.registers.pc += 1;
 
     // Write it to the register
     cpu.registers.write16(r16, value);
