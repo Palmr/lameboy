@@ -311,6 +311,23 @@ pub fn load_indirect_r16_d8(mut cpu: &mut CPU, r16_indirect_addr: &Reg16) -> u8 
     return 12
 }
 
+/// Load a 16-bit register into a 16-bit register.
+///
+/// Takes 8 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD SP, HL
+/// ```
+pub fn load_r16_r16(mut cpu: &mut CPU, r16_target: &Reg16, r16_source: &Reg16) -> u8 {
+    // Copy from source register to target register
+    let value = cpu.registers.read16(r16_source);
+    cpu.registers.write16(r16_target, value);
+
+    return 8
+}
+
 /// Load a 16-bit value into a 16-bit register.
 ///
 /// Takes 12 cycles.

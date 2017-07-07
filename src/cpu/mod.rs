@@ -304,7 +304,7 @@ impl<'c> CPU<'c> {
             0xF6 => {println!("OR d8"); or_d8(self)},
             0xF7 => {println!("RST 30H"); 16},
             0xF8 => {println!("LD HL, SP+r8"); 12},
-            0xF9 => {println!("LD SP, HL"); 8},
+            0xF9 => {println!("LD SP, HL"); load_r16_r16(self, &Reg16::SP, &Reg16::HL)},
             0xFA => {println!("LD A, (a16)"); 16},
             0xFB => {println!("EI"); 4},
             0xFC => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
