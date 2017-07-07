@@ -28,15 +28,7 @@ pub fn nop(cpu: &CPU) -> u8 {
 /// INC B
 /// ```
 pub fn inc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let mut value = match r8 {
-        &Reg8::A => cpu.registers.a,
-        &Reg8::B => cpu.registers.b,
-        &Reg8::C => cpu.registers.c,
-        &Reg8::D => cpu.registers.d,
-        &Reg8::E => cpu.registers.e,
-        &Reg8::H => cpu.registers.h,
-        &Reg8::L => cpu.registers.l,
-    };
+    let mut value = cpu.registers.read8(r8);
 
     value = value.wrapping_add(1);
 
@@ -68,15 +60,7 @@ pub fn inc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// DEC B
 /// ```
 pub fn dec_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let mut value = match r8 {
-        &Reg8::A => cpu.registers.a,
-        &Reg8::B => cpu.registers.b,
-        &Reg8::C => cpu.registers.c,
-        &Reg8::D => cpu.registers.d,
-        &Reg8::E => cpu.registers.e,
-        &Reg8::H => cpu.registers.h,
-        &Reg8::L => cpu.registers.l,
-    };
+    let mut value = cpu.registers.read8(r8);
 
     value = value.wrapping_sub(1);
 
@@ -178,6 +162,53 @@ pub fn load_r8_d8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     return 8
 }
 
+/// Load an 8-bit register into memory using a 16-bit register as an address. Then increment that 16-bit register.
+///
+/// Takes 8 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD (HL+), A ; memory[HL] <- A; HL++
+/// ```
+pub fn load_indirect_r16_increment_r8(mut cpu: &mut CPU, r16_indirect_addr: &Reg16, r8: &Reg8) -> u8 {
+    let value = cpu.registers.read8(r8);
+
+    // Copy from memory using 16-bit register value as address
+    let a16_addr = cpu.registers.read16(r16_indirect_addr);
+
+    cpu.mmu.write8(a16_addr, value);
+
+    // Increment the 16-bit indirect address register
+    cpu.registers.write16(r16_indirect_addr, a16_addr.wrapping_add(1));
+
+    return 8
+}
+
+/// Load an 8-bit register with an indirect value, taken from memory using a 16-bit register as an
+/// address. Then decrement that 16-bit register.
+///
+/// Takes 8 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD A, (HL-) ; A <- memory[HL]; HL--
+/// ```
+pub fn load_indirect_r16_decrement_r8(mut cpu: &mut CPU, r16_indirect_addr: &Reg16, r8: &Reg8) -> u8 {
+    let value = cpu.registers.read8(r8);
+
+    // Copy from memory using 16-bit register value as address
+    let a16_addr = cpu.registers.read16(r16_indirect_addr);
+
+    cpu.mmu.write8(a16_addr, value);
+
+    // Increment the 16-bit indirect address register
+    cpu.registers.write16(r16_indirect_addr, a16_addr.wrapping_sub(1));
+
+    return 8
+}
+
 /// Load an 8-bit register with an indirect value, taken from memory using a 16-bit register as an
 /// address.
 ///
@@ -227,7 +258,7 @@ pub fn load_r8_indirect_r16_increment(mut cpu: &mut CPU, r8_target: &Reg8, r16_i
 /// # Examples
 ///
 /// ```asm
-/// LD A, (HL+) ; A <- memory[HL]; HL++
+/// LD A, (HL-) ; A <- memory[HL]; HL--
 /// ```
 pub fn load_r8_indirect_r16_decrement(mut cpu: &mut CPU, r8_target: &Reg8, r16_indirect_addr: &Reg16) -> u8 {
     // Copy from memory using 16-bit register value as address
@@ -256,6 +287,28 @@ pub fn load_indirect_r16_r8(mut cpu: &mut CPU, r16_indirect_addr: &Reg16, r8_sou
     cpu.mmu.write8(cpu.registers.read16(r16_indirect_addr), cpu.registers.read8(r8_source));
 
     return 8
+}
+
+/// Load memory, using a 16-bit register as an address, with an 8-bit value.
+///
+/// Takes 12 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD (HL), $DA ; memory[HL] <- 0xDA
+/// ```
+pub fn load_indirect_r16_d8(mut cpu: &mut CPU, r16_indirect_addr: &Reg16) -> u8 {
+    // Read 8-bit value
+    let value = cpu.mmu.read8(cpu.registers.pc);
+
+    // Move PC on
+    cpu.registers.pc += 1;
+
+    // Copy from source register to memory using indirect register
+    cpu.mmu.write8(cpu.registers.read16(r16_indirect_addr), value);
+
+    return 12
 }
 
 /// Load a 16-bit value into a 16-bit register.
@@ -328,6 +381,31 @@ pub fn jump_d16(mut cpu: &mut CPU) -> u8 {
     return 16
 }
 
+/// ADD 16-bit register with register HL, storing the result in HL.
+///
+/// Takes 8 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// ADD HL, BC ; HL <- HL + BC
+/// ```
+pub fn add_hl_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
+    let value = cpu.registers.read16(r16);
+    let original_hl = cpu.registers.read16(&Reg16::HL);
+
+    let combined = original_hl.wrapping_add(value);
+
+    cpu.registers.write16(&Reg16::HL, combined);
+
+    cpu.registers.f.set(ZERO, combined == 0);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, ((original_hl & 0x0F) + (value & 0x0F)) > 0x0F);
+    cpu.registers.f.set(CARRY, ((original_hl as u16) + (value as u16)) > 0xFF);
+
+    return 8
+}
+
 /// ADD 8-bit register with register A, storing the result in A.
 ///
 /// Takes 4 cycles.
@@ -338,22 +416,16 @@ pub fn jump_d16(mut cpu: &mut CPU) -> u8 {
 /// ADD B ; A <- A + B
 /// ```
 pub fn add_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let value = match r8 {
-        &Reg8::A => cpu.registers.a,
-        &Reg8::B => cpu.registers.b,
-        &Reg8::C => cpu.registers.c,
-        &Reg8::D => cpu.registers.d,
-        &Reg8::E => cpu.registers.e,
-        &Reg8::H => cpu.registers.h,
-        &Reg8::L => cpu.registers.l,
-    };
+    let value = cpu.registers.read8(r8);
+    let original_a = cpu.registers.a;
 
-    cpu.registers.a = cpu.registers.a.wrapping_add(value);
+    cpu.registers.a = original_a.wrapping_add(value);
 
-    cpu.registers.f.set(ZERO, cpu.registers.a == 0);
+    cpu.registers.f.set(ZERO, original_a == 0);
     cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, ((cpu.registers.a & 0x0F) + (value & 0x0F)) > 0x0F);
-    cpu.registers.f.set(CARRY, ((cpu.registers.a as u16) + (value as u16)) > 0xFF);
+
+    cpu.registers.f.set(HALF_CARRY, ((original_a & 0x0F) + (value & 0x0F)) > 0x0F);
+    cpu.registers.f.set(CARRY, ((original_a as u16) + (value as u16)) > 0xFF);
 
     return 4
 }
@@ -368,24 +440,17 @@ pub fn add_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ADC B ; A <- A + B + Flag::CARRY
 /// ```
 pub fn adc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let value = match r8 {
-        &Reg8::A => cpu.registers.a,
-        &Reg8::B => cpu.registers.b,
-        &Reg8::C => cpu.registers.c,
-        &Reg8::D => cpu.registers.d,
-        &Reg8::E => cpu.registers.e,
-        &Reg8::H => cpu.registers.h,
-        &Reg8::L => cpu.registers.l,
-    };
+    let value = cpu.registers.read8(r8);
+    let original_a = cpu.registers.a;
 
     let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
 
-    cpu.registers.a = cpu.registers.a.wrapping_add(value).wrapping_add(cy);
+    cpu.registers.a = original_a.wrapping_add(value).wrapping_add(cy);
 
     cpu.registers.f.set(ZERO, cpu.registers.a == 0);
     cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, ((cpu.registers.a & 0x0F) + (value & 0x0F) + cy) > 0x0F);
-    cpu.registers.f.set(CARRY, (cpu.registers.a as u16 + value as u16 + cy as u16) > 0xFF);
+    cpu.registers.f.set(HALF_CARRY, ((original_a & 0x0F) + (value & 0x0F) + cy) > 0x0F);
+    cpu.registers.f.set(CARRY, (original_a as u16 + value as u16 + cy as u16) > 0xFF);
 
     return 4
 }
@@ -400,23 +465,15 @@ pub fn adc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// SUB B ; A <- A - B
 /// ```
 pub fn sub_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let value = match r8 {
-        &Reg8::A => cpu.registers.a,
-        &Reg8::B => cpu.registers.b,
-        &Reg8::C => cpu.registers.c,
-        &Reg8::D => cpu.registers.d,
-        &Reg8::E => cpu.registers.e,
-        &Reg8::H => cpu.registers.h,
-        &Reg8::L => cpu.registers.l,
-    };
+    let value = cpu.registers.read8(r8);
+    let original_a = cpu.registers.a;
 
-    cpu.registers.f.set(HALF_CARRY, (cpu.registers.a & 0x0F) < (value & 0x0F));
-    cpu.registers.f.set(CARRY, cpu.registers.a < value);
-
-    cpu.registers.a = cpu.registers.a.wrapping_sub(value);
+    cpu.registers.a = original_a.wrapping_sub(value);
 
     cpu.registers.f.set(ZERO, cpu.registers.a == 0);
     cpu.registers.f.set(SUBTRACT, true);
+    cpu.registers.f.set(HALF_CARRY, (original_a & 0x0F) < (value & 0x0F));
+    cpu.registers.f.set(CARRY, original_a < value);
 
     return 4
 }
@@ -431,25 +488,17 @@ pub fn sub_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// SBC B ; A <- A - B - Flag::CARRY
 /// ```
 pub fn sbc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let value = match r8 {
-        &Reg8::A => cpu.registers.a,
-        &Reg8::B => cpu.registers.b,
-        &Reg8::C => cpu.registers.c,
-        &Reg8::D => cpu.registers.d,
-        &Reg8::E => cpu.registers.e,
-        &Reg8::H => cpu.registers.h,
-        &Reg8::L => cpu.registers.l,
-    };
+    let value = cpu.registers.read8(r8);
+    let original_a = cpu.registers.a;
 
     let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
 
-    cpu.registers.f.set(HALF_CARRY, (cpu.registers.a & 0x0F) < (value & 0x0F) + cy);
-    cpu.registers.f.set(CARRY, (cpu.registers.a as u16) < (value as u16) + (cy as u16));
-
-    cpu.registers.a = cpu.registers.a.wrapping_sub(value).wrapping_sub(cy);
+    cpu.registers.a = original_a.wrapping_sub(value).wrapping_sub(cy);
 
     cpu.registers.f.set(ZERO, cpu.registers.a == 0);
     cpu.registers.f.set(SUBTRACT, true);
+    cpu.registers.f.set(HALF_CARRY, (original_a & 0x0F) < (value & 0x0F) + cy);
+    cpu.registers.f.set(CARRY, (original_a as u16) < (value as u16) + (cy as u16));
 
     return 4
 }
@@ -464,15 +513,7 @@ pub fn sbc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// AND B ; A <- A & B
 /// ```
 pub fn and_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let value = match r8 {
-        &Reg8::A => cpu.registers.a,
-        &Reg8::B => cpu.registers.b,
-        &Reg8::C => cpu.registers.c,
-        &Reg8::D => cpu.registers.d,
-        &Reg8::E => cpu.registers.e,
-        &Reg8::H => cpu.registers.h,
-        &Reg8::L => cpu.registers.l,
-    };
+    let value = cpu.registers.read8(r8);
 
     cpu.registers.a = cpu.registers.a & value;
 
@@ -494,15 +535,7 @@ pub fn and_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// XOR B ; A <- A ^ B
 /// ```
 pub fn xor_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let value = match r8 {
-        &Reg8::A => cpu.registers.a,
-        &Reg8::B => cpu.registers.b,
-        &Reg8::C => cpu.registers.c,
-        &Reg8::D => cpu.registers.d,
-        &Reg8::E => cpu.registers.e,
-        &Reg8::H => cpu.registers.h,
-        &Reg8::L => cpu.registers.l,
-    };
+    let value = cpu.registers.read8(r8);
 
     cpu.registers.a = cpu.registers.a ^ value;
 
@@ -524,15 +557,7 @@ pub fn xor_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// OR B ; A <- A | B
 /// ```
 pub fn or_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let value = match r8 {
-        &Reg8::A => cpu.registers.a,
-        &Reg8::B => cpu.registers.b,
-        &Reg8::C => cpu.registers.c,
-        &Reg8::D => cpu.registers.d,
-        &Reg8::E => cpu.registers.e,
-        &Reg8::H => cpu.registers.h,
-        &Reg8::L => cpu.registers.l,
-    };
+    let value = cpu.registers.read8(r8);
 
     cpu.registers.a = cpu.registers.a | value;
 
@@ -555,15 +580,7 @@ pub fn or_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// CP B ; Flag::ZERO true if A == B, Flag::CARRY true if A < B
 /// ```
 pub fn cp_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let value = match r8 {
-        &Reg8::A => cpu.registers.a,
-        &Reg8::B => cpu.registers.b,
-        &Reg8::C => cpu.registers.c,
-        &Reg8::D => cpu.registers.d,
-        &Reg8::E => cpu.registers.e,
-        &Reg8::H => cpu.registers.h,
-        &Reg8::L => cpu.registers.l,
-    };
+    let value = cpu.registers.read8(r8);
 
     cpu.registers.f.set(ZERO, cpu.registers.a.wrapping_sub(value) == 0);
     cpu.registers.f.set(SUBTRACT, true);
@@ -585,16 +602,17 @@ pub fn cp_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 pub fn add_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
     let value = cpu.mmu.read8(cpu.registers.pc);
-
     // Move PC on
     cpu.registers.pc += 1;
 
-    cpu.registers.a = cpu.registers.a.wrapping_add(value);
+    let original_a = cpu.registers.a;
+
+    cpu.registers.a = original_a.wrapping_add(value);
 
     cpu.registers.f.set(ZERO, cpu.registers.a == 0);
     cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, ((cpu.registers.a & 0x0F) + (value & 0x0F)) > 0x0F);
-    cpu.registers.f.set(CARRY, ((cpu.registers.a as u16) + (value as u16)) > 0xFF);
+    cpu.registers.f.set(HALF_CARRY, ((original_a & 0x0F) + (value & 0x0F)) > 0x0F);
+    cpu.registers.f.set(CARRY, ((original_a as u16) + (value as u16)) > 0xFF);
 
     return 8
 }
@@ -615,14 +633,16 @@ pub fn adc_d8(mut cpu: &mut CPU) -> u8 {
     // Move PC on
     cpu.registers.pc += 1;
 
+    let original_a = cpu.registers.a;
+
     let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
 
-    cpu.registers.a = cpu.registers.a.wrapping_add(value).wrapping_add(cy);
+    cpu.registers.a = original_a.wrapping_add(value).wrapping_add(cy);
 
     cpu.registers.f.set(ZERO, cpu.registers.a == 0);
     cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, ((cpu.registers.a & 0x0F) + (value & 0x0F) + cy) > 0x0F);
-    cpu.registers.f.set(CARRY, (cpu.registers.a as u16 + value as u16 + cy as u16) > 0xFF);
+    cpu.registers.f.set(HALF_CARRY, ((original_a & 0x0F) + (value & 0x0F) + cy) > 0x0F);
+    cpu.registers.f.set(CARRY, (original_a as u16 + value as u16 + cy as u16) > 0xFF);
 
     return 8
 }
@@ -643,13 +663,14 @@ pub fn sub_d8(mut cpu: &mut CPU) -> u8 {
     // Move PC on
     cpu.registers.pc += 1;
 
-    cpu.registers.f.set(HALF_CARRY, (cpu.registers.a & 0x0F) < (value & 0x0F));
-    cpu.registers.f.set(CARRY, cpu.registers.a < value);
+    let original_a = cpu.registers.a;
 
-    cpu.registers.a = cpu.registers.a.wrapping_sub(value);
+    cpu.registers.a = original_a.wrapping_sub(value);
 
     cpu.registers.f.set(ZERO, cpu.registers.a == 0);
     cpu.registers.f.set(SUBTRACT, true);
+    cpu.registers.f.set(HALF_CARRY, (original_a & 0x0F) < (value & 0x0F));
+    cpu.registers.f.set(CARRY, original_a < value);
 
     return 8
 }
@@ -670,15 +691,16 @@ pub fn sbc_d8(mut cpu: &mut CPU) -> u8 {
     // Move PC on
     cpu.registers.pc += 1;
 
-    let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
+    let original_a = cpu.registers.a;
 
-    cpu.registers.f.set(HALF_CARRY, (cpu.registers.a & 0x0F) < (value & 0x0F) + cy);
-    cpu.registers.f.set(CARRY, (cpu.registers.a as u16) < (value as u16) + (cy as u16));
+    let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
 
     cpu.registers.a = cpu.registers.a.wrapping_sub(value).wrapping_sub(cy);
 
     cpu.registers.f.set(ZERO, cpu.registers.a == 0);
     cpu.registers.f.set(SUBTRACT, true);
+    cpu.registers.f.set(HALF_CARRY, (original_a & 0x0F) < (value & 0x0F) + cy);
+    cpu.registers.f.set(CARRY, (original_a as u16) < (value as u16) + (cy as u16));
 
     return 8
 }
