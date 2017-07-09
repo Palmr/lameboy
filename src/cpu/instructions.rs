@@ -1248,3 +1248,174 @@ pub fn cp_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     return 8
 }
+
+/// Rotate an 8-bit register to the left.
+///
+/// If through_carry is true then the high bit will go into the CARRY flag and the old value of the
+/// CARRY flag will become the new low bit.
+/// If it is not true the high bit will become the low bit as well as going into the CARRY flag.
+///
+/// If reset_zero is true the ZERO flag will always be reset.
+/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+///
+pub fn alu_rotate_left(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: bool) -> u8 {
+    let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
+    let high_bit = d8 & 0x80;
+    let new_low_bit = if through_carry {cy} else {high_bit};
+    let rotated_value = (d8 << 1) | new_low_bit;
+
+    cpu.registers.f.set(ZERO, rotated_value == 0 && !reset_zero);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, false);
+    cpu.registers.f.set(CARRY, high_bit != 0);
+
+    return rotated_value
+}
+
+/// Rotate an 8-bit register to the left.
+///
+/// If through_carry is true then the high bit will go into the CARRY flag and the old value of the
+/// CARRY flag will become the new low bit.
+/// If it is not true the high bit will become the low bit as well as going into the CARRY flag.
+///
+/// If reset_zero is true the ZERO flag will always be reset.
+/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+///
+/// Takes 4 cycles if always using A, otherwise 8 cycles
+///
+/// # Examples
+///
+/// ```asm
+/// ; 4 cycle
+/// RLCA  ; Rotate A left (resets Flag::ZERO)
+/// RLA   ; Rotate A left through the carry flag (resets Flag::ZERO)
+///
+/// ; 8 cycle
+/// RLC B ; Rotate B left (sets Flag::ZERO if rotated result == 0)
+/// RL B  ; Rotate B left through the carry flag (sets Flag::ZERO if rotated result == 0)
+///
+/// ```
+pub fn rotate_left_r8(mut cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero: bool) -> u8 {
+    let value = cpu.registers.read8(r8);
+
+    let rotated_value = alu_rotate_left(cpu, value, through_carry, reset_zero);
+
+    cpu.registers.write8(r8, rotated_value);
+
+    return if reset_zero {4} else {8}
+}
+
+/// Rotate an indirect value, taken from memory using a 16-bit register as an address to the left.
+///
+/// If through_carry is true then the high bit will go into the CARRY flag and the old value of the
+/// CARRY flag will become the new low bit.
+/// If it is not true the high bit will become the low bit as well as going into the CARRY flag.
+///
+/// If reset_zero is true the ZERO flag will always be reset.
+/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// RLC (HL) ; Rotate memory[hl] left (sets Flag::ZERO if rotated result == 0)
+/// RL (HL)  ; Rotate memory[hl] left through the carry flag (sets Flag::ZERO if rotated result == 0)
+///
+/// ```
+pub fn rotate_left_indirect_hl(mut cpu: &mut CPU, through_carry: bool, reset_zero: bool) -> u8 {
+    let a16_addr = cpu.registers.read16(&Reg16::HL);
+    let value = cpu.mmu.read8(a16_addr);
+
+    let rotated_value = alu_rotate_right(cpu, value, through_carry, reset_zero);
+
+    cpu.mmu.write8(a16_addr, rotated_value);
+
+    return 16
+}
+
+/// Rotate an 8-bit value to the right.
+///
+/// If through_carry is true then the low bit will go into the CARRY flag and the old value of the
+/// CARRY flag will become the new high bit.
+/// If it is not true the low bit will become the high bit as well as going into the CARRY flag.
+///
+/// If reset_zero is true the ZERO flag will always be reset.
+/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+///
+pub fn alu_rotate_right(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: bool) -> u8 {
+    let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
+    let low_bit = d8 & 0x01;
+    let new_high_bit = if through_carry {cy} else {low_bit};
+
+    let rotated_value = (d8 >> 1) | new_high_bit;
+
+    cpu.registers.f.set(ZERO, rotated_value == 0 && !reset_zero);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, false);
+    cpu.registers.f.set(CARRY, low_bit != 0);
+
+    return rotated_value
+}
+
+/// Rotate an 8-bit register to the right.
+///
+/// If through_carry is true then the low bit will go into the CARRY flag and the old value of the
+/// CARRY flag will become the new high bit.
+/// If it is not true the low bit will become the high bit as well as going into the CARRY flag.
+///
+/// If reset_zero is true the ZERO flag will always be reset.
+/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+///
+/// Takes 4 cycles if always using A, otherwise 8 cycles
+///
+/// # Examples
+///
+/// ```asm
+/// ; 4 cycle
+/// RRCA  ; Rotate A right (resets Flag::ZERO)
+/// RRA   ; Rotate A right through the carry flag (resets Flag::ZERO)
+///
+/// ; 8 cycle
+/// RRC B ; Rotate B right (sets Flag::ZERO if rotated result == 0)
+/// RR B  ; Rotate B right through the carry flag (sets Flag::ZERO if rotated result == 0)
+///
+/// ```
+pub fn rotate_right_r8(mut cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero: bool) -> u8 {
+    let value = cpu.registers.read8(r8);
+
+    let rotated_value = alu_rotate_right(cpu, value, through_carry, reset_zero);
+
+    cpu.registers.write8(r8, rotated_value);
+
+    return if reset_zero {4} else {8}
+}
+
+/// Rotate an indirect value, taken from memory using a 16-bit register as an address to the right.
+///
+/// If through_carry is true then the low bit will go into the CARRY flag and the old value of the
+/// CARRY flag will become the new high bit.
+/// If it is not true the low bit will become the high bit as well as going into the CARRY flag.
+///
+/// If reset_zero is true the ZERO flag will always be reset.
+/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// RRC (HL) ; Rotate memory[hl] right (sets Flag::ZERO if rotated result == 0)
+/// RR (HL)  ; Rotate memory[hl] right through the carry flag (sets Flag::ZERO if rotated result == 0)
+///
+/// ```
+pub fn rotate_right_indirect_hl(mut cpu: &mut CPU, through_carry: bool, reset_zero: bool) -> u8 {
+    let a16_addr = cpu.registers.read16(&Reg16::HL);
+    let value = cpu.mmu.read8(a16_addr);
+
+    let rotated_value = alu_rotate_right(cpu, value, through_carry, reset_zero);
+
+    cpu.mmu.write8(a16_addr, rotated_value);
+
+    return 16
+}

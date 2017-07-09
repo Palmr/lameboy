@@ -7,6 +7,7 @@ bitflags! {
     }
 }
 
+#[derive(Debug)]
 pub enum Reg8 {
     A,
     B,
@@ -17,6 +18,7 @@ pub enum Reg8 {
     L
 }
 
+#[derive(Debug)]
 pub enum Reg16 {
     AF,
     BC,
