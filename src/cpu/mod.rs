@@ -60,7 +60,7 @@ impl<'c> CPU<'c> {
             0x15 => {println!("DEC D"); dec_r8(self, &Reg8::D)},
             0x16 => {println!("LD D, d8"); load_r8_d8(self, &Reg8::D)},
             0x17 => {println!("RLA"); 4},
-            0x18 => {println!("JR r8"); 12},
+            0x18 => {println!("JR r8"); jump_relative_d8(self)},
             0x19 => {println!("ADD HL, DE"); add_hl_r16(self, &Reg16::DE)},
             0x1A => {println!("LD A, (DE)"); load_r8_indirect_r16(self, &Reg8::A, &Reg16::DE)},
             0x1B => {println!("DEC DE"); dec_r16(self, &Reg16::DE)},
@@ -69,7 +69,7 @@ impl<'c> CPU<'c> {
             0x1E => {println!("LD E, d8"); load_r8_d8(self, &Reg8::E)},
             0x1F => {println!("RRA"); 4},
 
-            0x20 => {println!("JR NZ, r8"); 12/*/8*/},
+            0x20 => {println!("JR NZ, r8"); jump_relative_conditional_d8(self, op)},
             0x21 => {println!("LD HL, d16"); load_r16_d16(self, &Reg16::HL)},
             0x22 => {println!("LD (HL+), A"); load_indirect_r16_increment_r8(self, &Reg16::HL, &Reg8::A)},
             0x23 => {println!("INC HL"); inc_r16(self, &Reg16::HL)},
@@ -77,7 +77,7 @@ impl<'c> CPU<'c> {
             0x25 => {println!("DEC H"); dec_r8(self, &Reg8::H)},
             0x26 => {println!("LD H ,d8"); load_r8_d8(self, &Reg8::H)},
             0x27 => {println!("DAA"); 4},
-            0x28 => {println!("JR Z, r8"); 12/*/8*/},
+            0x28 => {println!("JR Z, r8"); jump_relative_conditional_d8(self, op)},
             0x29 => {println!("ADD HL, HL"); add_hl_r16(self, &Reg16::HL)},
             0x2A => {println!("LD A, (HL+)"); load_r8_indirect_r16_increment(self, &Reg8::A, &Reg16::HL)},
             0x2B => {println!("DEC HL"); dec_r16(self, &Reg16::HL)},
@@ -86,15 +86,15 @@ impl<'c> CPU<'c> {
             0x2E => {println!("LD L, d8"); load_r8_d8(self, &Reg8::L)},
             0x2F => {println!("CPL"); 4},
 
-            0x30 => {println!("JR NC, r8"); 12/*/8*/},
+            0x30 => {println!("JR NC, r8"); jump_relative_conditional_d8(self, op)},
             0x31 => {println!("LD SP, d16"); load_r16_d16(self, &Reg16::SP)},
             0x32 => {println!("LD (HL-), A"); load_indirect_r16_decrement_r8(self, &Reg16::HL, &Reg8::A)},
             0x33 => {println!("INC SP"); inc_r16(self, &Reg16::SP)},
-            0x34 => {println!("INC (HL)"); 12},
-            0x35 => {println!("DEC (HL)"); 12},
+            0x34 => {println!("INC (HL)"); inc_indirect_r16(self, &Reg16::HL)},
+            0x35 => {println!("DEC (HL)"); dec_indirect_r16(self, &Reg16::HL)},
             0x36 => {println!("LD (HL), d8"); load_indirect_r16_d8(self, &Reg16::HL)},
             0x37 => {println!("SCF"); 4},
-            0x38 => {println!("JR C, r8"); 12/*/8*/},
+            0x38 => {println!("JR C, r8"); jump_relative_conditional_d8(self, op)},
             0x39 => {println!("ADD HL, SP"); add_hl_r16(self, &Reg16::SP)},
             0x3A => {println!("LD A, (HL-)"); load_r8_indirect_r16_decrement(self, &Reg8::A, &Reg16::HL)},
             0x3B => {println!("DEC SP"); dec_r16(self, &Reg16::SP)},
@@ -179,7 +179,7 @@ impl<'c> CPU<'c> {
             0x83 => {println!("ADD A, E"); add_r8(self, &Reg8::E)},
             0x84 => {println!("ADD A, H"); add_r8(self, &Reg8::H)},
             0x85 => {println!("ADD A, L"); add_r8(self, &Reg8::L)},
-            0x86 => {println!("ADD A, (HL)"); 8},
+            0x86 => {println!("ADD A, (HL)"); add_indirect_r16(self, &Reg16::HL)},
             0x87 => {println!("ADD A, A"); add_r8(self, &Reg8::A)},
             0x88 => {println!("ADC A, B"); adc_r8(self, &Reg8::B)},
             0x89 => {println!("ADC A, C"); adc_r8(self, &Reg8::C)},
@@ -187,7 +187,7 @@ impl<'c> CPU<'c> {
             0x8B => {println!("ADC A, E"); adc_r8(self, &Reg8::E)},
             0x8C => {println!("ADC A, H"); adc_r8(self, &Reg8::H)},
             0x8D => {println!("ADC A, L"); adc_r8(self, &Reg8::L)},
-            0x8E => {println!("ADC A, (HL)"); 8},
+            0x8E => {println!("ADC A, (HL)"); adc_indirect_r16(self, &Reg16::HL)},
             0x8F => {println!("ADC A, A"); adc_r8(self, &Reg8::A)},
 
             // SUBs
@@ -197,7 +197,7 @@ impl<'c> CPU<'c> {
             0x93 => {println!("SUB E"); sub_r8(self, &Reg8::E)},
             0x94 => {println!("SUB H"); sub_r8(self, &Reg8::H)},
             0x95 => {println!("SUB L"); sub_r8(self, &Reg8::L)},
-            0x96 => {println!("SUB (HL)"); 8},
+            0x96 => {println!("SUB (HL)"); sub_indirect_r16(self, &Reg16::HL)},
             0x97 => {println!("SUB A"); sub_r8(self, &Reg8::A)},
             0x98 => {println!("SBC A, B"); sbc_r8(self, &Reg8::B)},
             0x99 => {println!("SBC A, C"); sbc_r8(self, &Reg8::C)},
@@ -205,7 +205,7 @@ impl<'c> CPU<'c> {
             0x9B => {println!("SBC A, E"); sbc_r8(self, &Reg8::E)},
             0x9C => {println!("SBC A, H"); sbc_r8(self, &Reg8::H)},
             0x9D => {println!("SBC A, L"); sbc_r8(self, &Reg8::L)},
-            0x9E => {println!("SBC A, (HL)"); 8},
+            0x9E => {println!("SBC A, (HL)"); sbc_indirect_r16(self, &Reg16::HL)},
             0x9F => {println!("SBC A, A"); sbc_r8(self, &Reg8::A)},
 
             // ANDs & XORs
@@ -215,7 +215,7 @@ impl<'c> CPU<'c> {
             0xA3 => {println!("AND E"); and_r8(self, &Reg8::E)},
             0xA4 => {println!("AND H"); and_r8(self, &Reg8::H)},
             0xA5 => {println!("AND L"); and_r8(self, &Reg8::L)},
-            0xA6 => {println!("AND (HL)"); 8},
+            0xA6 => {println!("AND (HL)"); and_indirect_r16(self, &Reg16::HL)},
             0xA7 => {println!("AND A"); and_r8(self, &Reg8::A)},
             0xA8 => {println!("XOR B"); xor_r8(self, &Reg8::B)},
             0xA9 => {println!("XOR C"); xor_r8(self, &Reg8::C)},
@@ -223,7 +223,7 @@ impl<'c> CPU<'c> {
             0xAB => {println!("XOR E"); xor_r8(self, &Reg8::E)},
             0xAC => {println!("XOR H"); xor_r8(self, &Reg8::H)},
             0xAD => {println!("XOR L"); xor_r8(self, &Reg8::L)},
-            0xAE => {println!("XOR (HL)"); 8},
+            0xAE => {println!("XOR (HL)"); xor_indirect_r16(self, &Reg16::HL)},
             0xAF => {println!("XOR A"); xor_r8(self, &Reg8::A)},
 
             // ORs & CPs
@@ -233,7 +233,7 @@ impl<'c> CPU<'c> {
             0xB3 => {println!("OR E"); or_r8(self, &Reg8::E)},
             0xB4 => {println!("OR H"); or_r8(self, &Reg8::H)},
             0xB5 => {println!("OR L"); or_r8(self, &Reg8::L)},
-            0xB6 => {println!("OR (HL)"); 8},
+            0xB6 => {println!("OR (HL)"); or_indirect_r16(self, &Reg16::HL)},
             0xB7 => {println!("OR A"); or_r8(self, &Reg8::A)},
             0xB8 => {println!("CP B"); cp_r8(self, &Reg8::B)},
             0xB9 => {println!("CP C"); cp_r8(self, &Reg8::C)},
@@ -241,12 +241,12 @@ impl<'c> CPU<'c> {
             0xBB => {println!("CP E"); cp_r8(self, &Reg8::E)},
             0xBC => {println!("CP H"); cp_r8(self, &Reg8::H)},
             0xBD => {println!("CP L"); cp_r8(self, &Reg8::L)},
-            0xBE => {println!("CP (HL)"); 8},
+            0xBE => {println!("CP (HL)"); cp_indirect_r16(self, &Reg16::HL)},
             0xBF => {println!("CP A"); cp_r8(self, &Reg8::A)},
 
             0xC0 => {println!("RET NZ"); 20/*/8*/},
             0xC1 => {println!("POP BC"); 12},
-            0xC2 => {println!("JP NZ, a16"); 16/*/12*/},
+            0xC2 => {println!("JP NZ, a16"); jump_conditional_d16(self, op)},
             0xC3 => {println!("JP a16"); jump_d16(self)},
             0xC4 => {println!("CALL NZ, a16"); 24/*/12*/},
             0xC5 => {println!("PUSH BC"); 16},
@@ -254,7 +254,7 @@ impl<'c> CPU<'c> {
             0xC7 => {println!("RST 00H"); 16},
             0xC8 => {println!("RET Z"); 20/*/8*/},
             0xC9 => {println!("RET"); 16},
-            0xCA => {println!("JP Z, a16"); 16/*/12*/},
+            0xCA => {println!("JP Z, a16"); jump_conditional_d16(self, op)},
             0xCB => {println!("PREFIX CB"); 4},                 // TODO - CB PREFIX
             0xCC => {println!("CALL Z, a16"); 24/*/12*/},
             0xCD => {println!("CALL a16"); 24},
@@ -263,7 +263,7 @@ impl<'c> CPU<'c> {
 
             0xD0 => {println!("RET NC"); 20/*/8*/},
             0xD1 => {println!("POP DE"); 12},
-            0xD2 => {println!("JP NC, a16"); 16/*/12*/},
+            0xD2 => {println!("JP NC, a16"); jump_conditional_d16(self, op)},
             0xD3 => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
             0xD4 => {println!("CALL NC, a16"); 24/*/12*/},
             0xD5 => {println!("PUSH DE"); 16},
@@ -271,7 +271,7 @@ impl<'c> CPU<'c> {
             0xD7 => {println!("RST 10H"); 16},
             0xD8 => {println!("RET C"); 20/*/8*/},
             0xD9 => {println!("RETI"); 16},
-            0xDA => {println!("JP C, a16"); 16/*/12*/},
+            0xDA => {println!("JP C, a16"); jump_conditional_d16(self, op)},
             0xDB => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
             0xDC => {println!("CALL C, a16"); 24/*/12*/},
             0xDD => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
@@ -286,8 +286,8 @@ impl<'c> CPU<'c> {
             0xE5 => {println!("PUSH HL"); 16},
             0xE6 => {println!("AND d8"); and_d8(self)},
             0xE7 => {println!("RST 20H"); 16},
-            0xE8 => {println!("ADD SP, r8"); 16},
-            0xE9 => {println!("JP (HL)"); 4},
+            0xE8 => {println!("ADD SP, d8"); add_sp_d8(self, &Reg16::SP)},
+            0xE9 => {println!("JP (HL)"); jump_r16(self, &Reg16::HL)},
             0xEA => {println!("LD (a16), A"); 16},
             0xEB => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
             0xEC => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
