@@ -10,7 +10,9 @@ use self::super::mmu::MMU;
 
 pub struct CPU<'c> {
     pub registers: Registers,
-    pub mmu: MMU<'c>
+    pub mmu: MMU<'c>,
+    pub IME: bool,
+    pub halt: bool,
 }
 
 impl<'c> CPU<'c> {
@@ -18,11 +20,20 @@ impl<'c> CPU<'c> {
         CPU {
             registers: Registers::new(),
             mmu: MMU::new(cart),
+            IME: true,
+            halt: false,
         }
     }
 
     pub fn post_boot_reset(&mut self) {
         self.registers.post_boot_reset();
+    }
+
+    fn halt(&mut self) {
+        // if interrupt
+        self.halt = false;
+        // else
+        // ??
     }
 
     pub fn cycle(&mut self) {
@@ -52,7 +63,7 @@ impl<'c> CPU<'c> {
             0x0E => {println!("LD C, d8"); load_r8_d8(self, &Reg8::C)},
             0x0F => {println!("RRCA"); rotate_right_r8(self, &Reg8::A, false, true)},
 
-            0x10 => {println!("STOP 0"); 4},
+            0x10 => {println!("STOP"); stop(self)},
             0x11 => {println!("LD DE, d16"); load_r16_d16(self, &Reg16::DE)},
             0x12 => {println!("LD (DE), A"); load_indirect_r16_r8(self, &Reg16::DE, &Reg8::A)},
             0x13 => {println!("INC DE"); inc_r16(self, &Reg16::DE)},
@@ -76,7 +87,7 @@ impl<'c> CPU<'c> {
             0x24 => {println!("INC H"); inc_r8(self, &Reg8::H)},
             0x25 => {println!("DEC H"); dec_r8(self, &Reg8::H)},
             0x26 => {println!("LD H ,d8"); load_r8_d8(self, &Reg8::H)},
-            0x27 => {println!("DAA"); 4},
+            0x27 => {println!("DAA"); decimal_adjust(self)},
             0x28 => {println!("JR Z, r8"); jump_relative_conditional_d8(self, op)},
             0x29 => {println!("ADD HL, HL"); add_hl_r16(self, &Reg16::HL)},
             0x2A => {println!("LD A, (HL+)"); load_r8_indirect_r16_increment(self, &Reg8::A, &Reg16::HL)},
@@ -84,7 +95,7 @@ impl<'c> CPU<'c> {
             0x2C => {println!("INC L"); inc_r8(self, &Reg8::L)},
             0x2D => {println!("DEC L"); dec_r8(self, &Reg8::L)},
             0x2E => {println!("LD L, d8"); load_r8_d8(self, &Reg8::L)},
-            0x2F => {println!("CPL"); 4},
+            0x2F => {println!("CPL"); complement(self)},
 
             0x30 => {println!("JR NC, r8"); jump_relative_conditional_d8(self, op)},
             0x31 => {println!("LD SP, d16"); load_r16_d16(self, &Reg16::SP)},
@@ -93,7 +104,7 @@ impl<'c> CPU<'c> {
             0x34 => {println!("INC (HL)"); inc_indirect_r16(self, &Reg16::HL)},
             0x35 => {println!("DEC (HL)"); dec_indirect_r16(self, &Reg16::HL)},
             0x36 => {println!("LD (HL), d8"); load_indirect_r16_d8(self, &Reg16::HL)},
-            0x37 => {println!("SCF"); 4},
+            0x37 => {println!("SCF"); set_carry_flag(self)},
             0x38 => {println!("JR C, r8"); jump_relative_conditional_d8(self, op)},
             0x39 => {println!("ADD HL, SP"); add_hl_r16(self, &Reg16::SP)},
             0x3A => {println!("LD A, (HL-)"); load_r8_indirect_r16_decrement(self, &Reg8::A, &Reg16::HL)},
@@ -101,7 +112,7 @@ impl<'c> CPU<'c> {
             0x3C => {println!("INC A"); inc_r8(self, &Reg8::A)},
             0x3D => {println!("DEC A"); dec_r8(self, &Reg8::A)},
             0x3E => {println!("LD A, d8"); load_r8_d8(self, &Reg8::A)},
-            0x3F => {println!("CCF"); 4},
+            0x3F => {println!("CCF"); complement_carry_flag(self)},
 
             // Loads
             0x40 => {println!("LD B, B"); load_r8_r8(self, &Reg8::B, &Reg8::B)},
@@ -161,7 +172,7 @@ impl<'c> CPU<'c> {
             0x73 => {println!("LD (HL), E"); load_indirect_r16_r8(self, &Reg16::HL, &Reg8::E)},
             0x74 => {println!("LD (HL), H"); load_indirect_r16_r8(self, &Reg16::HL, &Reg8::H)},
             0x75 => {println!("LD (HL), L"); load_indirect_r16_r8(self, &Reg16::HL, &Reg8::L)},
-            0x76 => {println!("HALT"); 4},
+            0x76 => {println!("HALT"); halt(self)},
             0x77 => {println!("LD (HL), A"); load_indirect_r16_r8(self, &Reg16::HL, &Reg8::A)},
             0x78 => {println!("LD A, B"); load_r8_r8(self, &Reg8::A, &Reg8::A)},
             0x79 => {println!("LD A, C"); load_r8_r8(self, &Reg8::A, &Reg8::B)},
@@ -244,36 +255,36 @@ impl<'c> CPU<'c> {
             0xBE => {println!("CP (HL)"); cp_indirect_r16(self, &Reg16::HL)},
             0xBF => {println!("CP A"); cp_r8(self, &Reg8::A)},
 
-            0xC0 => {println!("RET NZ"); 20/*/8*/},
+            0xC0 => {println!("RET NZ"); ret_conditional(self, op)},
             0xC1 => {println!("POP BC"); 12},
             0xC2 => {println!("JP NZ, a16"); jump_conditional_d16(self, op)},
             0xC3 => {println!("JP a16"); jump_d16(self)},
-            0xC4 => {println!("CALL NZ, a16"); 24/*/12*/},
+            0xC4 => {println!("CALL NZ, a16"); call_conditional_d16(self, op)},
             0xC5 => {println!("PUSH BC"); 16},
             0xC6 => {println!("ADD A, d8"); add_d8(self)},
             0xC7 => {println!("RST 00H"); 16},
-            0xC8 => {println!("RET Z"); 20/*/8*/},
-            0xC9 => {println!("RET"); 16},
+            0xC8 => {println!("RET Z");  ret_conditional(self, op)},
+            0xC9 => {println!("RET");  ret(self)},
             0xCA => {println!("JP Z, a16"); jump_conditional_d16(self, op)},
             0xCB => {println!("PREFIX CB"); self.cb_prefix()},
-            0xCC => {println!("CALL Z, a16"); 24/*/12*/},
-            0xCD => {println!("CALL a16"); 24},
+            0xCC => {println!("CALL Z, a16"); call_conditional_d16(self, op)},
+            0xCD => {println!("CALL a16"); call_d16(self)},
             0xCE => {println!("ADC A, d8"); adc_d8(self)},
             0xCF => {println!("RST 08H"); 16},
 
-            0xD0 => {println!("RET NC"); 20/*/8*/},
+            0xD0 => {println!("RET NC");  ret_conditional(self, op)},
             0xD1 => {println!("POP DE"); 12},
             0xD2 => {println!("JP NC, a16"); jump_conditional_d16(self, op)},
             0xD3 => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
-            0xD4 => {println!("CALL NC, a16"); 24/*/12*/},
+            0xD4 => {println!("CALL NC, a16"); call_conditional_d16(self, op)},
             0xD5 => {println!("PUSH DE"); 16},
             0xD6 => {println!("SUB d8"); sub_d8(self)},
             0xD7 => {println!("RST 10H"); 16},
-            0xD8 => {println!("RET C"); 20/*/8*/},
-            0xD9 => {println!("RETI"); 16},
+            0xD8 => {println!("RET C");  ret_conditional(self, op)},
+            0xD9 => {println!("RETI");  ret_interrupt(self)},
             0xDA => {println!("JP C, a16"); jump_conditional_d16(self, op)},
             0xDB => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
-            0xDC => {println!("CALL C, a16"); 24/*/12*/},
+            0xDC => {println!("CALL C, a16"); call_conditional_d16(self, op)},
             0xDD => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
             0xDE => {println!("SBC A, d8"); sbc_d8(self)},
             0xDF => {println!("RST 18H"); 16},

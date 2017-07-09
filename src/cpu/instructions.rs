@@ -17,6 +17,145 @@ pub fn nop(cpu: &CPU) -> u8 {
     return 4
 }
 
+/// Stop the system clock and oscillator circuit to stop the CPU and LCD controller.
+///
+/// Stop mode can be cancelled by a reset signal.
+///
+/// Takes 4 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// STOP
+/// ```
+pub fn stop(mut cpu: &mut CPU) -> u8 {
+    // Read 8-bit value
+    let value = cpu.mmu.read8(cpu.registers.pc);
+
+    // Move PC on
+    cpu.registers.pc.wrapping_add(1);
+
+    if value != 0 {
+        panic!("Stop instruction should be followed by a zero but found: 0x{:02X}", value);
+    }
+
+    // TODO - Halt the CPU & LCD display until a button is pressed
+
+    return 4
+}
+
+/// Halt the system clock, though let the oscillator and LCD controller continue to run.
+///
+/// Halt mode can be cancelled by an interrupt or reset signal.
+///
+/// Takes 4 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// HALT
+/// ```
+pub fn halt(mut cpu: &mut CPU) -> u8 {
+    cpu.halt = true;
+
+    return 4
+}
+
+/// This instruction conditionally adjusts the accumulator for BCD addition and subtraction
+/// operations.
+///
+/// Takes 4 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// DAA
+/// ```
+pub fn decimal_adjust(mut cpu: &mut CPU) -> u8 {
+    let mut carry = false;
+
+    if !cpu.registers.f.contains(SUBTRACT) {
+      if cpu.registers.f.contains(CARRY) || cpu.registers.a > 0x99 {
+        cpu.registers.a = cpu.registers.a.wrapping_add(0x60);
+        carry = true;
+      }
+      if cpu.registers.f.contains(HALF_CARRY) || cpu.registers.a & 0x0F > 0x09 {
+        cpu.registers.a = cpu.registers.a.wrapping_add(0x06);
+      }
+    } else if cpu.registers.f.contains(CARRY) {
+      carry = true;
+      cpu.registers.a = cpu.registers.a.wrapping_add(
+        if cpu.registers.f.contains(HALF_CARRY) {
+            0x9A
+        }
+        else {
+            0xA0
+        });
+    } else if cpu.registers.f.contains(HALF_CARRY) {
+      cpu.registers.a = cpu.registers.a.wrapping_add(0xFA);
+    }
+
+    cpu.registers.f.set(ZERO, cpu.registers.a == 0);
+    cpu.registers.f.set(HALF_CARRY, false);
+    cpu.registers.f.set(CARRY, carry);
+
+    return 4
+}
+
+/// Complement A register, flipping all bits.
+///
+/// Takes 4 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// CPL
+/// ```
+pub fn complement(mut cpu: &mut CPU) -> u8 {
+    let value = cpu.registers.a;
+    cpu.registers.a = !value;
+
+    cpu.registers.f.set(SUBTRACT, true);
+    cpu.registers.f.set(HALF_CARRY, true);
+
+    return 4
+}
+
+/// Set the carry flag.
+///
+/// Takes 4 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// SCF ; Flag::CARRY = 1
+/// ```
+pub fn set_carry_flag(mut cpu: &mut CPU) -> u8 {
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, false);
+    cpu.registers.f.set(CARRY, true);
+
+    return 4
+}
+
+/// Complement the carry flag.
+///
+/// Takes 4 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// CCF ; Flag::CARRY = !Flag::CARRY
+/// ```
+pub fn complement_carry_flag(mut cpu: &mut CPU) -> u8 {
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, false);
+    cpu.registers.f.toggle(CARRY);
+
+    return 4
+}
+
+
 /// Increment 8-bit registers.
 ///
 /// Takes 4 cycles.
@@ -36,15 +175,7 @@ pub fn inc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     cpu.registers.f.set(SUBTRACT, false);
     cpu.registers.f.set(HALF_CARRY, value  & 0xf == 0xf);
 
-    match r8 {
-        &Reg8::A => cpu.registers.a = value,
-        &Reg8::B => cpu.registers.b = value,
-        &Reg8::C => cpu.registers.c = value,
-        &Reg8::D => cpu.registers.d = value,
-        &Reg8::E => cpu.registers.e = value,
-        &Reg8::H => cpu.registers.h = value,
-        &Reg8::L => cpu.registers.l = value,
-    };
+    cpu.registers.write8(r8, value);
 
     return 4
 }
@@ -68,15 +199,7 @@ pub fn dec_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     cpu.registers.f.set(SUBTRACT, true);
     cpu.registers.f.set(HALF_CARRY, value  & 0xf == 0x0);
 
-    match r8 {
-        &Reg8::A => cpu.registers.a = value,
-        &Reg8::B => cpu.registers.b = value,
-        &Reg8::C => cpu.registers.c = value,
-        &Reg8::D => cpu.registers.d = value,
-        &Reg8::E => cpu.registers.e = value,
-        &Reg8::H => cpu.registers.h = value,
-        &Reg8::L => cpu.registers.l = value,
-    };
+    cpu.registers.write8(r8, value);
 
     return 4
 }
@@ -553,6 +676,162 @@ pub fn jump_relative_conditional_d8(cpu: &CPU, opcode: u8) -> u8 {
         cpu.registers.pc.wrapping_add(jump_offset as u16);
 
         return 12
+    }
+    else {
+        return 8
+    }
+}
+
+/// Push an 8-bit value to the stack.
+/// Decrements the stack pointer and then writes the 8-bit value using the new stack pointer value.
+fn push_stack_d8(mut cpu: &mut CPU, d8: u8) -> () {
+    // Decrement stack pointer
+    cpu.registers.sp.wrapping_sub(1);
+
+    // Write byte to stack
+    cpu.mmu.write8(cpu.registers.sp, d8);
+}
+
+/// Push a 16-bit value to the stack.
+/// Pushing the high byte of the value first, then the low byte.
+fn push_stack_d16(mut cpu: &mut CPU, d16: u16) -> () {
+    // Write high byte
+    push_stack_d8(cpu, ((d16 >> 8) & 0xFF) as u8);
+    // Write low byte
+    push_stack_d8(cpu, (d16 & 0xFF) as u8);
+}
+
+/// Pop an 8-bit value off the stack.
+/// Decrements the stack pointer and then writes the 8-bit value using the new stack pointer value.
+fn pop_stack_d8(mut cpu: &mut CPU) -> u8 {
+    // Read byte from stack
+    let value = cpu.mmu.read8(cpu.registers.sp);
+
+    // Decrement stack pointer
+    cpu.registers.sp.wrapping_add(1);
+
+    return value;
+}
+
+/// Pop a 16-bit value off the stack.
+/// Pushing the high byte of the value first, then the low byte.
+fn pop_stack_d16(mut cpu: &mut CPU) -> u16 {
+    let mut value: u16;
+    // Pop low byte
+    value = pop_stack_d8(cpu) as u16;
+    // Pop high byte
+    value |= (pop_stack_d8(cpu) as u16) << 8 ;
+
+    return value;
+}
+
+/// Jump to a different address using 16-bit data as an address after first pushing the current PC
+/// to the stack.
+///
+/// Takes 24 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// CALL $0150 ; STACK <<- PC; PC <- 0x0150
+/// ```
+pub fn call_d16(mut cpu: &mut CPU) -> u8 {
+    // Read 16-bit jump target address
+    let jump_target: u16 = cpu.mmu.read16(cpu.registers.pc);
+
+    // Move the PC past the address operand
+    cpu.registers.pc.wrapping_add(2);
+
+    // Push current PC to the stack
+    let current_pc = cpu.registers.pc;
+    push_stack_d16(cpu, current_pc);
+
+    // Jump PC to the target address
+    cpu.registers.pc = jump_target;
+
+    return 24
+}
+
+/// Jump to a different address using 16-bit data as an address after first pushing the current PC
+/// to the stack if a given flag status condition matches.
+///
+/// Takes 24 cycles if condition matches, 12 cycles if it doesn't match.
+///
+/// # Examples
+///
+/// ```asm
+/// CALL NZ $0150 ; IF !Flags::ZERO { STACK <<- PC; PC <- 0x0150 }
+/// ```
+pub fn call_conditional_d16(mut cpu: &mut CPU, opcode: u8) -> u8 {
+    // Read 16-bit jump target address
+    let jump_target: u16 = cpu.mmu.read16(cpu.registers.pc);
+
+    // Move the PC past the address operand
+    cpu.registers.pc.wrapping_add(2);
+
+    if test_jump_condition(cpu, opcode) {
+        // Push current PC to the stack
+        let current_pc = cpu.registers.pc;
+        push_stack_d16(cpu, current_pc);
+
+        // Jump PC to the target address
+        cpu.registers.pc = jump_target;
+
+        return 24
+    }
+    else {
+        return 12
+    }
+}
+
+/// Return to an address that was pushed to the stack.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// RET ; PC <<- STACK;
+/// ```
+pub fn ret(mut cpu: &mut CPU) -> u8 {
+    // Read 16-bit jump target address
+    let jump_target: u16 = pop_stack_d16(cpu);
+
+    // Jump PC to the target address
+    cpu.registers.pc = jump_target;
+
+    return 16
+}
+
+/// Return to an address that was pushed to the stack.
+/// Enables the master interrupt flag.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// RETI ; PC <<- STACK; IME == true
+/// ```
+pub fn ret_interrupt(mut cpu: &mut CPU) -> u8 {
+    cpu.IME = true;
+    ret(cpu)
+}
+
+/// Return to an address that was pushed to the stack if a given flag status condition matches.
+///
+/// Takes 20 cycles if condition matches, 8 cycles if it doesn't match.
+///
+/// # Examples
+///
+/// ```asm
+/// RET ; PC <<- STACK;
+/// ```
+pub fn ret_conditional(mut cpu: &mut CPU, opcode: u8) -> u8 {
+    if test_jump_condition(cpu, opcode) {
+        ret(cpu);
+
+        return 20
     }
     else {
         return 8
