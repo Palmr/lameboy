@@ -11,7 +11,7 @@ use self::super::mmu::MMU;
 pub struct CPU<'c> {
     pub registers: Registers,
     pub mmu: MMU<'c>,
-    pub IME: bool,
+    pub ime: bool,
     pub halt: bool,
 }
 
@@ -20,7 +20,7 @@ impl<'c> CPU<'c> {
         CPU {
             registers: Registers::new(),
             mmu: MMU::new(cart),
-            IME: true,
+            ime: true,
             halt: false,
         }
     }

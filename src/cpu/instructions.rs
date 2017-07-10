@@ -846,10 +846,10 @@ pub fn ret(mut cpu: &mut CPU) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// RETI ; PC <<- STACK; IME == true
+/// RETI ; PC <<- STACK; ime == true
 /// ```
 pub fn ret_interrupt(mut cpu: &mut CPU) -> u8 {
-    cpu.IME = true;
+    cpu.ime = true;
     ret(cpu)
 }
 
