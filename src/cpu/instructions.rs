@@ -5,7 +5,7 @@ use cpu::registers::*;
 
 /// Panic if anything tries to run an undefined opcode, likely means the emulator has a bug.
 ///
-pub fn undefined(cpu: &CPU, opcode: u8) -> () {
+pub fn undefined(cpu: &CPU, opcode: u8) -> u8 {
     panic!("Undefined opcode 0x{:02X}", opcode)
 }
 
@@ -63,6 +63,22 @@ pub fn stop(mut cpu: &mut CPU) -> u8 {
 /// ```
 pub fn halt(mut cpu: &mut CPU) -> u8 {
     cpu.halt = true;
+
+    return 4
+}
+
+/// Enable or disable interrupts.
+///
+/// Takes 4 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// DI
+/// EI
+/// ```
+pub fn interrupts(mut cpu: &mut CPU, enabled: bool) -> u8 {
+    cpu.ime = enabled;
 
     return 4
 }
@@ -550,6 +566,159 @@ pub fn load_indirect_a16_r16(mut cpu: &mut CPU, r16_source: &Reg16) -> u8 {
     return 20
 }
 
+/// Load memory, using an 8-bit value added to 0xFF00 as an address, with the A register value.
+///
+/// Takes 12 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LDH ($DA), A ; memory[0xFFDA] <- A
+/// ```
+pub fn load_high_mem_d8_reg_a(mut cpu: &mut CPU) -> u8 {
+    // Read 8-bit value
+    let address = 0xFF00 + cpu.mmu.read8(cpu.registers.pc) as u16;
+
+    // Move PC on
+    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+
+    // Write the byte to memory
+    cpu.mmu.write8(address, cpu.registers.a);
+
+    return 12
+}
+
+/// Load the A register with a value from memory, using an 8-bit value added to 0xFF00 as an
+/// address.
+///
+/// Takes 12 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LDH A, ($DA) ; A <- memory[0xFFDA]
+/// ```
+pub fn load_reg_a_high_mem_d8(mut cpu: &mut CPU) -> u8 {
+    // Read 8-bit value
+    let value = cpu.mmu.read8(0xFF00 + cpu.mmu.read8(cpu.registers.pc) as u16);
+
+    // Move PC on
+    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+
+    cpu.registers.a = value;
+
+    return 12
+}
+
+/// Load memory, using the register C value added to 0xFF00 as an address, with the A register
+/// value.
+///
+/// Takes 8 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD (C), A ; memory[0xFF00 + C] <- A
+/// ```
+pub fn load_high_mem_reg_c_reg_a(mut cpu: &mut CPU) -> u8 {
+    let address = 0xFF00 + cpu.registers.c as u16;
+
+    // Write the byte to memory
+    cpu.mmu.write8(address, cpu.registers.a);
+
+    return 8
+}
+
+/// Load the A register with a value from memory, using the value of register C added to 0xFF00 as
+/// an address.
+///
+/// Takes 8 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LDH A, (C) ; A <- memory[0xFF00 + C]
+/// ```
+pub fn load_reg_a_high_mem_reg_c(mut cpu: &mut CPU) -> u8 {
+    let address = 0xFF00 + cpu.registers.c as u16;
+
+    cpu.registers.a = cpu.mmu.read8(address);
+
+    return 8
+}
+
+/// Load memory, using a 16-bit value address, with the A register value.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD ($0150), A ; memory[0x0150] <- A
+/// ```
+pub fn load_a16_reg_a(mut cpu: &mut CPU) -> u8 {
+    // Read 16-bit value
+    let value: u16 = cpu.mmu.read16(cpu.registers.pc);
+
+    // Move PC on
+    cpu.registers.pc = cpu.registers.pc.wrapping_add(2);
+
+    // Write the byte to memory
+    cpu.mmu.write8(value, cpu.registers.a);
+
+    return 16
+}
+
+/// Load the A register with a value from memory, using a 16-bit value as an address.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD A, ($0150) ; A <- memory[0x0150]
+/// ```
+pub fn load_reg_a_a16(mut cpu: &mut CPU) -> u8 {
+    // Read 8-bit value
+    let value = cpu.mmu.read8(cpu.mmu.read16(cpu.registers.pc));
+
+    // Move PC on
+    cpu.registers.pc = cpu.registers.pc.wrapping_add(2);
+
+    cpu.registers.a = value;
+
+    return 16
+}
+
+/// Load the HL register with the value of the SP register added to an 8-bit value.
+///
+/// Takes 12 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// LD HL, SP+d8 ; HL <- SP + d8
+/// ```
+pub fn load_reg_hl_reg_sp_d8(mut cpu: &mut CPU) -> u8 {
+    // TODO - Could combine logic with add_sp_d8
+    // Read 8-bit value
+    let value = cpu.mmu.read8(cpu.registers.pc) as u16;
+
+    // Move PC on
+    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+
+    let combined = cpu.registers.sp.wrapping_add(value);
+
+    cpu.registers.write16(&Reg16::HL, combined);
+
+    cpu.registers.f.set(ZERO, false);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, ((cpu.registers.sp & 0x0F00) + (value & 0x0F00)) > 0x0F00);
+    cpu.registers.f.set(CARRY, ((cpu.registers.sp as u32) + (value as u32)) > 0xFFFF);
+
+    return 12
+}
+
 /// Test a jump condition against the flags register of a CPU and return the result as a bool.
 ///
 /// The condition (cc) is defined by the middle two bits (& 0b00011000) of the opcode in the
@@ -930,17 +1099,15 @@ pub fn add_hl_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```asm
 /// ADD SP, $DA ; SP <- SP + 0xDA
 /// ```
-pub fn add_sp_d8(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
+pub fn add_sp_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
     let value = cpu.mmu.read8(cpu.registers.pc) as u16;
     // Move PC on
     cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
 
-    let original_sp = cpu.registers.read16(&Reg16::HL);
+    let original_sp = cpu.registers.sp;
 
-    let combined = original_sp.wrapping_add(value);
-
-    cpu.registers.write16(&Reg16::HL, combined);
+    cpu.registers.sp = original_sp.wrapping_add(value);
 
     cpu.registers.f.set(ZERO, false);
     cpu.registers.f.set(SUBTRACT, false);
