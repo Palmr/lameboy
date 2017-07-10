@@ -336,24 +336,74 @@ impl<'c> CPU<'c> {
         // Move PC
         self.registers.pc += 1;
 
-        // Derive the register the opcode will be using
-        let reg8_vec = vec![Reg8::B, Reg8::C, Reg8::D, Reg8::E, Reg8::H, Reg8::L, Reg8::A];
-        let register_key = op & 0b00000111;
-        let register = &reg8_vec[register_key as usize];
+//        // Derive the register the opcode will be using
+//        let register_key = op & 0b00000111;
+//        let register = match register_key {
+//            0b111 => Reg8::A,
+//            0b000 => Reg8::B,
+//            0b001 => Reg8::C,
+//            0b010 => Reg8::D,
+//            0b011 => Reg8::E,
+//            0b100 => Reg8::H,
+//            0b101 => Reg8::L,
+//            _ => Reg8::A, // TODO - ugly
+//        };
 
         // Derive the bit the opcode will affect
         let bit = (op >> 3) & 0b00111000;
 
         // Decode & Execute
         match op {
-            0x00...0x05 | 0x07 => {println!("RLC {:?}", register); rotate_left_r8(self, &register, false, false)},
+            0x00 => {println!("RLC B"); rotate_left_r8(self, &Reg8::B, false, false)},
+            0x01 => {println!("RLC C"); rotate_left_r8(self, &Reg8::C, false, false)},
+            0x02 => {println!("RLC D"); rotate_left_r8(self, &Reg8::D, false, false)},
+            0x03 => {println!("RLC E"); rotate_left_r8(self, &Reg8::E, false, false)},
+            0x04 => {println!("RLC H"); rotate_left_r8(self, &Reg8::H, false, false)},
+            0x05 => {println!("RLC L"); rotate_left_r8(self, &Reg8::L, false, false)},
             0x06 => {println!("RLC (HL)"); rotate_left_indirect_hl(self, false, false)},
-            0x08...0x0D | 0x0F => {println!("RRC {:?}", register); rotate_right_r8(self, &register, false, false)},
+            0x07 => {println!("RLC A"); rotate_left_r8(self, &Reg8::A, false, false)},
+            0x08 => {println!("RRC B"); rotate_right_r8(self, &Reg8::B, false, false)},
+            0x09 => {println!("RRC C"); rotate_right_r8(self, &Reg8::C, false, false)},
+            0x0A => {println!("RRC D"); rotate_right_r8(self, &Reg8::D, false, false)},
+            0x0B => {println!("RRC E"); rotate_right_r8(self, &Reg8::E, false, false)},
+            0x0C => {println!("RRC H"); rotate_right_r8(self, &Reg8::H, false, false)},
+            0x0D => {println!("RRC L"); rotate_right_r8(self, &Reg8::L, false, false)},
             0x0E => {println!("RRC (HL)"); rotate_right_indirect_hl(self, false, false)},
-            0x10...0x15 | 0x17 => {println!("RLC {:?}", register); rotate_left_r8(self, &register, true, false)},
-            0x16 => {println!("RLC (HL)"); rotate_left_indirect_hl(self, true, false)},
-            0x18...0x1D | 0x1F => {println!("RRC {:?}", register); rotate_right_r8(self, &register, true, false)},
-            0x1E => {println!("RRC (HL)"); rotate_right_indirect_hl(self, true, false)},
+            0x0F => {println!("RRC A"); rotate_right_r8(self, &Reg8::A, false, false)},
+
+            0x10 => {println!("RL B"); rotate_left_r8(self, &Reg8::B, true, false)},
+            0x11 => {println!("RL C"); rotate_left_r8(self, &Reg8::C, true, false)},
+            0x12 => {println!("RL D"); rotate_left_r8(self, &Reg8::D, true, false)},
+            0x13 => {println!("RL E"); rotate_left_r8(self, &Reg8::E, true, false)},
+            0x14 => {println!("RL H"); rotate_left_r8(self, &Reg8::H, true, false)},
+            0x15 => {println!("RL L"); rotate_left_r8(self, &Reg8::L, true, false)},
+            0x16 => {println!("RL (HL)"); rotate_left_indirect_hl(self, true, false)},
+            0x17 => {println!("RL A"); rotate_left_r8(self, &Reg8::A, true, false)},
+            0x18 => {println!("RR B"); rotate_right_r8(self, &Reg8::B, true, false)},
+            0x19 => {println!("RR C"); rotate_right_r8(self, &Reg8::C, true, false)},
+            0x1A => {println!("RR D"); rotate_right_r8(self, &Reg8::D, true, false)},
+            0x1B => {println!("RR E"); rotate_right_r8(self, &Reg8::E, true, false)},
+            0x1C => {println!("RR H"); rotate_right_r8(self, &Reg8::H, true, false)},
+            0x1D => {println!("RR L"); rotate_right_r8(self, &Reg8::L, true, false)},
+            0x1E => {println!("RR (HL)"); rotate_right_indirect_hl(self, true, false)},
+            0x1F => {println!("RR A"); rotate_right_r8(self, &Reg8::A, true, false)},
+
+            0x20 => {println!("SLA B"); shift_left_r8(self, &Reg8::B)},
+            0x21 => {println!("SLA C"); shift_left_r8(self, &Reg8::C)},
+            0x22 => {println!("SLA D"); shift_left_r8(self, &Reg8::D)},
+            0x23 => {println!("SLA E"); shift_left_r8(self, &Reg8::E)},
+            0x24 => {println!("SLA H"); shift_left_r8(self, &Reg8::H)},
+            0x25 => {println!("SLA L"); shift_left_r8(self, &Reg8::L)},
+            0x26 => {println!("SLA (HL)"); shift_left_indirect_hl(self)},
+            0x27 => {println!("SLA A"); shift_left_r8(self, &Reg8::A)},
+            0x28 => {println!("SRA B"); shift_right_r8(self, &Reg8::B)},
+            0x29 => {println!("SRA C"); shift_right_r8(self, &Reg8::C)},
+            0x2A => {println!("SRA D"); shift_right_r8(self, &Reg8::D)},
+            0x2B => {println!("SRA E"); shift_right_r8(self, &Reg8::E)},
+            0x2C => {println!("SRA H"); shift_right_r8(self, &Reg8::H)},
+            0x2D => {println!("SRA L"); shift_right_r8(self, &Reg8::L)},
+            0x2E => {println!("SRA (HL)"); shift_right_indirect_hl(self)},
+            0x2F => {println!("SRA A"); shift_right_r8(self, &Reg8::A)},
 
             _ => {println!("Unhandled CB Op: {:02X}", op); 0}
         }

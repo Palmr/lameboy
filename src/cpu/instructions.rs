@@ -1923,3 +1923,110 @@ pub fn rotate_right_indirect_hl(mut cpu: &mut CPU, through_carry: bool, reset_ze
 
     return 16
 }
+
+/// Shift an 8-bit value to the left.
+///
+pub fn alu_shift_left(mut cpu: &mut CPU, d8: u8) -> u8 {
+    let high_bit = d8 & 0x80;
+    let shifted_value = (d8 << 1);
+
+    cpu.registers.f.set(ZERO, shifted_value == 0 && !reset_zero);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, false);
+    cpu.registers.f.set(CARRY, high_bit != 0);
+
+    return shifted_value
+}
+
+/// Shift an 8-bit register to the left.
+///
+/// Takes 8 cycles
+///
+/// # Examples
+///
+/// ```asm
+/// SLA B  ; Shift B left through the carry flag (sets Flag::ZERO if rotated result == 0)
+/// ```
+pub fn shift_left_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
+    let value = cpu.registers.read8(r8);
+
+    let shifted_value = alu_shift_left(cpu, value);
+
+    cpu.registers.write8(r8, rotated_value);
+
+    return 8
+}
+
+/// Shift an indirect value, taken from memory using a 16-bit register as an address to the left.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// SLA (HL) ; Shift memory[hl] left (sets Flag::ZERO if rotated result == 0)
+/// ```
+pub fn shift_left_indirect_hl(mut cpu: &mut CPU) -> u8 {
+    let a16_addr = cpu.registers.read16(&Reg16::HL);
+    let value = cpu.mmu.read8(a16_addr);
+
+    let shifted_value = alu_shift_left(cpu, value);
+
+    cpu.mmu.write8(a16_addr, shifted_value);
+
+    return 16
+}
+
+/// Shift an 8-bit value to the right.
+///
+pub fn alu_shift_right(mut cpu: &mut CPU, d8: u8) -> u8 {
+    let high_bit = d8 & 0x80;
+    let low_bit = d8 & 0x01;
+    let shifted_value = (d8 >> 1) | high_bit;
+
+    cpu.registers.f.set(ZERO, shifted_value == 0 && !reset_zero);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, false);
+    cpu.registers.f.set(CARRY, low_bit != 0);
+
+    return shifted_value
+}
+
+/// Shift an 8-bit register to the right.
+///
+/// Takes 8 cycles
+///
+/// # Examples
+///
+/// ```asm
+/// SRA B  ; Shift B right through the carry flag (sets Flag::ZERO if rotated result == 0)
+/// ```
+pub fn shift_right_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
+    let value = cpu.registers.read8(r8);
+
+    let shifted_value = alu_shift_right(cpu, value);
+
+    cpu.registers.write8(r8, rotated_value);
+
+    return 8
+}
+
+/// Shift an indirect value, taken from memory using a 16-bit register as an address to the right.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// SRA (HL) ; Shift memory[hl] right (sets Flag::ZERO if rotated result == 0)
+/// ```
+pub fn shift_right_indirect_hl(mut cpu: &mut CPU) -> u8 {
+    let a16_addr = cpu.registers.read16(&Reg16::HL);
+    let value = cpu.mmu.read8(a16_addr);
+
+    let shifted_value = alu_shift_right(cpu, value);
+
+    cpu.mmu.write8(a16_addr, shifted_value);
+
+    return 16
+}
