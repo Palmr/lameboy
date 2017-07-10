@@ -256,11 +256,11 @@ impl<'c> CPU<'c> {
             0xBF => {println!("CP A"); cp_r8(self, &Reg8::A)},
 
             0xC0 => {println!("RET NZ"); ret_conditional(self, op)},
-            0xC1 => {println!("POP BC"); 12},
+            0xC1 => {println!("POP BC"); pop_r16(self, &Reg16::BC)},
             0xC2 => {println!("JP NZ, a16"); jump_conditional_d16(self, op)},
             0xC3 => {println!("JP a16"); jump_d16(self)},
             0xC4 => {println!("CALL NZ, a16"); call_conditional_d16(self, op)},
-            0xC5 => {println!("PUSH BC"); 16},
+            0xC5 => {println!("PUSH BC"); push_r16(self, &Reg16::BC)},
             0xC6 => {println!("ADD A, d8"); add_d8(self)},
             0xC7 => {println!("RST 00H"); 16},
             0xC8 => {println!("RET Z");  ret_conditional(self, op)},
@@ -273,11 +273,11 @@ impl<'c> CPU<'c> {
             0xCF => {println!("RST 08H"); 16},
 
             0xD0 => {println!("RET NC");  ret_conditional(self, op)},
-            0xD1 => {println!("POP DE"); 12},
+            0xD1 => {println!("POP DE"); pop_r16(self, &Reg16::DE)},
             0xD2 => {println!("JP NC, a16"); jump_conditional_d16(self, op)},
             0xD3 => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
             0xD4 => {println!("CALL NC, a16"); call_conditional_d16(self, op)},
-            0xD5 => {println!("PUSH DE"); 16},
+            0xD5 => {println!("PUSH DE"); push_r16(self, &Reg16::DE)},
             0xD6 => {println!("SUB d8"); sub_d8(self)},
             0xD7 => {println!("RST 10H"); 16},
             0xD8 => {println!("RET C");  ret_conditional(self, op)},
@@ -290,11 +290,11 @@ impl<'c> CPU<'c> {
             0xDF => {println!("RST 18H"); 16},
 
             0xE0 => {println!("LDH (a8) ,A"); 12},
-            0xE1 => {println!("POP HL"); 12},
+            0xE1 => {println!("POP HL"); pop_r16(self, &Reg16::HL)},
             0xE2 => {println!("LD (C), A"); 8},
             0xE3 => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
             0xE4 => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
-            0xE5 => {println!("PUSH HL"); 16},
+            0xE5 => {println!("PUSH HL"); push_r16(self, &Reg16::HL)},
             0xE6 => {println!("AND d8"); and_d8(self)},
             0xE7 => {println!("RST 20H"); 16},
             0xE8 => {println!("ADD SP, d8"); add_sp_d8(self, &Reg16::SP)},
@@ -307,11 +307,11 @@ impl<'c> CPU<'c> {
             0xEF => {println!("RST 28H"); 16},
 
             0xF0 => {println!("LDH A, (a8)"); 12},
-            0xF1 => {println!("POP AF"); 12},
+            0xF1 => {println!("POP AF"); pop_r16(self, &Reg16::AF)},
             0xF2 => {println!("LD A, (C)"); 8},
             0xF3 => {println!("DI"); 4},
             0xF4 => {println!("!!!UNDEFINED OPCODE!!!"); 255},  // TODO - Handle Undefined
-            0xF5 => {println!("PUSH AF"); 16},
+            0xF5 => {println!("PUSH AF"); push_r16(self, &Reg16::AF)},
             0xF6 => {println!("OR d8"); or_d8(self)},
             0xF7 => {println!("RST 30H"); 16},
             0xF8 => {println!("LD HL, SP+r8"); 12},

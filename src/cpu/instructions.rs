@@ -722,6 +722,38 @@ fn pop_stack_d16(mut cpu: &mut CPU) -> u16 {
     return value;
 }
 
+/// Push a 16-bit register to the stack.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// PUSH BC ; STACK <<- BC
+/// ```
+pub fn push_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
+    let value = cpu.registers.read16(r16);
+    push_stack_d16(cpu, value);
+
+    return 16
+}
+
+/// Pop the contents of the stack into a 16-bit register.
+///
+/// Takes 12 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// POP BC ; BC <<- STACK
+/// ```
+pub fn pop_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
+    let value = pop_stack_d16(cpu);
+    cpu.registers.write16(r16, value);
+
+    return 12
+}
+
 /// Jump to a different address using 16-bit data as an address after first pushing the current PC
 /// to the stack.
 ///
