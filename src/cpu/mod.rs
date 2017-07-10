@@ -323,7 +323,7 @@ impl<'c> CPU<'c> {
             0xFE => {println!("CP d8"); cp_d8(self)},
             0xFF => {println!("RST 38H"); reset(self, op)},
 
-            _ => {panic!("Unhandled Op: {:02X}", op); 0}
+            _ => panic!("Unhandled Op: {:02X}", op)
         };
         println!("Took {} cycles", duration);
     }
@@ -335,22 +335,6 @@ impl<'c> CPU<'c> {
 
         // Move PC
         self.registers.pc += 1;
-
-//        // Derive the register the opcode will be using
-//        let register_key = op & 0b00000111;
-//        let register = match register_key {
-//            0b111 => Reg8::A,
-//            0b000 => Reg8::B,
-//            0b001 => Reg8::C,
-//            0b010 => Reg8::D,
-//            0b011 => Reg8::E,
-//            0b100 => Reg8::H,
-//            0b101 => Reg8::L,
-//            _ => Reg8::A, // TODO - ugly
-//        };
-
-        // Derive the bit the opcode will affect
-        let bit = (op >> 3) & 0b00111000;
 
         // Decode & Execute
         match op {
@@ -396,16 +380,38 @@ impl<'c> CPU<'c> {
             0x25 => {println!("SLA L"); shift_left_r8(self, &Reg8::L)},
             0x26 => {println!("SLA (HL)"); shift_left_indirect_hl(self)},
             0x27 => {println!("SLA A"); shift_left_r8(self, &Reg8::A)},
-            0x28 => {println!("SRA B"); shift_right_r8(self, &Reg8::B)},
-            0x29 => {println!("SRA C"); shift_right_r8(self, &Reg8::C)},
-            0x2A => {println!("SRA D"); shift_right_r8(self, &Reg8::D)},
-            0x2B => {println!("SRA E"); shift_right_r8(self, &Reg8::E)},
-            0x2C => {println!("SRA H"); shift_right_r8(self, &Reg8::H)},
-            0x2D => {println!("SRA L"); shift_right_r8(self, &Reg8::L)},
-            0x2E => {println!("SRA (HL)"); shift_right_indirect_hl(self)},
-            0x2F => {println!("SRA A"); shift_right_r8(self, &Reg8::A)},
+            0x28 => {println!("SRA B"); shift_right_r8(self, &Reg8::B, false)},
+            0x29 => {println!("SRA C"); shift_right_r8(self, &Reg8::C, false)},
+            0x2A => {println!("SRA D"); shift_right_r8(self, &Reg8::D, false)},
+            0x2B => {println!("SRA E"); shift_right_r8(self, &Reg8::E, false)},
+            0x2C => {println!("SRA H"); shift_right_r8(self, &Reg8::H, false)},
+            0x2D => {println!("SRA L"); shift_right_r8(self, &Reg8::L, false)},
+            0x2E => {println!("SRA (HL)"); shift_right_indirect_hl(self, false)},
+            0x2F => {println!("SRA A"); shift_right_r8(self, &Reg8::A, false)},
 
-            _ => {println!("Unhandled CB Op: {:02X}", op); 0}
+            0x30 => {println!("SWAP B"); swap_r8(self, &Reg8::B)},
+            0x31 => {println!("SWAP C"); swap_r8(self, &Reg8::C)},
+            0x32 => {println!("SWAP D"); swap_r8(self, &Reg8::D)},
+            0x33 => {println!("SWAP E"); swap_r8(self, &Reg8::E)},
+            0x34 => {println!("SWAP H"); swap_r8(self, &Reg8::H)},
+            0x35 => {println!("SWAP L"); swap_r8(self, &Reg8::L)},
+            0x36 => {println!("SWAP (HL)"); swap_indirect_hl(self)},
+            0x37 => {println!("SWAP A"); swap_r8(self, &Reg8::A)},
+            0x38 => {println!("SRL B"); shift_right_r8(self, &Reg8::B, true)},
+            0x39 => {println!("SRL C"); shift_right_r8(self, &Reg8::C, true)},
+            0x3A => {println!("SRL D"); shift_right_r8(self, &Reg8::D, true)},
+            0x3B => {println!("SRL E"); shift_right_r8(self, &Reg8::E, true)},
+            0x3C => {println!("SRL H"); shift_right_r8(self, &Reg8::H, true)},
+            0x3D => {println!("SRL L"); shift_right_r8(self, &Reg8::L, true)},
+            0x3E => {println!("SRL (HL)"); shift_right_indirect_hl(self, true)},
+            0x3F => {println!("SRL A"); shift_right_r8(self, &Reg8::A, true)},
+
+            0x40...0x7F => {println!("BIT"); bit_test(self, op)},
+
+            0x80...0xBF => {println!("RES"); bit_assign(self, op, false)},
+            0xC0...0xFF => {println!("SET"); bit_assign(self, op, true)},
+
+            _ => panic!("Unhandled CB Op: {:02X}", op),
         }
     }
 }

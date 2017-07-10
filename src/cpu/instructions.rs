@@ -875,7 +875,7 @@ fn push_stack_d16(mut cpu: &mut CPU, d16: u16) -> () {
 
 /// Pop an 8-bit value off the stack.
 /// Decrements the stack pointer and then writes the 8-bit value using the new stack pointer value.
-fn pop_stack_d8(mut cpu: &mut CPU) -> u8 {
+fn pop_stack_d8(cpu: &CPU) -> u8 {
     // Read byte from stack
     let value = cpu.mmu.read8(cpu.registers.sp);
 
@@ -887,7 +887,7 @@ fn pop_stack_d8(mut cpu: &mut CPU) -> u8 {
 
 /// Pop a 16-bit value off the stack.
 /// Pushing the high byte of the value first, then the low byte.
-fn pop_stack_d16(mut cpu: &mut CPU) -> u16 {
+fn pop_stack_d16(cpu: &CPU) -> u16 {
     let mut value: u16;
     // Pop low byte
     value = pop_stack_d8(cpu) as u16;
@@ -1762,7 +1762,7 @@ pub fn cp_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// If reset_zero is true the ZERO flag will always be reset.
 /// If it is not true the ZERO flag will be set only if the rotated value equals zero.
 ///
-pub fn alu_rotate_left(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: bool) -> u8 {
+fn alu_rotate_left(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: bool) -> u8 {
     let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
     let high_bit = d8 & 0x80;
     let new_low_bit = if through_carry {cy} else {high_bit};
@@ -1847,7 +1847,7 @@ pub fn rotate_left_indirect_hl(mut cpu: &mut CPU, through_carry: bool, reset_zer
 /// If reset_zero is true the ZERO flag will always be reset.
 /// If it is not true the ZERO flag will be set only if the rotated value equals zero.
 ///
-pub fn alu_rotate_right(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: bool) -> u8 {
+fn alu_rotate_right(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: bool) -> u8 {
     let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
     let low_bit = d8 & 0x01;
     let new_high_bit = if through_carry {cy} else {low_bit};
@@ -1926,11 +1926,11 @@ pub fn rotate_right_indirect_hl(mut cpu: &mut CPU, through_carry: bool, reset_ze
 
 /// Shift an 8-bit value to the left.
 ///
-pub fn alu_shift_left(mut cpu: &mut CPU, d8: u8) -> u8 {
+fn alu_shift_left(mut cpu: &mut CPU, d8: u8) -> u8 {
     let high_bit = d8 & 0x80;
-    let shifted_value = (d8 << 1);
+    let shifted_value = d8 << 1;
 
-    cpu.registers.f.set(ZERO, shifted_value == 0 && !reset_zero);
+    cpu.registers.f.set(ZERO, shifted_value == 0);
     cpu.registers.f.set(SUBTRACT, false);
     cpu.registers.f.set(HALF_CARRY, false);
     cpu.registers.f.set(CARRY, high_bit != 0);
@@ -1952,7 +1952,7 @@ pub fn shift_left_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     let shifted_value = alu_shift_left(cpu, value);
 
-    cpu.registers.write8(r8, rotated_value);
+    cpu.registers.write8(r8, shifted_value);
 
     return 8
 }
@@ -1979,12 +1979,12 @@ pub fn shift_left_indirect_hl(mut cpu: &mut CPU) -> u8 {
 
 /// Shift an 8-bit value to the right.
 ///
-pub fn alu_shift_right(mut cpu: &mut CPU, d8: u8) -> u8 {
-    let high_bit = d8 & 0x80;
+fn alu_shift_right(mut cpu: &mut CPU, d8: u8, reset_high_bit: bool) -> u8 {
+    let high_bit = if reset_high_bit {0} else {d8 & 0x80};
     let low_bit = d8 & 0x01;
     let shifted_value = (d8 >> 1) | high_bit;
 
-    cpu.registers.f.set(ZERO, shifted_value == 0 && !reset_zero);
+    cpu.registers.f.set(ZERO, shifted_value == 0);
     cpu.registers.f.set(SUBTRACT, false);
     cpu.registers.f.set(HALF_CARRY, false);
     cpu.registers.f.set(CARRY, low_bit != 0);
@@ -1994,24 +1994,31 @@ pub fn alu_shift_right(mut cpu: &mut CPU, d8: u8) -> u8 {
 
 /// Shift an 8-bit register to the right.
 ///
+/// If reset_high_bit is true the highest bit after the shift will always be reset.
+/// If it is not true the highest bit after the shift will be left as its original value.
+///
 /// Takes 8 cycles
 ///
 /// # Examples
 ///
 /// ```asm
 /// SRA B  ; Shift B right through the carry flag (sets Flag::ZERO if rotated result == 0)
+/// SRL B  ; Shift B right through the carry flag (sets Flag::ZERO if rotated result == 0)
 /// ```
-pub fn shift_right_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
+pub fn shift_right_r8(mut cpu: &mut CPU, r8: &Reg8, reset_high_bit: bool) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    let shifted_value = alu_shift_right(cpu, value);
+    let shifted_value = alu_shift_right(cpu, value, reset_high_bit);
 
-    cpu.registers.write8(r8, rotated_value);
+    cpu.registers.write8(r8, shifted_value);
 
     return 8
 }
 
 /// Shift an indirect value, taken from memory using a 16-bit register as an address to the right.
+///
+/// If reset_high_bit is true the highest bit after the shift will always be reset.
+/// If it is not true the highest bit after the shift will be left as its original value.
 ///
 /// Takes 16 cycles.
 ///
@@ -2019,14 +2026,151 @@ pub fn shift_right_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 ///
 /// ```asm
 /// SRA (HL) ; Shift memory[hl] right (sets Flag::ZERO if rotated result == 0)
+/// SRL (HL) ; Shift memory[hl] right (sets Flag::ZERO if rotated result == 0)
 /// ```
-pub fn shift_right_indirect_hl(mut cpu: &mut CPU) -> u8 {
+pub fn shift_right_indirect_hl(mut cpu: &mut CPU, reset_high_bit: bool) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
     let value = cpu.mmu.read8(a16_addr);
 
-    let shifted_value = alu_shift_right(cpu, value);
+    let shifted_value = alu_shift_right(cpu, value, reset_high_bit);
 
     cpu.mmu.write8(a16_addr, shifted_value);
 
     return 16
+}
+
+/// Swap high and low bits of an 8-bit value.
+///
+fn alu_swap(mut cpu: &mut CPU, d8: u8) -> u8 {
+    let swapped_value = (d8 & 0x0F << 4) & (d8 & 0xF0 >> 4);
+
+    cpu.registers.f.set(ZERO, swapped_value == 0);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, false);
+    cpu.registers.f.set(CARRY, false);
+
+    return swapped_value
+}
+
+/// Swap high and low bits of an 8-bit register.
+///
+/// Takes 8 cycles
+///
+/// # Examples
+///
+/// ```asm
+/// SWAP B  ; B = (B & 0x0F << 4) & (B & 0xF0 >> 4)
+/// ```
+pub fn swap_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
+    let value = cpu.registers.read8(r8);
+
+    let swapped_value = alu_swap(cpu, value);
+
+    cpu.registers.write8(r8, swapped_value);
+
+    return 8
+}
+
+/// Swap high and low bits of an indirect value, taken from memory using a 16-bit register as an
+/// address.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// SLA (HL) ; Shift memory[hl] left (sets Flag::ZERO if rotated result == 0)
+/// ```
+pub fn swap_indirect_hl(mut cpu: &mut CPU) -> u8 {
+    let a16_addr = cpu.registers.read16(&Reg16::HL);
+    let value = cpu.mmu.read8(a16_addr);
+
+    let swapped_value = alu_swap(cpu, value);
+
+    cpu.mmu.write8(a16_addr, swapped_value);
+
+    return 16
+}
+
+/// Put the complement of an 8-bit values single bit into the ZERO flag.
+///
+/// Takes 8 cycles unless operating on an indirectly addressed value, then 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// BIT 4, B  ; Flag::ZERO = (B & 0x01 << 4)
+/// ```
+pub fn bit_test(mut cpu: &mut CPU, opcode: u8) -> u8 {
+    let register = opcode & 0b00000111;
+    let bit_index = (opcode & 0b00111000) >> 3;
+
+    let (value, duration) = match register {
+        0b111 => (cpu.registers.read8(&Reg8::A), 8),
+        0b000 => (cpu.registers.read8(&Reg8::B), 8),
+        0b001 => (cpu.registers.read8(&Reg8::C), 8),
+        0b010 => (cpu.registers.read8(&Reg8::D), 8),
+        0b011 => (cpu.registers.read8(&Reg8::E), 8),
+        0b100 => (cpu.registers.read8(&Reg8::H), 8),
+        0b101 => (cpu.registers.read8(&Reg8::L), 8),
+        0b110 => (cpu.mmu.read8(cpu.registers.read16(&Reg16::HL)), 16),
+        _ => panic!("Unhandled register bit pattern: 0b{:08b}", register),
+    };
+
+    let tested_value = value & (0x01 << bit_index);
+
+    cpu.registers.f.set(ZERO, tested_value != 0);
+    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(HALF_CARRY, false);
+    cpu.registers.f.set(CARRY, false);
+
+    return duration
+}
+
+/// Set, or reset, an individual bit in an 8-bit value.
+///
+/// Takes 8 cycles unless operating on an indirectly addressed value, then 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// SET 4, B  ; B = (B | 0x01 << 4)
+/// RES 4, B  ; B = (B & 0x01 << 4)
+/// ```
+pub fn bit_assign(mut cpu: &mut CPU, opcode: u8, set_bit: bool) -> u8 {
+    let register = opcode & 0b00000111;
+    let bit_index = (opcode & 0b00111000) >> 3;
+
+    let (mut value, duration) = match register {
+        0b111 => (cpu.registers.read8(&Reg8::A), 8),
+        0b000 => (cpu.registers.read8(&Reg8::B), 8),
+        0b001 => (cpu.registers.read8(&Reg8::C), 8),
+        0b010 => (cpu.registers.read8(&Reg8::D), 8),
+        0b011 => (cpu.registers.read8(&Reg8::E), 8),
+        0b100 => (cpu.registers.read8(&Reg8::H), 8),
+        0b101 => (cpu.registers.read8(&Reg8::L), 8),
+        0b110 => (cpu.mmu.read8(cpu.registers.read16(&Reg16::HL)), 16),
+        _ => panic!("Unhandled register bit pattern: 0b{:08b}", register),
+    };
+
+    if set_bit {
+        value = value | (0x01 << bit_index);
+    }
+    else {
+        value = value & !(0x01 << bit_index);
+    }
+
+    match register {
+        0b111 => cpu.registers.write8(&Reg8::A, value),
+        0b000 => cpu.registers.write8(&Reg8::B, value),
+        0b001 => cpu.registers.write8(&Reg8::C, value),
+        0b010 => cpu.registers.write8(&Reg8::D, value),
+        0b011 => cpu.registers.write8(&Reg8::E, value),
+        0b100 => cpu.registers.write8(&Reg8::H, value),
+        0b101 => cpu.registers.write8(&Reg8::L, value),
+        0b110 => cpu.mmu.write8(cpu.registers.read16(&Reg16::HL), value),
+        _ => panic!("Unhandled register bit pattern: 0b{:08b}", register),
+    };
+
+    return duration
 }
