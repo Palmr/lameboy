@@ -3,6 +3,12 @@
 use cpu::CPU;
 use cpu::registers::*;
 
+/// Panic if anything tries to run an undefined opcode, likely means the emulator has a bug.
+///
+pub fn undefined(cpu: &CPU, opcode: u8) -> () {
+    panic!("Undefined opcode 0x{:02X}", opcode)
+}
+
 /// No operation instruction, does nothing.
 ///
 /// Takes 4 cycles.
@@ -865,6 +871,29 @@ pub fn ret_conditional(mut cpu: &mut CPU, opcode: u8) -> u8 {
     else {
         return 8
     }
+}
+
+/// Push the current PC to the stack and then jump to one of 8 positions in the zero page.
+///
+/// Takes 16 cycles.
+///
+/// # Examples
+///
+/// ```asm
+/// RST 1 ; STACK <<- PC; PC <- 0x0008
+/// ```
+pub fn reset(mut cpu: &mut CPU, opcode: u8) -> u8 {
+    // Push current PC to the stack
+    let current_pc = cpu.registers.pc;
+    push_stack_d16(cpu, current_pc);
+
+    // Derive target address from opcode bits
+    let jump_target = opcode & 0b00111000;
+
+    // Jump PC to the target address
+    cpu.registers.pc = jump_target as u16;
+
+    return 16
 }
 
 /// ADD 16-bit register with register HL, storing the result in HL.
