@@ -11,10 +11,15 @@ extern crate imgui;
 
 extern crate imgui_sys;
 
+extern crate nalgebra;
+
 use imgui::*;
 
 mod gui;
 use self::gui::GUI;
+
+mod ppu;
+use ppu::PPU;
 
 extern crate clap;
 
@@ -29,20 +34,11 @@ mod mmu;
 mod cpu;
 use cpu::CPU;
 
-// glium
-#[derive(Copy, Clone)]
-struct Vertex {
-    position: [f32; 2],
-}
-
-implement_vertex!(Vertex, position);
-use glium::Surface;
-//
-
 const CLEAR_COLOR: (f32, f32, f32, f32) = (0.8784, 0.9725, 0.8156, 1.0);
 
 struct GUIState {
     active: bool,
+    emulator_running: bool,
     show_imgui_metrics: bool,
     show_memory: bool,
     mem_editor: memoryeditor::HexEditor,
@@ -78,39 +74,11 @@ fn main() {
 
     let mut gui = GUI::init((640, 576));
 
-    // glutin testing
-    let vertex1 = Vertex { position: [-0.5, -0.5] };
-    let vertex2 = Vertex { position: [ 0.0,  0.5] };
-    let vertex3 = Vertex { position: [ 0.5, -0.5] };
-    let shape = vec![vertex1, vertex2, vertex3];
-
-    let vertex_buffer = glium::VertexBuffer::new(&mut gui.display, &shape).unwrap();
-    let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
-
-let vertex_shader_src = r#"
-    #version 140
-
-    in vec2 position;
-
-    void main() {
-        gl_Position = vec4(position, 0.0, 1.0);
-    }
-"#;
-let fragment_shader_src = r#"
-    #version 140
-
-    out vec4 color;
-
-    void main() {
-        color = vec4(0.2039, 0.4078, 0.3372, 1.0);
-    }
-"#;
-
-    let program = glium::Program::from_source(&mut gui.display, vertex_shader_src, fragment_shader_src, None).unwrap();
-    //
+    let mut ppu = PPU::new(&gui.display);
 
     let mut gui_state = GUIState{
         active: true,
+        emulator_running: false,
         show_imgui_metrics: false,
         show_memory: false,
         mem_editor: memoryeditor::HexEditor::default(),
@@ -122,9 +90,14 @@ let fragment_shader_src = r#"
     };
 
     loop {
+        if gui_state.emulator_running {
+            cpu.cycle();
+        }
+
         gui.render(CLEAR_COLOR,
            |t| {
-               t.draw(&vertex_buffer, &indices, &program, &glium::uniforms::EmptyUniforms, &Default::default()).unwrap()
+                ppu.render_test();
+                ppu.draw(t);
            },
            |ui| {
                imgui_display(ui, &cart, &mut cpu, &mut gui_state);
@@ -230,7 +203,8 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mu
                 ui.text(im_str!(" H: 0x{:02X}   -  L: 0x{:02X}", cpu.registers.h, cpu.registers.l));
                 ui.text(im_str!("Flags: {:?}", cpu.registers.f));
                 ui.separator();
-                if ui.small_button(im_str!("cycle")) {
+                ui.checkbox(im_str!("running"), &mut gui_state.emulator_running);
+                if ui.small_button(im_str!("step")) {
                     cpu.cycle();
                 }
             });
