@@ -35,6 +35,40 @@ impl<'c> MMU<'c> {
         }
     }
 
+    pub fn post_boot_reset(&mut self) {
+        self.write8(0xFF05, 0x00);
+        self.write8(0xFF06, 0x00);
+        self.write8(0xFF07, 0x00);
+        self.write8(0xFF10, 0x80);
+        self.write8(0xFF11, 0xBF);
+        self.write8(0xFF12, 0xF3);
+        self.write8(0xFF14, 0xBF);
+        self.write8(0xFF16, 0x3F);
+        self.write8(0xFF17, 0x00);
+        self.write8(0xFF19, 0xBF);
+        self.write8(0xFF1A, 0x7F);
+        self.write8(0xFF1B, 0xFF);
+        self.write8(0xFF1C, 0x9F);
+        self.write8(0xFF1E, 0xBF);
+        self.write8(0xFF20, 0xFF);
+        self.write8(0xFF21, 0x00);
+        self.write8(0xFF22, 0x00);
+        self.write8(0xFF23, 0xBF);
+        self.write8(0xFF24, 0x77);
+        self.write8(0xFF25, 0xF3);
+        self.write8(0xFF26, 0xF1);
+        self.write8(0xFF40, 0x91);
+        self.write8(0xFF42, 0x00);
+        self.write8(0xFF43, 0x00);
+        self.write8(0xFF45, 0x00);
+        self.write8(0xFF47, 0xFC);
+        self.write8(0xFF48, 0xFF);
+        self.write8(0xFF49, 0xFF);
+        self.write8(0xFF4A, 0x00);
+        self.write8(0xFF4B, 0x00);
+        self.write8(0xFFFF, 0x00);
+    }
+
     pub fn read8(&self, addr: u16) -> u8 {
         match addr {
             0x0000...0x7FFF |

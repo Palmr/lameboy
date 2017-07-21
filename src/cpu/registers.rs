@@ -66,7 +66,7 @@ impl Registers {
         self.h = 0x01;
         self.l = 0x4D;
         self.pc = 0x0100;
-        self.sp = 0x0100;
+        self.sp = 0xFFFE;
     }
 
     pub fn read8(&self, r8: &Reg8) -> u8 {

@@ -27,6 +27,7 @@ impl<'c> CPU<'c> {
 
     pub fn post_boot_reset(&mut self) {
         self.registers.post_boot_reset();
+        self.mmu.post_boot_reset();
     }
 
     fn halt(&mut self) {
