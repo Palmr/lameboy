@@ -94,7 +94,7 @@ fn main() {
     loop {
         if gui_state.emulator_running {
             let mut t_clk: u32 = 0;
-            while t_clk < 4560 {
+            while t_clk < 70224 {
                 t_clk += cpu.cycle() as u32;
             }
         }
