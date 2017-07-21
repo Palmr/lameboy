@@ -75,7 +75,7 @@ fn main() {
 
     let mut gui = GUI::init((640, 576));
 
-    let mut ppu = PPU::new(&gui.display);
+    let ppu = PPU::new(&gui.display);
 
     let mut gui_state = GUIState{
         active: true,
@@ -104,7 +104,6 @@ fn main() {
 
         gui.render(CLEAR_COLOR,
            |t| {
-                ppu.render_test();
                 ppu.draw(t);
            },
            |ui| {
