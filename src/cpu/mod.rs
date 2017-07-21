@@ -61,7 +61,7 @@ impl<'c> CPU<'c> {
         return value;
     }
 
-    pub fn cycle(&mut self) {
+    pub fn cycle(&mut self) -> u8 {
         // Fetch
         let op = self.mmu.read8(self.registers.pc);
         println!("Opcode[{:04X}] = {:02X}", self.registers.pc, op);
@@ -350,7 +350,8 @@ impl<'c> CPU<'c> {
 
             _ => panic!("Unhandled Op: {:02X}", op)
         };
-        println!("Took {} cycles", duration);
+
+        return duration;
     }
 
     fn decode_cb_prefixed(&mut self) -> u8 {
@@ -362,7 +363,7 @@ impl<'c> CPU<'c> {
         self.registers.pc += 1;
 
         // Decode & Execute
-        match op {
+        let duration = match op {
             0x00 => {println!("RLC B"); rotate_left_r8(self, &Reg8::B, false, false)},
             0x01 => {println!("RLC C"); rotate_left_r8(self, &Reg8::C, false, false)},
             0x02 => {println!("RLC D"); rotate_left_r8(self, &Reg8::D, false, false)},
@@ -437,6 +438,8 @@ impl<'c> CPU<'c> {
             0xC0...0xFF => {println!("SET"); bit_assign(self, op, true)},
 
             _ => panic!("Unhandled CB Op: {:02X}", op),
-        }
+        };
+
+        return duration + 4;
     }
 }

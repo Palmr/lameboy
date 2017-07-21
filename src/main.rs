@@ -93,7 +93,10 @@ fn main() {
 
     loop {
         if gui_state.emulator_running {
-            cpu.cycle();
+            let mut t_clk: u32 = 0;
+            while t_clk < 4560 {
+                t_clk += cpu.cycle() as u32;
+            }
         }
 
         gui.update_events(&mut gui_state);
