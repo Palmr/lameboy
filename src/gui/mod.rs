@@ -6,6 +6,8 @@ use imgui::{ImGui, Ui, ImGuiKey, ImStr};
 use imgui::glium_renderer::Renderer;
 use std::time::Instant;
 
+use self::super::GUIState;
+
 pub struct GUI {
     pub display: GlutinFacade,
     imgui: ImGui,
@@ -103,10 +105,10 @@ impl GUI {
         target.finish().unwrap();
     }
 
-    pub fn update_events(&mut self) -> bool {
+    pub fn update_events(&mut self, mut gui_state: &mut GUIState) -> () {
         for event in self.display.poll_events() {
             match event {
-                Event::Closed => return false,
+                Event::Closed => gui_state.active = false,
                 Event::KeyboardInput(state, _, code) => {
                     let pressed = state == ElementState::Pressed;
                     match code {
@@ -157,10 +159,15 @@ impl GUI {
                 Event::MouseWheel(MouseScrollDelta::PixelDelta(_, y), TouchPhase::Moved) => {
                     self.mouse_wheel = y
                 }
+                Event::MouseEntered => {
+                    gui_state.show_menu = true
+                }
+                Event::MouseLeft => {
+                    gui_state.show_menu = false
+                }
                 Event::ReceivedCharacter(c) => self.imgui.add_input_character(c),
                 _ => (),
             }
         }
-        true
     }
 }

@@ -36,10 +36,11 @@ use cpu::CPU;
 
 const CLEAR_COLOR: (f32, f32, f32, f32) = (0.8784, 0.9725, 0.8156, 1.0);
 
-struct GUIState {
+pub struct GUIState {
     active: bool,
     emulator_running: bool,
     show_imgui_metrics: bool,
+    show_menu: bool,
     show_memory: bool,
     mem_editor: memoryeditor::HexEditor,
     show_cpu: bool,
@@ -80,6 +81,7 @@ fn main() {
         active: true,
         emulator_running: false,
         show_imgui_metrics: false,
+        show_menu: false,
         show_memory: false,
         mem_editor: memoryeditor::HexEditor::default(),
         show_cpu: false,
@@ -94,6 +96,12 @@ fn main() {
             cpu.cycle();
         }
 
+        gui.update_events(&mut gui_state);
+
+        if !gui_state.active {
+            break;
+        }
+
         gui.render(CLEAR_COLOR,
            |t| {
                 ppu.render_test();
@@ -103,56 +111,53 @@ fn main() {
                imgui_display(ui, &cart, &mut cpu, &mut gui_state);
            }
         );
-
-        gui_state.active &= gui.update_events();
-        if !gui_state.active {
-            break;
-        }
     }
 }
 
 fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mut GUIState) {
-    ui.main_menu_bar(|| {
-        ui.menu(im_str!("File"))
-            .build(|| {
-                ui.menu_item(im_str!("Open ROM"))
-                    .selected(&mut gui_state.show_memory)
-                    .build();
-                ui.menu_item(im_str!("Reload ROM"))
-                    .selected(&mut gui_state.show_memory)
-                    .build();
-                ui.menu_item(im_str!("Reset"))
-                    .selected(&mut gui_state.show_memory)
-                    .build();
-                ui.separator();
-                ui.menu_item(im_str!("Exit"))
-                    .selected(&mut gui_state.active)
-                    .build();
-            });
-        ui.menu(im_str!("Options"))
-            .build(|| {  });
-        ui.menu(im_str!("Debug"))
-            .build(|| {
-                ui.menu_item(im_str!("Memory"))
-                    .selected(&mut gui_state.show_memory)
-                    .build();
-                ui.menu_item(im_str!("CPU"))
-                    .selected(&mut gui_state.show_cpu)
-                    .build();
-                ui.menu_item(im_str!("vram"))
-                    .selected(&mut gui_state.show_vram)
-                    .build();
-            });
-        ui.menu(im_str!("Help"))
-            .build(|| {
-                ui.menu_item(im_str!("Misc"))
-                    .selected(&mut gui_state.show_misc)
-                    .build();
-                ui.menu_item(im_str!("ImGUI Metrics"))
-                    .selected(&mut gui_state.show_imgui_metrics)
-                    .build();
-            });
-    });
+    if gui_state.show_menu {
+        ui.main_menu_bar(|| {
+            ui.menu(im_str!("File"))
+                .build(|| {
+                    ui.menu_item(im_str!("Open ROM"))
+                        .selected(&mut gui_state.show_memory)
+                        .build();
+                    ui.menu_item(im_str!("Reload ROM"))
+                        .selected(&mut gui_state.show_memory)
+                        .build();
+                    ui.menu_item(im_str!("Reset"))
+                        .selected(&mut gui_state.show_memory)
+                        .build();
+                    ui.separator();
+                    ui.menu_item(im_str!("Exit"))
+                        .selected(&mut gui_state.active)
+                        .build();
+                });
+            ui.menu(im_str!("Options"))
+                .build(|| {});
+            ui.menu(im_str!("Debug"))
+                .build(|| {
+                    ui.menu_item(im_str!("Memory"))
+                        .selected(&mut gui_state.show_memory)
+                        .build();
+                    ui.menu_item(im_str!("CPU"))
+                        .selected(&mut gui_state.show_cpu)
+                        .build();
+                    ui.menu_item(im_str!("vram"))
+                        .selected(&mut gui_state.show_vram)
+                        .build();
+                });
+            ui.menu(im_str!("Help"))
+                .build(|| {
+                    ui.menu_item(im_str!("Misc"))
+                        .selected(&mut gui_state.show_misc)
+                        .build();
+                    ui.menu_item(im_str!("ImGUI Metrics"))
+                        .selected(&mut gui_state.show_imgui_metrics)
+                        .build();
+                });
+        });
+    }
 
     if gui_state.show_misc {
         ui.window(im_str!("Hello world"))
