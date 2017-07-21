@@ -19,7 +19,7 @@ mod gui;
 use self::gui::GUI;
 
 mod ppu;
-use ppu::PPU;
+use ppu::{PPU, TestPattern};
 
 extern crate clap;
 
@@ -45,8 +45,7 @@ pub struct GUIState {
     mem_editor: memoryeditor::HexEditor,
     show_cpu: bool,
     show_vram: bool,
-    show_misc: bool,
-    test_str: String,
+    show_about: bool,
     i0: i32
 }
 
@@ -75,7 +74,7 @@ fn main() {
 
     let mut gui = GUI::init((640, 576));
 
-    let ppu = PPU::new(&gui.display);
+    let mut ppu = PPU::new(&gui.display);
 
     let mut gui_state = GUIState{
         active: true,
@@ -86,8 +85,7 @@ fn main() {
         mem_editor: memoryeditor::HexEditor::default(),
         show_cpu: false,
         show_vram: false,
-        show_misc: false,
-        test_str: String::from("Hello world!"),
+        show_about: false,
         i0: 0
     };
 
@@ -106,17 +104,15 @@ fn main() {
         }
 
         gui.render(CLEAR_COLOR,
-           |t| {
-                ppu.draw(t);
-           },
-           |ui| {
-               imgui_display(ui, &cart, &mut cpu, &mut gui_state);
+           &mut ppu,
+           |ui, mut ppu| {
+               imgui_display(ui, &cart, &mut cpu, &mut ppu, &mut gui_state);
            }
         );
     }
 }
 
-fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mut GUIState) {
+fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, ppu: &mut PPU, mut gui_state: &mut GUIState) {
     if gui_state.show_menu {
         ui.main_menu_bar(|| {
             ui.menu(im_str!("File"))
@@ -151,8 +147,8 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mu
                 });
             ui.menu(im_str!("Help"))
                 .build(|| {
-                    ui.menu_item(im_str!("Misc"))
-                        .selected(&mut gui_state.show_misc)
+                    ui.menu_item(im_str!("About"))
+                        .selected(&mut gui_state.show_about)
                         .build();
                     ui.menu_item(im_str!("ImGUI Metrics"))
                         .selected(&mut gui_state.show_imgui_metrics)
@@ -161,24 +157,10 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mu
         });
     }
 
-    if gui_state.show_misc {
-        ui.window(im_str!("Hello world"))
-            .size((300.0, 200.0), ImGuiSetCond_FirstUseEver)
-            .build(|| {
-                ui.input_text(im_str!("=buf"), &mut gui_state.test_str).build();
-                if ui.small_button(im_str!("test")) {
-                    cpu.cycle();
-                }
-            });
-        ui.window(im_str!("buf-display"))
-            .size((100.0, 100.0), ImGuiSetCond_FirstUseEver)
-            .build(|| {
-                ui.text(im_str!("buf={}", gui_state.test_str));
-            });
-    }
     if gui_state.show_imgui_metrics {
         ui.show_metrics_window(&mut gui_state.show_imgui_metrics);
     }
+
     if gui_state.show_memory {
         ui.window(im_str!("Cart"))
             .size((200.0, 125.0), ImGuiSetCond_Always)
@@ -198,9 +180,10 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mu
             });
         //gui_state.mem_editor.render(ui, "Memory Editor", &data);
     }
-    if gui_state.show_cpu{
+
+    if gui_state.show_cpu {
         ui.window(im_str!("CPU"))
-            .size((260.0, 150.0), ImGuiSetCond_FirstUseEver)
+            .size((260.0, 175.0), ImGuiSetCond_FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.text(im_str!("PC: 0x{:04X} - SP: 0x{:04X}", cpu.registers.pc, cpu.registers.sp));
@@ -213,6 +196,23 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, mut gui_state: &mu
                 ui.checkbox(im_str!("running"), &mut gui_state.emulator_running);
                 if ui.small_button(im_str!("step")) {
                     cpu.cycle();
+                }
+            });
+    }
+
+    if gui_state.show_vram {
+        ui.window(im_str!("PPU"))
+            .size((150.0, 85.0), ImGuiSetCond_FirstUseEver)
+            .resizable(true)
+            .build(|| {
+                if ui.small_button(im_str!("Blank")) {
+                    ppu.testing(TestPattern::BLANK);
+                }
+                if ui.small_button(im_str!("Diagonal")) {
+                    ppu.testing(TestPattern::DIAGONAL);
+                }
+                if ui.small_button(im_str!("XOR")) {
+                    ppu.testing(TestPattern::XOR);
                 }
             });
     }

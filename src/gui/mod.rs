@@ -1,4 +1,4 @@
-use glium::{DisplayBuild, Surface, Frame};
+use glium::{DisplayBuild, Surface};
 use glium::backend::glutin_backend::GlutinFacade;
 use glium::glutin;
 use glium::glutin::{ElementState, Event, MouseButton, MouseScrollDelta, VirtualKeyCode, TouchPhase};
@@ -7,6 +7,8 @@ use imgui::glium_renderer::Renderer;
 use std::time::Instant;
 
 use self::super::GUIState;
+
+use self::super::ppu::PPU;
 
 pub struct GUI {
     pub display: GlutinFacade,
@@ -77,7 +79,7 @@ impl GUI {
         self.mouse_wheel = 0.0;
     }
 
-    pub fn render<F: FnMut(&Ui), F2: FnMut(&mut Frame)>(&mut self, clear_color: (f32, f32, f32, f32), mut run_glium: F2, mut run_ui: F) {
+    pub fn render<F: FnMut(&Ui, &mut PPU)>(&mut self, clear_color: (f32, f32, f32, f32), mut ppu: &mut PPU, mut run_ui: F) {
         let now = Instant::now();
         let delta = now - self.last_frame;
         let delta_s = delta.as_secs() as f32 + delta.subsec_nanos() as f32 / 1_000_000_000.0;
@@ -88,7 +90,7 @@ impl GUI {
         let mut target = self.display.draw();
         target.clear_color(clear_color.0, clear_color.1, clear_color.2, clear_color.3);
 
-        run_glium(&mut target);
+        ppu.draw(&mut target);
 
         let window = self.display.get_window().unwrap();
         let size_points = window.get_inner_size_points().unwrap();
@@ -97,7 +99,7 @@ impl GUI {
         if self.show_imgui {
             let ui = self.imgui.frame(size_points, size_pixels, delta_s);
 
-            run_ui(&ui);
+            run_ui(&ui, &mut ppu);
 
             self.renderer.render(&mut target, ui).unwrap();
         }
