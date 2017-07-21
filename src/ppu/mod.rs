@@ -121,7 +121,10 @@ impl PPU {
         let mut test_array: Vec<u8> = Vec::with_capacity(self.pixel_buffer.get_size());
         for y in 0..144 {
             for x in 0..160 {
-                test_array.push((((x+y) / 8) % 4) as u8);
+                // Diagonal lines
+//                test_array.push((((x+y) / 8) % 4) as u8);
+                // XOR pattern
+                test_array.push(((x/4^y/4) % 4) as u8);
             }
         }
         self.pixel_buffer.write(&test_array);
