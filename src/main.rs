@@ -206,13 +206,13 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, ppu: &mut PPU, mut
             .resizable(true)
             .build(|| {
                 if ui.small_button(im_str!("Blank")) {
-                    ppu.testing(TestPattern::BLANK);
+                    ppu.apply_test_pattern(TestPattern::BLANK);
                 }
                 if ui.small_button(im_str!("Diagonal")) {
-                    ppu.testing(TestPattern::DIAGONAL);
+                    ppu.apply_test_pattern(TestPattern::DIAGONAL);
                 }
                 if ui.small_button(im_str!("XOR")) {
-                    ppu.testing(TestPattern::XOR);
+                    ppu.apply_test_pattern(TestPattern::XOR);
                 }
             });
     }
