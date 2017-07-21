@@ -36,10 +36,7 @@ pub fn nop(cpu: &CPU) -> u8 {
 /// ```
 pub fn stop(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8();
 
     if value != 0 {
         panic!("Stop instruction should be followed by a zero but found: 0x{:02X}", value);
@@ -338,10 +335,7 @@ pub fn load_r8_r8(mut cpu: &mut CPU, r8_target: &Reg8, r8_source: &Reg8) -> u8 {
 /// ```
 pub fn load_r8_d8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8();
 
     // Write it to the register
     cpu.registers.write8(r8, value);
@@ -487,10 +481,7 @@ pub fn load_indirect_r16_r8(mut cpu: &mut CPU, r16_indirect_addr: &Reg16, r8_sou
 /// ```
 pub fn load_indirect_r16_d8(mut cpu: &mut CPU, r16_indirect_addr: &Reg16) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8();
 
     // Copy from source register to memory using indirect register
     cpu.mmu.write8(cpu.registers.read16(r16_indirect_addr), value);
@@ -527,10 +518,7 @@ pub fn load_r16_r16(mut cpu: &mut CPU, r16_target: &Reg16, r16_source: &Reg16) -
 /// ```
 pub fn load_r16_d16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
     // Read 16-bit value
-    let value: u16 = cpu.mmu.read16(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(2);
+    let value: u16 = cpu.fetch16();
 
     // Write it to the register
     cpu.registers.write16(r16, value);
@@ -549,10 +537,7 @@ pub fn load_r16_d16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```
 pub fn load_indirect_a16_r16(mut cpu: &mut CPU, r16_source: &Reg16) -> u8 {
     // Read 16-bit address
-    let a16_addr = cpu.mmu.read16(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(2);
+    let a16_addr = cpu.fetch16();
 
     // Split 16-bit register to low/high
     let r16_value = cpu.registers.read16(r16_source);
@@ -577,10 +562,7 @@ pub fn load_indirect_a16_r16(mut cpu: &mut CPU, r16_source: &Reg16) -> u8 {
 /// ```
 pub fn load_high_mem_d8_reg_a(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let address = 0xFF00 + cpu.mmu.read8(cpu.registers.pc) as u16;
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let address = 0xFF00 + cpu.fetch8() as u16;
 
     // Write the byte to memory
     cpu.mmu.write8(address, cpu.registers.a);
@@ -599,11 +581,11 @@ pub fn load_high_mem_d8_reg_a(mut cpu: &mut CPU) -> u8 {
 /// LDH A, ($DA) ; A <- memory[0xFFDA]
 /// ```
 pub fn load_reg_a_high_mem_d8(mut cpu: &mut CPU) -> u8 {
-    // Read 8-bit value
-    let value = cpu.mmu.read8(0xFF00 + cpu.mmu.read8(cpu.registers.pc) as u16);
+    // Address is offset plus 8-bit data
+    let addr = 0xFF00 + cpu.fetch8() as u16;
 
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    // Read 8-bit value
+    let value = cpu.mmu.read8(addr);
 
     cpu.registers.a = value;
 
@@ -657,14 +639,11 @@ pub fn load_reg_a_high_mem_reg_c(mut cpu: &mut CPU) -> u8 {
 /// LD ($0150), A ; memory[0x0150] <- A
 /// ```
 pub fn load_a16_reg_a(mut cpu: &mut CPU) -> u8 {
-    // Read 16-bit value
-    let value: u16 = cpu.mmu.read16(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(2);
+    // Read 16-bit address value
+    let addr = cpu.fetch16();
 
     // Write the byte to memory
-    cpu.mmu.write8(value, cpu.registers.a);
+    cpu.mmu.write8(addr, cpu.registers.a);
 
     return 16
 }
@@ -679,11 +658,10 @@ pub fn load_a16_reg_a(mut cpu: &mut CPU) -> u8 {
 /// LD A, ($0150) ; A <- memory[0x0150]
 /// ```
 pub fn load_reg_a_a16(mut cpu: &mut CPU) -> u8 {
-    // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.mmu.read16(cpu.registers.pc));
+    let addr = cpu.fetch16();
 
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(2);
+    // Read 8-bit value
+    let value = cpu.mmu.read8(addr);
 
     cpu.registers.a = value;
 
@@ -702,10 +680,7 @@ pub fn load_reg_a_a16(mut cpu: &mut CPU) -> u8 {
 pub fn load_reg_hl_reg_sp_d8(mut cpu: &mut CPU) -> u8 {
     // TODO - Could combine logic with add_sp_d8
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc) as u16;
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8() as u16;
 
     let combined = cpu.registers.sp.wrapping_add(value);
 
@@ -753,7 +728,7 @@ fn test_jump_condition(cpu: &CPU, opcode: u8) -> bool {
 /// ```
 pub fn jump_d16(mut cpu: &mut CPU) -> u8 {
     // Read 16-bit jump target address
-    let jump_target: u16 = cpu.mmu.read16(cpu.registers.pc);
+    let jump_target = cpu.fetch16();
 
     // Jump PC to that target address
     cpu.registers.pc = jump_target;
@@ -772,10 +747,11 @@ pub fn jump_d16(mut cpu: &mut CPU) -> u8 {
 /// JP NZ $0150 ; IF !Flags::ZERO { PC <- 0x0150 }
 /// ```
 pub fn jump_conditional_d16(mut cpu: &mut CPU, opcode: u8) -> u8 {
+    // Read 16-bit jump target address
+    let jump_target = cpu.fetch16();
+
     // Test if the condition matches and if we need to jump
     if test_jump_condition(cpu, opcode) {
-        // Read 16-bit jump target address
-        let jump_target: u16 = cpu.mmu.read16(cpu.registers.pc);
 
         // Jump PC to that target address
         cpu.registers.pc = jump_target;
@@ -783,9 +759,6 @@ pub fn jump_conditional_d16(mut cpu: &mut CPU, opcode: u8) -> u8 {
         return 16
     }
     else {
-        // Just move the PC past the address operand
-        cpu.registers.pc = cpu.registers.pc.wrapping_add(2);
-
         return 12
     }
 }
@@ -817,7 +790,7 @@ pub fn jump_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```
 pub fn jump_relative_d8(mut cpu: &mut  CPU) -> u8 {
     // Read signed 8-bit jump offset
-    let jump_offset: i8 = cpu.mmu.read8(cpu.registers.pc) as i8;
+    let jump_offset: i8 = cpu.fetch8() as i8;
 
     // Jump PC to that target address
     cpu.registers.pc = cpu.registers.pc.wrapping_add(jump_offset as u16);
@@ -837,10 +810,7 @@ pub fn jump_relative_d8(mut cpu: &mut  CPU) -> u8 {
 /// ```
 pub fn jump_relative_conditional_d8(mut cpu: &mut  CPU, opcode: u8) -> u8 {
     // Read signed 8-bit jump offset
-    let jump_offset: i8 = cpu.mmu.read8(cpu.registers.pc) as i8;
-
-    // Move the PC past the address operand
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let jump_offset: i8 = cpu.fetch8() as i8;
 
     // Test if the condition matches and if we need to jump
     if test_jump_condition(cpu, opcode) {
@@ -941,10 +911,7 @@ pub fn pop_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```
 pub fn call_d16(mut cpu: &mut CPU) -> u8 {
     // Read 16-bit jump target address
-    let jump_target: u16 = cpu.mmu.read16(cpu.registers.pc);
-
-    // Move the PC past the address operand
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(2);
+    let jump_target = cpu.fetch16();
 
     // Push current PC to the stack
     let current_pc = cpu.registers.pc;
@@ -968,10 +935,7 @@ pub fn call_d16(mut cpu: &mut CPU) -> u8 {
 /// ```
 pub fn call_conditional_d16(mut cpu: &mut CPU, opcode: u8) -> u8 {
     // Read 16-bit jump target address
-    let jump_target: u16 = cpu.mmu.read16(cpu.registers.pc);
-
-    // Move the PC past the address operand
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(2);
+    let jump_target = cpu.fetch16();
 
     if test_jump_condition(cpu, opcode) {
         // Push current PC to the stack
@@ -1101,9 +1065,7 @@ pub fn add_hl_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```
 pub fn add_sp_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc) as u16;
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8() as u16;
 
     let original_sp = cpu.registers.sp;
 
@@ -1180,9 +1142,7 @@ pub fn add_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```
 pub fn add_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc);
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8();
 
     alu_add_8bit(cpu, value, false);
 
@@ -1234,10 +1194,7 @@ pub fn adc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```
 pub fn adc_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8();
 
     alu_add_8bit(cpu, value, true);
 
@@ -1326,10 +1283,7 @@ pub fn sub_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```
 pub fn sub_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8();
 
     alu_sub_8bit(cpu, value, false);
 
@@ -1382,10 +1336,7 @@ pub fn sbc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```
 pub fn sbc_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8();
 
     alu_sub_8bit(cpu, value, true);
 
@@ -1467,10 +1418,7 @@ pub fn and_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```
 pub fn and_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8();
 
     alu_and_8bit(cpu, value);
 
@@ -1552,10 +1500,7 @@ pub fn xor_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```
 pub fn xor_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8();
 
     alu_xor_8bit(cpu, value);
 
@@ -1637,10 +1582,7 @@ pub fn or_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```
 pub fn or_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8();
 
     alu_or_8bit(cpu, value);
 
@@ -1724,10 +1666,7 @@ pub fn cp_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```
 pub fn cp_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = cpu.mmu.read8(cpu.registers.pc);
-
-    // Move PC on
-    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
+    let value = cpu.fetch8();
 
     alu_cp_8bit(cpu, value);
 

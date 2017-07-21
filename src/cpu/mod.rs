@@ -37,6 +37,30 @@ impl<'c> CPU<'c> {
         // ??
     }
 
+    /// Read an 8-bit value using the PC register as the address, then move the PC register forward
+    /// by one.
+    pub fn fetch8(&mut self) -> u8 {
+        // Read 16-bit value
+        let value: u8 = self.mmu.read8(self.registers.pc);
+
+        // Move PC on
+        self.registers.pc = self.registers.pc.wrapping_add(1);
+
+        return value;
+    }
+
+    /// Read a 16-bit value using the PC register as the address, then move the PC register forward
+    /// by two.
+    pub fn fetch16(&mut self) -> u16 {
+        // Read 16-bit value
+        let value: u16 = self.mmu.read16(self.registers.pc);
+
+        // Move PC on
+        self.registers.pc = self.registers.pc.wrapping_add(2);
+
+        return value;
+    }
+
     pub fn cycle(&mut self) {
         // Fetch
         let op = self.mmu.read8(self.registers.pc);
