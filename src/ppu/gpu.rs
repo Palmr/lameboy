@@ -1,5 +1,7 @@
+use std::os::raw::c_void;
+
 use glium;
-use glium::{IndexBuffer, Program, VertexBuffer, Surface};
+use glium::{IndexBuffer, Program, VertexBuffer, Surface, GlObject};
 use glium::backend::Facade;
 use glium::index::PrimitiveType;
 use glium::texture::pixel_buffer::PixelBuffer;
@@ -130,5 +132,9 @@ impl GPU {
         // Load texture with data from pixel buffer
         self.texture.main_level()
 				.raw_upload_from_pixel_buffer(self.pixel_buffer.as_slice(), 0..160, 0..144, 0..1);
+    }
+
+    pub fn get_tex_id(&self) -> *mut c_void {
+        self.texture.get_id() as *mut c_void
     }
 }

@@ -45,8 +45,11 @@ pub struct GUIState {
     mem_editor: memoryeditor::HexEditor,
     show_cpu: bool,
     show_vram: bool,
+    apply_test_pattern: bool,
+    test_pattern_type: TestPattern,
+    ppu_mod: i32,
     show_about: bool,
-    i0: i32
+    i0: i32,
 }
 
 fn main() {
@@ -85,8 +88,11 @@ fn main() {
         mem_editor: memoryeditor::HexEditor::default(),
         show_cpu: false,
         show_vram: false,
+        apply_test_pattern: false,
+        test_pattern_type: TestPattern::BLANK,
+        ppu_mod: 4,
         show_about: false,
-        i0: 0
+        i0: 0,
     };
 
     loop {
@@ -200,20 +206,30 @@ fn imgui_display<'a>(ui: &Ui<'a>, cart: &Cart, cpu: &mut CPU, ppu: &mut PPU, mut
             });
     }
 
-    if gui_state.show_vram {
+    if true {
         ui.window(im_str!("PPU"))
-            .size((150.0, 85.0), ImGuiSetCond_FirstUseEver)
+            .size((150.0, 130.0), ImGuiSetCond_FirstUseEver)
             .resizable(true)
             .build(|| {
+                ui.checkbox(im_str!("Apply test"), &mut gui_state.apply_test_pattern);
+                ui.slider_int(im_str!("Mod"), &mut gui_state.ppu_mod, 1, 20).build();
                 if ui.small_button(im_str!("Blank")) {
-                    ppu.apply_test_pattern(TestPattern::BLANK);
+                    gui_state.test_pattern_type = TestPattern::BLANK;
                 }
                 if ui.small_button(im_str!("Diagonal")) {
-                    ppu.apply_test_pattern(TestPattern::DIAGONAL);
+                    gui_state.test_pattern_type = TestPattern::DIAGONAL;
                 }
                 if ui.small_button(im_str!("XOR")) {
-                    ppu.apply_test_pattern(TestPattern::XOR);
+                    gui_state.test_pattern_type = TestPattern::XOR;
                 }
+
+                if gui_state.apply_test_pattern {
+                    ppu.apply_test_pattern(&gui_state.test_pattern_type, gui_state.ppu_mod as usize);
+                }
+                // Uncomment below when custom textures get supported
+//                unsafe {
+//                    imgui_sys::igImage(ppu.get_tex_id(), ImVec2::new(160.0, 144.0), ImVec2::new(0.0, 0.0), ImVec2::new(1.0, 1.0), ImVec4::new(0.0, 0.0, 0.0, 1.0), ImVec4::new(1.0, 0.0, 0.0, 1.0));
+//                }
             });
     }
 }

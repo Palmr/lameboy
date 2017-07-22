@@ -1,3 +1,5 @@
+use std::os::raw::c_void;
+
 use glium::backend::Facade;
 use glium::Surface;
 
@@ -109,14 +111,18 @@ impl PPU {
         self.gpu.draw(target);
     }
 
-    pub fn apply_test_pattern(&mut self, pattern: TestPattern) {
+    pub fn get_tex_id (&self) -> *mut c_void {
+        self.gpu.get_tex_id()
+    }
+
+    pub fn apply_test_pattern(&mut self, pattern: &TestPattern, mod_value: usize) {
         for y in 0..144 {
             for x in 0..160 {
                 self.screen_buffer[y * SCREEN_WIDTH + x] =
                     match pattern {
-                        TestPattern::BLANK => 0u8,
-                        TestPattern::DIAGONAL => (((x+y) / 8) % 4) as u8,
-                        TestPattern::XOR => ((x/4^y/4) % 4) as u8,
+                        &TestPattern::BLANK => 0u8,
+                        &TestPattern::DIAGONAL => (((x+y) / mod_value) % 4) as u8,
+                        &TestPattern::XOR => ((x/mod_value ^ y/mod_value) % 4) as u8,
                     }
 
             }
