@@ -6,9 +6,10 @@ use imgui::{ImGui, Ui, ImGuiKey, ImStr};
 use imgui::glium_renderer::Renderer;
 use std::time::Instant;
 
-use self::super::GUIState;
+use self::super::Lameboy;
 
-use self::super::ppu::PPU;
+pub mod imguidebug;
+use gui::imguidebug::ImguiDebug;
 
 pub struct GUI {
     pub display: GlutinFacade,
@@ -79,7 +80,7 @@ impl GUI {
         self.mouse_wheel = 0.0;
     }
 
-    pub fn render<F: FnMut(&Ui, &mut PPU)>(&mut self, clear_color: (f32, f32, f32, f32), mut ppu: &mut PPU, mut run_ui: F) {
+    pub fn render<F: FnMut(&Ui, &mut Lameboy)>(&mut self, clear_color: (f32, f32, f32, f32), mut lameboy: &mut Lameboy, mut run_ui: F) {
         let now = Instant::now();
         let delta = now - self.last_frame;
         let delta_s = delta.as_secs() as f32 + delta.subsec_nanos() as f32 / 1_000_000_000.0;
@@ -90,7 +91,7 @@ impl GUI {
         let mut target = self.display.draw();
         target.clear_color(clear_color.0, clear_color.1, clear_color.2, clear_color.3);
 
-        ppu.draw(&mut target);
+        lameboy.get_ppu().draw(&mut target);
 
         let window = self.display.get_window().unwrap();
         let size_points = window.get_inner_size_points().unwrap();
@@ -99,7 +100,7 @@ impl GUI {
         if self.show_imgui {
             let ui = self.imgui.frame(size_points, size_pixels, delta_s);
 
-            run_ui(&ui, &mut ppu);
+            run_ui(&ui, &mut lameboy);
 
             self.renderer.render(&mut target, ui).unwrap();
         }
@@ -107,7 +108,7 @@ impl GUI {
         target.finish().unwrap();
     }
 
-    pub fn update_events(&mut self, mut gui_state: &mut GUIState) -> () {
+    pub fn update_events(&mut self, mut gui_state: &mut ImguiDebug) -> () {
         for event in self.display.poll_events() {
             match event {
                 Event::Closed => gui_state.active = false,

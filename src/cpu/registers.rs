@@ -27,6 +27,7 @@ pub enum Reg16 {
     SP
 }
 
+/// Registers for the CPU core
 pub struct Registers {
     pub a: u8,
     pub f: Flags,

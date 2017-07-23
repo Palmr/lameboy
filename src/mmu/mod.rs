@@ -1,7 +1,9 @@
 use self::super::cart::Cart;
+use self::super::ppu::PPU;
 
-pub struct MMU<'c> {
-    cart: &'c Cart,
+pub struct MMU<'m> {
+    pub cart: &'m mut Cart,
+    pub ppu: &'m mut PPU,
     /// Video RAM [0x8000 - 0x9FFF] (Bank 0-1 in CGB Mode)
     vram: Box<[u8; 0x2000]>,
 	/// Work RAM 0 [0xC000 - 0xCFFF]
@@ -20,10 +22,11 @@ pub struct MMU<'c> {
 	ier: u8,
 }
 
-impl<'c> MMU<'c> {
-    pub fn new(cart: &Cart) -> MMU {
+impl<'m> MMU<'m> {
+    pub fn new(cart: &'m mut Cart, ppu: &'m mut PPU) -> MMU<'m> {
         MMU {
             cart: cart,
+            ppu: ppu,
             vram: Box::new([0; 0x2000]),
             wram0: Box::new([0; 0x1000]),
             wram1: Box::new([0; 0x1000]),
@@ -80,7 +83,12 @@ impl<'c> MMU<'c> {
             0xF000...0xFDFF => self.wram1[(addr as usize) & 0x0FFF],
             0xFE00...0xFE9F => self.oam[(addr as usize) & 0x00FF],
             0xFEA0...0xFEFF => self.unusable,
-            0xFF00...0xFF7F => self.io[(addr as usize) & 0x00FF],
+            0xFF00...0xFF7F => {
+                match addr {
+                    0xFF00...0xFF7F => self.io[(addr as usize) & 0x00FF],
+                    _ => panic!("Attempted to access memory from an invalid address: {:#X}", addr)
+                }
+            },
             0xFF80...0xFFFE => self.hram[((addr as usize) & 0x00FF) - 0x0080],
             0xFFFF => self.ier,
             _ => panic!("Attempted to access memory from an invalid address: {:#X}", addr)

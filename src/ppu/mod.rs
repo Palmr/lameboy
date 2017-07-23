@@ -6,6 +6,9 @@ use glium::Surface;
 pub mod gpu;
 use ppu::gpu::*;
 
+pub mod registers;
+use ppu::registers::*;
+
 pub const SCREEN_WIDTH: usize = 160;
 pub const SCREEN_HEIGHT: usize = 144;
 
@@ -26,6 +29,7 @@ pub struct PPU {
     mode_clock: usize,
     mode: Mode,
     line: u8,
+    registers: Registers,
     gpu: GPU,
     screen_buffer: Box<Vec<u8>>,
 }
@@ -40,6 +44,7 @@ impl PPU {
             mode_clock: 0,
             mode: Mode::HBlank,
             line: 0,
+            registers: Registers::new(),
             gpu: gpu,
             screen_buffer: screen_buffer,
         }

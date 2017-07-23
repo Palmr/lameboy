@@ -4,22 +4,20 @@ use cpu::registers::*;
 pub mod instructions;
 use cpu::instructions::*;
 
-use self::super::cart::Cart;
-
 use self::super::mmu::MMU;
 
 pub struct CPU<'c> {
     pub registers: Registers,
-    pub mmu: MMU<'c>,
+    pub mmu: &'c mut MMU<'c>,
     pub ime: bool,
     pub halt: bool,
 }
 
 impl<'c> CPU<'c> {
-    pub fn new(cart: &Cart) -> CPU {
+    pub fn new(mmu: &'c mut MMU<'c>) -> CPU<'c> {
         CPU {
             registers: Registers::new(),
-            mmu: MMU::new(cart),
+            mmu: mmu,
             ime: true,
             halt: false,
         }

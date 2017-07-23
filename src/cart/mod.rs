@@ -15,7 +15,7 @@ impl Cart {
         self.data[addr as usize]
     }
 
-    pub fn write(&self, addr: u16, data: u8) {
+    pub fn write(&mut self, addr: u16, data: u8) {
         // Deal with MBC
         println!("Write to cart [0x{:04X}] = 0x{:02X}", addr, data);
     }
