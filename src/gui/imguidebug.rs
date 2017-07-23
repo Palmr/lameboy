@@ -10,7 +10,7 @@ pub struct ImguiDebug {
     pub show_menu: bool,
     pub show_memory: bool,
     pub show_cpu: bool,
-    pub show_vram: bool,
+    pub show_ppu: bool,
     pub apply_test_pattern: bool,
     pub test_pattern_type: TestPattern,
     pub ppu_mod: i32,
@@ -27,7 +27,7 @@ impl ImguiDebug {
             show_menu: false,
             show_memory: false,
             show_cpu: false,
-            show_vram: false,
+            show_ppu: false,
             apply_test_pattern: false,
             test_pattern_type: TestPattern::BLANK,
             ppu_mod: 4,
@@ -66,7 +66,7 @@ impl ImguiDebug {
                             .selected(&mut self.show_cpu)
                             .build();
                         ui.menu_item(im_str!("vram"))
-                            .selected(&mut self.show_vram)
+                            .selected(&mut self.show_ppu)
                             .build();
                     });
                 ui.menu(im_str!("Help"))
@@ -87,8 +87,8 @@ impl ImguiDebug {
 
         if self.show_memory {
             ui.window(im_str!("Cart"))
-                .size((200.0, 125.0), ImGuiSetCond_Always)
-                .resizable(false)
+                .size((285.0, 125.0), ImGuiSetCond_FirstUseEver)
+                .resizable(true)
                 .build(|| {
                     ui.text(im_str!("Size: {} bytes", emu.get_cart().get_size()));
                     ui.text(im_str!("Title: {}", emu.get_cart().get_title()));
@@ -97,6 +97,7 @@ impl ImguiDebug {
                     ui.separator();
 
                     ui.input_int(im_str!("Addr"), &mut self.i0).build();
+                    ui.same_line(0.0);
                     if ui.small_button(im_str!("print")) {
                         let byte = emu.get_mmu().read8(self.i0 as u16);
                         println!("Memory[{:04X}] = {:02X}", self.i0, byte);
@@ -107,7 +108,7 @@ impl ImguiDebug {
         if self.show_cpu {
             let cpu = emu.get_cpu();
             ui.window(im_str!("CPU"))
-                .size((260.0, 175.0), ImGuiSetCond_FirstUseEver)
+                .size((260.0, 180.0), ImGuiSetCond_FirstUseEver)
                 .resizable(true)
                 .build(|| {
                     ui.text(im_str!("PC: 0x{:04X} - SP: 0x{:04X}", cpu.registers.pc, cpu.registers.sp));
@@ -116,17 +117,26 @@ impl ImguiDebug {
                     ui.text(im_str!(" E: 0x{:02X}   -  F: 0x{:02X}", cpu.registers.e, cpu.registers.f.bits()));
                     ui.text(im_str!(" H: 0x{:02X}   -  L: 0x{:02X}", cpu.registers.h, cpu.registers.l));
                     ui.text(im_str!("Flags: {:?}", cpu.registers.f));
+
                     ui.separator();
-                    ui.checkbox(im_str!("running"), &mut self.emulator_running);
+
                     if ui.small_button(im_str!("step")) {
                         cpu.cycle();
+                    }
+                    ui.same_line(0.0);
+                    ui.checkbox(im_str!("running"), &mut self.emulator_running);
+
+                    ui.separator();
+
+                    if ui.small_button(im_str!("reset")) {
+                        cpu.post_boot_reset();
                     }
                 });
         }
 
-        if true {
+        if self.show_ppu {
             ui.window(im_str!("PPU"))
-                .size((150.0, 130.0), ImGuiSetCond_FirstUseEver)
+                .size((180.0, 125.0), ImGuiSetCond_FirstUseEver)
                 .resizable(true)
                 .build(|| {
                     ui.checkbox(im_str!("Apply test"), &mut self.apply_test_pattern);
@@ -134,9 +144,11 @@ impl ImguiDebug {
                     if ui.small_button(im_str!("Blank")) {
                         self.test_pattern_type = TestPattern::BLANK;
                     }
+                    ui.same_line(0.0);
                     if ui.small_button(im_str!("Diagonal")) {
                         self.test_pattern_type = TestPattern::DIAGONAL;
                     }
+                    ui.same_line(0.0);
                     if ui.small_button(im_str!("XOR")) {
                         self.test_pattern_type = TestPattern::XOR;
                     }

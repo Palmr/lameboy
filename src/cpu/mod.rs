@@ -65,7 +65,7 @@ impl<'c> CPU<'c> {
         println!("Opcode[{:04X}] = {:02X}", self.registers.pc, op);
 
         // Move PC
-        self.registers.pc += 1;
+        self.registers.pc = self.registers.pc.wrapping_add(1);
 
         // Decode & Execute
         let duration = match op {
