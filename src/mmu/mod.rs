@@ -85,13 +85,15 @@ impl<'m> MMU<'m> {
             0xFEA0...0xFEFF => self.unusable,
             0xFF00...0xFF7F => {
                 match addr {
-                    0xFF00...0xFF7F => self.io[(addr as usize) & 0x00FF],
-                    _ => panic!("Attempted to access memory from an invalid address: {:#X}", addr)
+                    0xFF40...0xFF4B => self.ppu.read8(addr),
+                    0xFF00...0xFF3F |
+                    0xFF4C...0xFF7F => self.io[(addr as usize) & 0x00FF],
+                    _ => panic!("Attempted to access [RD] memory from an invalid address: {:#X}", addr)
                 }
             },
             0xFF80...0xFFFE => self.hram[((addr as usize) & 0x00FF) - 0x0080],
             0xFFFF => self.ier,
-            _ => panic!("Attempted to access memory from an invalid address: {:#X}", addr)
+            _ => panic!("Attempted to access [RD] memory from an invalid address: {:#X}", addr)
         }
     }
 
@@ -113,10 +115,17 @@ impl<'m> MMU<'m> {
             0xF000...0xFDFF => self.wram1[(addr as usize) & 0x0FFF] = data,
             0xFE00...0xFE9F => self.oam[(addr as usize) & 0x00FF] = data,
             0xFEA0...0xFEFF => (),
-            0xFF00...0xFF7F => self.io[(addr as usize) & 0x00FF] = data,
+            0xFF00...0xFF7F => {
+                match addr {
+                    0xFF40...0xFF4B => self.ppu.write8(addr, data),
+                    0xFF00...0xFF3F |
+                    0xFF4C...0xFF7F => self.io[(addr as usize) & 0x00FF] = data,
+                    _ => panic!("Attempted to access [WR] memory from an invalid address: {:#X}", addr)
+                }
+            },
             0xFF80...0xFFFE => self.hram[((addr as usize) & 0x00FF) - 0x0080] = data,
             0xFFFF => self.ier = data,
-            _ => panic!("Attempted to access memory from an invalid address: {:#X}", addr)
+            _ => panic!("Attempted to access [WR] memory from an invalid address: {:#X}", addr)
         }
     }
 }

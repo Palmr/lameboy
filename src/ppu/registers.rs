@@ -10,6 +10,7 @@ bitflags! {
         const DISPLAY_ENABLE    = 0b_1000_0000;
     }
 }
+
 bitflags! {
     pub struct StatusFlags: u8 {
         const COINCIDENCE   = 0b_0000_0100;
@@ -23,7 +24,7 @@ bitflags! {
 /// Registers for video generation
 pub struct Registers {
     pub control: ControlFlags,
-    pub status: StatusFlags,
+    pub status: u8, // Not directly StatusFlags as mode part is two bits
     pub scroll_y: u8,
     pub scroll_x: u8,
     pub ly: u8,
@@ -40,7 +41,7 @@ impl Registers {
     pub fn new() -> Registers {
         Registers {
             control: ControlFlags::empty(),
-            status: StatusFlags::empty(),
+            status: 0,
             scroll_y: 0,
             scroll_x: 0,
             ly: 0,

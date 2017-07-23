@@ -7,7 +7,8 @@ pub mod gpu;
 use ppu::gpu::*;
 
 pub mod registers;
-use ppu::registers::*;
+use ppu::registers::Registers;
+use ppu::registers::ControlFlags;
 
 pub const SCREEN_WIDTH: usize = 160;
 pub const SCREEN_HEIGHT: usize = 144;
@@ -28,7 +29,6 @@ enum Mode {
 pub struct PPU {
     mode_clock: usize,
     mode: Mode,
-    line: u8,
     registers: Registers,
     gpu: GPU,
     screen_buffer: Box<Vec<u8>>,
@@ -43,10 +43,47 @@ impl PPU {
         PPU {
             mode_clock: 0,
             mode: Mode::HBlank,
-            line: 0,
             registers: Registers::new(),
             gpu: gpu,
             screen_buffer: screen_buffer,
+        }
+    }
+
+    /// Handle memory reads from the PPU data registers only, otherwise panic
+    pub fn read8(&self, addr: u16) -> u8 {
+        match addr {
+            0xFF40 => self.registers.control.bits(),
+            0xFF41 => self.registers.status,
+            0xFF42 => self.registers.scroll_y,
+            0xFF43 => self.registers.scroll_x,
+            0xFF44 => self.registers.ly,
+            0xFF45 => self.registers.lyc,
+            0xFF46 => self.registers.dma,
+            0xFF47 => self.registers.bg_palette,
+            0xFF48 => self.registers.obj0_palette,
+            0xFF49 => self.registers.obj1_palette,
+            0xFF4A => self.registers.window_y,
+            0xFF4B => self.registers.window_x,
+            _ => panic!("Attempted to access [RD] PPU memory from an invalid address: {:#X}", addr)
+        }
+    }
+
+    /// Handle memory writes to the PPU data registers only, otherwise panic
+    pub fn write8(&mut self, addr: u16, data: u8) {
+        match addr {
+            0xFF40 => self.registers.control = ControlFlags::from_bits_truncate(data),
+            0xFF41 => self.registers.status = data,
+            0xFF42 => self.registers.scroll_y = data,
+            0xFF43 => self.registers.scroll_x = data,
+            0xFF44 => self.registers.ly = data,
+            0xFF45 => self.registers.lyc = data,
+            0xFF46 => self.registers.dma = data,
+            0xFF47 => self.registers.bg_palette = data,
+            0xFF48 => self.registers.obj0_palette = data,
+            0xFF49 => self.registers.obj1_palette = data,
+            0xFF4A => self.registers.window_y = data,
+            0xFF4B => self.registers.window_x = data,
+            _ => panic!("Attempted to access [WR] PPU memory from an invalid address: {:#X}", addr)
         }
     }
 
@@ -80,9 +117,9 @@ impl PPU {
             Mode::HBlank => {
                 if self.mode_clock >= 204 {
                     self.mode_clock = 0;
-                    self.line += 1;
+                    self.registers.ly += 1;
 
-                    if self.line == 143 {
+                    if self.registers.ly == 143 {
                         // Enter vblank
                         self.mode = Mode::VBlank;
                         // TODO - self.canvas.putImageData(self.scrn, 0, 0);
@@ -98,12 +135,12 @@ impl PPU {
             Mode::VBlank => {
                 if self.mode_clock >= 456 {
                     self.mode_clock = 0;
-                    self.line += 1;
+                    self.registers.ly += 1;
 
-                    if self.line > 153 {
+                    if self.registers.ly > 153 {
                         // Restart scanning modes
                         self.mode = Mode::ReadOam;
-                        self.line = 0;
+                        self.registers.ly = 0;
                     }
                 }
             }
