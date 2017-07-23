@@ -48,3 +48,18 @@ impl Cart {
         x == Wrapping(self.data[0x014D])
     }
 }
+
+use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
+use imgui::{ImGuiSetCond_FirstUseEver, Ui};
+impl ImguiDebuggable for Cart {
+    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
+        ui.window(im_str!("Cart"))
+            .size((220.0, 85.0), ImGuiSetCond_FirstUseEver)
+            .resizable(true)
+            .build(|| {
+                ui.text(im_str!("Size: {} bytes", self.get_size()));
+                ui.text(im_str!("Title: {}", self.get_title()));
+                ui.text(im_str!("Checksum: {}", if self.validate_checksum() { "VALID" } else { "INVALID" }));
+            });
+    }
+}

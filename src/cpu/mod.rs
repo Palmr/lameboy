@@ -9,8 +9,8 @@ use self::super::mmu::MMU;
 pub struct CPU<'c> {
     pub registers: Registers,
     pub mmu: &'c mut MMU<'c>,
-    pub ime: bool,
-    pub halt: bool,
+    ime: bool,
+    halt: bool,
 }
 
 impl<'c> CPU<'c> {
@@ -439,5 +439,37 @@ impl<'c> CPU<'c> {
         };
 
         return duration + 4;
+    }
+}
+
+use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
+use imgui::{ImGuiSetCond_FirstUseEver, Ui};
+impl<'c> ImguiDebuggable for CPU<'c> {
+    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
+        ui.window(im_str!("CPU"))
+            .size((260.0, 180.0), ImGuiSetCond_FirstUseEver)
+            .resizable(true)
+            .build(|| {
+                ui.text(im_str!("PC: 0x{:04X} - SP: 0x{:04X}", self.registers.pc, self.registers.sp));
+                ui.text(im_str!(" A: 0x{:02X}   -  B: 0x{:02X}", self.registers.a, self.registers.b));
+                ui.text(im_str!(" C: 0x{:02X}   -  D: 0x{:02X}", self.registers.c, self.registers.d));
+                ui.text(im_str!(" E: 0x{:02X}   -  F: 0x{:02X}", self.registers.e, self.registers.f.bits()));
+                ui.text(im_str!(" H: 0x{:02X}   -  L: 0x{:02X}", self.registers.h, self.registers.l));
+                ui.text(im_str!("Flags: {:?}", self.registers.f));
+
+                ui.separator();
+
+                if ui.small_button(im_str!("step")) {
+                    self.cycle();
+                }
+                ui.same_line(0.0);
+                ui.checkbox(im_str!("running"), &mut imgui_debug.emulator_running);
+
+                ui.separator();
+
+                if ui.small_button(im_str!("reset")) {
+                    self.post_boot_reset();
+                }
+            });
     }
 }

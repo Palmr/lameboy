@@ -9,6 +9,7 @@ use ppu::gpu::*;
 pub mod registers;
 use ppu::registers::Registers;
 use ppu::registers::ControlFlags;
+use ppu::registers::StatusFlags;
 
 pub const SCREEN_WIDTH: usize = 160;
 pub const SCREEN_HEIGHT: usize = 144;
@@ -169,5 +170,48 @@ impl PPU {
 
             }
         }
+    }
+}
+
+use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
+use imgui::{ImGuiSetCond_FirstUseEver, Ui};
+impl ImguiDebuggable for PPU {
+    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
+        ui.window(im_str!("PPU"))
+                .size((180.0, 95.0), ImGuiSetCond_FirstUseEver)
+                .resizable(true)
+                .build(|| {
+                    ui.checkbox(im_str!("Apply test"), &mut imgui_debug.apply_test_pattern);
+                    ui.slider_int(im_str!("Mod"), &mut imgui_debug.ppu_mod, 1, 20).build();
+                    if ui.small_button(im_str!("Blank")) {
+                        imgui_debug.test_pattern_type = TestPattern::BLANK;
+                    }
+                    ui.same_line(0.0);
+                    if ui.small_button(im_str!("Diagonal")) {
+                        imgui_debug.test_pattern_type = TestPattern::DIAGONAL;
+                    }
+                    ui.same_line(0.0);
+                    if ui.small_button(im_str!("XOR")) {
+                        imgui_debug.test_pattern_type = TestPattern::XOR;
+                    }
+                });
+
+        ui.window(im_str!("PPU-registers"))
+            .size((355.0, 230.0), ImGuiSetCond_FirstUseEver)
+            .resizable(true)
+            .build(|| {
+                ui.text(im_str!("Control: {:?}", self.registers.control));
+                ui.text(im_str!("Status: {:?} - {:?}", self.registers.status, StatusFlags::from_bits_truncate(self.registers.status)));
+                ui.text(im_str!("Scroll Y: {:?}", self.registers.scroll_y));
+                ui.text(im_str!("Scroll X: {:?}", self.registers.scroll_x));
+                ui.text(im_str!("LY: {:?}", self.registers.ly));
+                ui.text(im_str!("LYC: {:?}", self.registers.lyc));
+                ui.text(im_str!("DMA: {:?}", self.registers.dma));
+                ui.text(im_str!("BG Palette: {:?}", self.registers.bg_palette));
+                ui.text(im_str!("OBJ0 Palette: {:?}", self.registers.obj0_palette));
+                ui.text(im_str!("OBJ1 Palette: {:?}", self.registers.obj1_palette));
+                ui.text(im_str!("Window Y: {:?}", self.registers.window_y));
+                ui.text(im_str!("Window X: {:?}", self.registers.window_x));
+            });
     }
 }
