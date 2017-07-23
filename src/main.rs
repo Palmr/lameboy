@@ -40,7 +40,7 @@ const CLEAR_COLOR: (f32, f32, f32, f32) = (0.8784, 0.9725, 0.8156, 1.0);
 
 
 fn main() {
-    let matches = clap::App::new("rboy")
+    let matches = clap::App::new("Lameboy")
         .version("0.1.0")
         .author("Nick Palmer <nick@palmr.co.uk>")
         .about("Yet another Gameboy emulator")
@@ -62,7 +62,8 @@ fn main() {
     let mut cart = Cart::new(data);
     let mut ppu = PPU::new(&gui.display);
     let mut mmu = MMU::new(&mut cart, &mut ppu);
-    let cpu = CPU::new(&mut mmu);
+    let mut cpu = CPU::new(&mut mmu);
+    cpu.post_boot_reset();
 
     let mut lameboy = Lameboy::new(cpu);
 
