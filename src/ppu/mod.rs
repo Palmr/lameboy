@@ -20,6 +20,7 @@ pub enum TestPattern {
     XOR,
 }
 
+#[derive(Debug)]
 enum Mode {
     ReadOam,
     ReadVram,
@@ -178,7 +179,7 @@ use imgui::{ImGuiSetCond_FirstUseEver, Ui};
 impl ImguiDebuggable for PPU {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("PPU"))
-                .size((180.0, 95.0), ImGuiSetCond_FirstUseEver)
+                .size((180.0, 115.0), ImGuiSetCond_FirstUseEver)
                 .resizable(true)
                 .build(|| {
                     ui.checkbox(im_str!("Apply test"), &mut imgui_debug.apply_test_pattern);
@@ -194,6 +195,10 @@ impl ImguiDebuggable for PPU {
                     if ui.small_button(im_str!("XOR")) {
                         imgui_debug.test_pattern_type = TestPattern::XOR;
                     }
+
+                    ui.separator();
+
+                    ui.text(im_str!("Mode: {:?}", self.mode));
                 });
 
         ui.window(im_str!("PPU-registers"))
