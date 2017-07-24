@@ -12,7 +12,12 @@ impl Cart {
     }
 
     pub fn read(&self, addr: u16) -> u8 {
-        self.data[addr as usize]
+        match addr {
+            0x0000...0x7FFF => self.data[addr as usize],
+            0xA000...0xC000 => 0xFF,
+            _ => panic!("Attempted to access [RD] Cart memory from an invalid address: {:#X}", addr)
+        }
+
     }
 
     pub fn write(&mut self, addr: u16, data: u8) {
