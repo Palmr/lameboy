@@ -70,7 +70,7 @@ fn main() {
     let mut imgui_debug = ImguiDebug::new();
 
     loop {
-        if imgui_debug.emulator_running {
+        if lameboy.is_running() {
             lameboy.run_frame();
         }
 

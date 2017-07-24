@@ -131,18 +131,20 @@ impl<'m> MMU<'m> {
 }
 
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiSetCond_FirstUseEver, Ui};
+use imgui::{ImGuiSetCond_FirstUseEver, Ui, ImGuiInputTextFlags_CharsHexadecimal};
 impl<'m> ImguiDebuggable for MMU<'m> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("MMU"))
             .size((265.0, 60.0), ImGuiSetCond_FirstUseEver)
             .resizable(true)
             .build(|| {
-                ui.input_int(im_str!("Addr"), &mut imgui_debug.i0).build();
+                ui.input_int(im_str!("Addr"), &mut imgui_debug.input_addr)
+                    .flags(ImGuiInputTextFlags_CharsHexadecimal)
+                    .build();
                 ui.same_line(0.0);
                 if ui.small_button(im_str!("print")) {
-                    let byte = self.read8(imgui_debug.i0 as u16);
-                    println!("Memory[{:04X}] = {:02X}", imgui_debug.i0, byte);
+                    let byte = self.read8(imgui_debug.input_addr as u16);
+                    println!("Memory[{:04X}] = {:02X}", imgui_debug.input_addr, byte);
                 }
             });
     }

@@ -9,7 +9,6 @@ pub trait ImguiDebuggable {
 
 pub struct ImguiDebug {
     pub active: bool,
-    pub emulator_running: bool,
     pub show_imgui_metrics: bool,
     pub show_menu: bool,
     pub show_cart: bool,
@@ -20,14 +19,13 @@ pub struct ImguiDebug {
     pub test_pattern_type: TestPattern,
     pub ppu_mod: i32,
     pub show_about: bool,
-    pub i0: i32,
+    pub input_addr: i32,
 }
 
 impl ImguiDebug {
      pub fn new() -> ImguiDebug {
         ImguiDebug {
             active: true,
-            emulator_running: false,
             show_imgui_metrics: false,
             show_menu: false,
             show_cart: false,
@@ -38,7 +36,7 @@ impl ImguiDebug {
             test_pattern_type: TestPattern::BLANK,
             ppu_mod: 4,
             show_about: false,
-            i0: 0,
+            input_addr: 0,
         }
     }
 
