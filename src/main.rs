@@ -71,7 +71,7 @@ fn main() {
 
     loop {
         if imgui_debug.emulator_running {
-            lameboy.test_cycles();
+            lameboy.run_frame();
         }
 
         gui.update_events(&mut imgui_debug);

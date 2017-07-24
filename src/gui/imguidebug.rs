@@ -113,5 +113,6 @@ impl ImguiDebug {
             emu.get_ppu().apply_test_pattern(&self.test_pattern_type, self.ppu_mod as usize);
         }
 
+        emu.imgui_display(ui, self);
     }
 }
