@@ -828,7 +828,7 @@ pub fn jump_relative_conditional_d8(mut cpu: &mut  CPU, opcode: u8) -> u8 {
 /// Decrements the stack pointer and then writes the 8-bit value using the new stack pointer value.
 fn push_stack_d8(mut cpu: &mut CPU, d8: u8) -> () {
     // Decrement stack pointer
-    cpu.registers.sp.wrapping_sub(1);
+    cpu.registers.sp = cpu.registers.sp.wrapping_sub(1);
 
     // Write byte to stack
     cpu.mmu.write8(cpu.registers.sp, d8);
@@ -845,19 +845,19 @@ fn push_stack_d16(mut cpu: &mut CPU, d16: u16) -> () {
 
 /// Pop an 8-bit value off the stack.
 /// Decrements the stack pointer and then writes the 8-bit value using the new stack pointer value.
-fn pop_stack_d8(cpu: &CPU) -> u8 {
+fn pop_stack_d8(mut cpu: &mut CPU) -> u8 {
     // Read byte from stack
     let value = cpu.mmu.read8(cpu.registers.sp);
 
     // Decrement stack pointer
-    cpu.registers.sp.wrapping_add(1);
+    cpu.registers.sp = cpu.registers.sp.wrapping_add(1);
 
     return value;
 }
 
 /// Pop a 16-bit value off the stack.
 /// Pushing the high byte of the value first, then the low byte.
-fn pop_stack_d16(cpu: &CPU) -> u16 {
+fn pop_stack_d16(mut cpu: &mut CPU) -> u16 {
     let mut value: u16;
     // Pop low byte
     value = pop_stack_d8(cpu) as u16;
@@ -1703,7 +1703,7 @@ pub fn cp_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 ///
 fn alu_rotate_left(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: bool) -> u8 {
     let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
-    let high_bit = d8 & 0x80;
+    let high_bit = (d8 & 0x80) >> 7;
     let new_low_bit = if through_carry {cy} else {high_bit};
     let rotated_value = (d8 << 1) | new_low_bit;
 
@@ -1791,7 +1791,7 @@ fn alu_rotate_right(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: 
     let low_bit = d8 & 0x01;
     let new_high_bit = if through_carry {cy} else {low_bit};
 
-    let rotated_value = (d8 >> 1) | new_high_bit;
+    let rotated_value = (d8 >> 1) | (new_high_bit << 7);
 
     cpu.registers.f.set(ZERO, rotated_value == 0 && !reset_zero);
     cpu.registers.f.set(SUBTRACT, false);
