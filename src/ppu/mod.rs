@@ -191,16 +191,20 @@ impl PPU {
         let slice_end = slice_start + SCREEN_WIDTH;
         let pixels = &mut self.screen_buffer[slice_start..slice_end];
 
+        let mut bg_palette = [0u8; 4];
+        for i in 0..4 {
+            bg_palette[i] = (self.registers.bg_palette >> (i * 2)) & 3;
+        }
+
         for i in 0..160 {
             let tile_addr = (tile_index << 4) + (tile_y_offset as usize * 2);
             let low = self.vram[tile_addr];
             let high = self.vram[tile_addr + 1usize];
 
             let colour = ((low>>(7-tile_x_offset)) & 0x01) | (((high>>((7-tile_x_offset))) & 0x01)<<1);
-            // TODO - Use palette
 
             // Plot the pixel to canvas
-            pixels[i] = colour as u8;
+            pixels[i] = bg_palette[(colour & 0x03) as usize];
 
             // When this tile ends, read another
             tile_x_offset += 1;
