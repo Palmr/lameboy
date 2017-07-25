@@ -1687,7 +1687,7 @@ pub fn cp_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
     // Read 8-bit value
     let value = cpu.mmu.read8(cpu.registers.read16(r16));
 
-    alu_or_8bit(cpu, value);
+    alu_cp_8bit(cpu, value);
 
     return 8
 }
