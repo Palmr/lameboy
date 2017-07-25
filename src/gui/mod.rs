@@ -108,7 +108,7 @@ impl GUI {
         target.finish().unwrap();
     }
 
-    pub fn update_events(&mut self, mut gui_state: &mut ImguiDebug, lameboy: &mut Lameboy) -> () {
+    pub fn update_events(&mut self, gui_state: &mut ImguiDebug, lameboy: &mut Lameboy) -> () {
         for event in self.display.poll_events() {
             match event {
                 Event::Closed => gui_state.active = false,

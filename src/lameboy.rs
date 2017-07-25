@@ -71,7 +71,7 @@ use imgui::{ImGuiSetCond_FirstUseEver, Ui, ImGuiSelectableFlags, ImVec2};
 impl<'c> ImguiDebuggable for Lameboy<'c> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("Emulator"))
-            .size((260.0, 80.0), ImGuiSetCond_FirstUseEver)
+            .size((200.0, 55.0), ImGuiSetCond_FirstUseEver)
             .resizable(true)
             .build(|| {
 
@@ -123,7 +123,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 }
             });
         ui.window(im_str!("Joypad"))
-            .size((260.0, 80.0), ImGuiSetCond_FirstUseEver)
+            .size((150.0, 115.0), ImGuiSetCond_FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.text(im_str!("A = {}", self.get_joypad().a));

@@ -87,7 +87,7 @@ impl<'m> MmuObject for MMU<'m> {
     fn read8(&self, addr: u16) -> u8 {
         match addr {
             0x0000...0x7FFF |
-            0xA000...0xBFFF => self.cart.read(addr),
+            0xA000...0xBFFF => self.cart.read8(addr),
             0x8000...0x9FFF => self.ppu.read8(addr),
             0xC000...0xCFFF |
             0xE000...0xEFFF => self.wram0[(addr as usize) & 0x0FFF],
@@ -113,7 +113,7 @@ impl<'m> MmuObject for MMU<'m> {
     fn write8(&mut self, addr: u16, data: u8) {
         match addr {
             0x0000...0x7FFF |
-            0xA000...0xBFFF => self.cart.write(addr, data),
+            0xA000...0xBFFF => self.cart.write8(addr, data),
             0x8000...0x9FFF => self.ppu.write8(addr, data),
             0xC000...0xCFFF |
             0xE000...0xEFFF => self.wram0[(addr as usize) & 0x0FFF] = data,
@@ -142,7 +142,7 @@ use imgui::{ImGuiSetCond_FirstUseEver, Ui};
 impl<'m> ImguiDebuggable for MMU<'m> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("MMU"))
-            .size((265.0, 60.0), ImGuiSetCond_FirstUseEver)
+            .size((285.0, 122.0), ImGuiSetCond_FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.input_int(im_str!("Addr"), &mut imgui_debug.input_addr)

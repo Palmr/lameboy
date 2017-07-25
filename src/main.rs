@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 #[macro_use]
 extern crate bitflags;
 
@@ -21,8 +19,6 @@ extern crate clap;
 
 use std::io::prelude::*;
 use std::fs::File;
-
-mod memoryeditor;
 
 mod lameboy;
 use lameboy::Lameboy;
@@ -61,14 +57,15 @@ fn main() {
     f.read_to_end(&mut data).expect("Unable to read data");
     println!("File length: {}", data.len());
 
+    // Create all our hardware instances
     let mut joypad = Joypad::new();
     let mut cart = Cart::new(data);
     let mut ppu = PPU::new(&gui.display);
     let mut mmu = MMU::new(&mut cart, &mut ppu, &mut joypad);
     let mut cpu = CPU::new(&mut mmu);
     cpu.post_boot_reset();
-
     let mut lameboy = Lameboy::new(cpu);
+
 
     let mut imgui_debug = ImguiDebug::new();
 

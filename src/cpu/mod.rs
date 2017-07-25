@@ -24,16 +24,11 @@ impl<'c> CPU<'c> {
         }
     }
 
+    /// Set the registers and memory up as if the DMG boot rom had just finished loading and handed
+    /// execution to the game.
     pub fn post_boot_reset(&mut self) {
         self.registers.post_boot_reset();
         self.mmu.post_boot_reset();
-    }
-
-    fn halt(&mut self) {
-        // if interrupt
-        self.halt = false;
-        // else
-        // ??
     }
 
     /// Read an 8-bit value using the PC register as the address, then move the PC register forward
@@ -60,6 +55,14 @@ impl<'c> CPU<'c> {
         return value;
     }
 
+    fn halt(&mut self) {
+        // if interrupt
+        self.halt = false;
+        // else
+        // ??
+    }
+
+    /// Run a fetch, decode, and execute cycle on the CPU
     pub fn cycle(&mut self) -> u8 {
         // Fetch
         let op = self.mmu.read8(self.registers.pc);

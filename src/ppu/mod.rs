@@ -1,5 +1,3 @@
-use std::os::raw::c_void;
-
 use glium::backend::Facade;
 use glium::Surface;
 
@@ -184,10 +182,6 @@ impl PPU {
         self.gpu.draw(target);
     }
 
-    pub fn get_tex_id (&self) -> *mut c_void {
-        self.gpu.get_tex_id()
-    }
-
     pub fn apply_test_pattern(&mut self, pattern: &TestPattern, mod_value: usize) {
         for y in 0..144 {
             for x in 0..160 {
@@ -247,8 +241,7 @@ impl MmuObject for PPU {
 }
 
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiSetCond_FirstUseEver, Ui, ImVec2, ImVec4};
-use imgui_sys;
+use imgui::{ImGuiSetCond_FirstUseEver, Ui};
 impl ImguiDebuggable for PPU {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("PPU"))
@@ -272,14 +265,10 @@ impl ImguiDebuggable for PPU {
                     ui.separator();
 
                     ui.text(im_str!("Mode: {:?}", self.mode));
-                    // Uncomment below when custom textures get supported
-                    unsafe {
-                        imgui_sys::igImage(self.get_tex_id(), ImVec2::new(160.0, 144.0), ImVec2::new(0.0, 0.0), ImVec2::new(1.0, 1.0), ImVec4::new(0.0, 0.0, 0.0, 1.0), ImVec4::new(1.0, 0.0, 0.0, 1.0));
-                    }
                 });
 
         ui.window(im_str!("PPU-registers"))
-            .size((355.0, 230.0), ImGuiSetCond_FirstUseEver)
+            .size((224.0, 230.0), ImGuiSetCond_FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.text(im_str!("Control: {:?}", self.registers.control));
