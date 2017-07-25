@@ -20,6 +20,7 @@ pub struct ImguiDebug {
     pub ppu_mod: i32,
     pub show_about: bool,
     pub input_addr: i32,
+    pub input_d8: i32,
 }
 
 impl ImguiDebug {
@@ -37,6 +38,7 @@ impl ImguiDebug {
             ppu_mod: 4,
             show_about: false,
             input_addr: 0,
+            input_d8: 0,
         }
     }
 

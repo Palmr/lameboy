@@ -4,8 +4,6 @@ use self::super::ppu::PPU;
 pub struct MMU<'m> {
     pub cart: &'m mut Cart,
     pub ppu: &'m mut PPU,
-    /// Video RAM [0x8000 - 0x9FFF] (Bank 0-1 in CGB Mode)
-    vram: Box<[u8; 0x2000]>,
 	/// Work RAM 0 [0xC000 - 0xCFFF]
 	wram0: Box<[u8; 0x1000]>,
 	/// Work RAM 1 [0xD000 - 0xDFFF] (Bank 1-7 in CGB Mode)
@@ -27,7 +25,6 @@ impl<'m> MMU<'m> {
         MMU {
             cart: cart,
             ppu: ppu,
-            vram: Box::new([0; 0x2000]),
             wram0: Box::new([0; 0x1000]),
             wram1: Box::new([0; 0x1000]),
             oam: Box::new([0; 0x00A0]),
@@ -76,7 +73,7 @@ impl<'m> MMU<'m> {
         match addr {
             0x0000...0x7FFF |
             0xA000...0xBFFF => self.cart.read(addr),
-            0x8000...0x9FFF => self.vram[(addr as usize) & 0x1FFF],
+            0x8000...0x9FFF => self.ppu.read8(addr),
             0xC000...0xCFFF |
             0xE000...0xEFFF => self.wram0[(addr as usize) & 0x0FFF],
             0xD000...0xDFFF |
@@ -108,7 +105,7 @@ impl<'m> MMU<'m> {
         match addr {
             0x0000...0x7FFF |
             0xA000...0xBFFF => self.cart.write(addr, data),
-            0x8000...0x9FFF => self.vram[(addr as usize) & 0x1FFF] = data,
+            0x8000...0x9FFF => self.ppu.write8(addr, data),
             0xC000...0xCFFF |
             0xE000...0xEFFF => self.wram0[(addr as usize) & 0x0FFF] = data,
             0xD000...0xDFFF |
@@ -139,12 +136,15 @@ impl<'m> ImguiDebuggable for MMU<'m> {
             .resizable(true)
             .build(|| {
                 ui.input_int(im_str!("Addr"), &mut imgui_debug.input_addr)
-                    .flags(ImGuiInputTextFlags_CharsHexadecimal)
+                    .chars_hexadecimal(true)
                     .build();
-                ui.same_line(0.0);
-                if ui.small_button(im_str!("print")) {
-                    let byte = self.read8(imgui_debug.input_addr as u16);
-                    println!("Memory[{:04X}] = {:02X}", imgui_debug.input_addr, byte);
+                ui.text(im_str!("[0x{:04X}] = 0x{:02x}", imgui_debug.input_addr, self.read8(imgui_debug.input_addr as u16)));
+                ui.separator();
+                ui.input_int(im_str!("Value"), &mut imgui_debug.input_d8)
+                    .chars_hexadecimal(true)
+                    .build();
+                if ui.small_button(im_str!("Write")) {
+                    let byte = self.write8(imgui_debug.input_addr as u16, imgui_debug.input_d8 as u8);
                 }
             });
     }

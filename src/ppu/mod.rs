@@ -7,9 +7,7 @@ pub mod gpu;
 use ppu::gpu::*;
 
 pub mod registers;
-use ppu::registers::Registers;
-use ppu::registers::ControlFlags;
-use ppu::registers::StatusFlags;
+use ppu::registers::*;
 
 pub const SCREEN_WIDTH: usize = 160;
 pub const SCREEN_HEIGHT: usize = 144;
@@ -29,6 +27,8 @@ enum Mode {
 }
 
 pub struct PPU {
+    /// Video RAM [0x8000 - 0x9FFF] (Bank 0-1 in CGB Mode)
+    vram: Box<[u8; 0x2000]>,
     mode_clock: usize,
     mode: Mode,
     registers: Registers,
@@ -43,6 +43,7 @@ impl PPU {
         let screen_buffer = Box::new(vec![0 as u8; SCREEN_WIDTH * SCREEN_HEIGHT]);
 
         PPU {
+            vram: Box::new([0; 0x2000]),
             mode_clock: 0,
             mode: Mode::HBlank,
             registers: Registers::new(),
@@ -54,8 +55,9 @@ impl PPU {
     /// Handle memory reads from the PPU data registers only, otherwise panic
     pub fn read8(&self, addr: u16) -> u8 {
         match addr {
+            0x8000...0x9FFF => self.vram[(addr as usize) & 0x1FFF],
             0xFF40 => self.registers.control.bits(),
-            0xFF41 => self.registers.status,
+            0xFF41 => self.combine_status_mode(),
             0xFF42 => self.registers.scroll_y,
             0xFF43 => self.registers.scroll_x,
             0xFF44 => self.registers.ly,
@@ -70,9 +72,22 @@ impl PPU {
         }
     }
 
+    fn combine_status_mode(&self) -> u8 {
+        // Mask away any existing mode
+        let stat = self.registers.status & 0b11111100;
+
+        match self.mode {
+            Mode::HBlank => stat | 0x00,
+            Mode::VBlank => stat | 0x01,
+            Mode::ReadOam => stat | 0x02,
+            Mode::ReadVram => stat | 0x03,
+        }
+    }
+
     /// Handle memory writes to the PPU data registers only, otherwise panic
     pub fn write8(&mut self, addr: u16, data: u8) {
         match addr {
+            0x8000...0x9FFF => self.vram[(addr as usize) & 0x1FFF] = data,
             0xFF40 => self.registers.control = ControlFlags::from_bits_truncate(data),
             0xFF41 => self.registers.status = data,
             0xFF42 => self.registers.scroll_y = data,
@@ -110,7 +125,7 @@ impl PPU {
                     self.mode = Mode::HBlank;
 
                     // Write a scanline to the framebuffer
-                    // TODO - self.renderscan();
+                    self.renderscan();
                 }
             },
 
@@ -121,17 +136,16 @@ impl PPU {
                     self.mode_clock = 0;
                     self.registers.ly += 1;
 
-                    if self.registers.ly == 143 {
+                    if self.registers.ly == 144 {
                         // Enter vblank
                         self.mode = Mode::VBlank;
-                        // TODO - self.canvas.putImageData(self.scrn, 0, 0);
+                        self.gpu.load_texture(&self.screen_buffer);
                     }
                     else {
                         self.mode = Mode::ReadOam;
                     }
                 }
             },
-
 
             // Vblank (10 lines)
             Mode::VBlank => {
@@ -145,6 +159,56 @@ impl PPU {
                         self.registers.ly = 0;
                     }
                 }
+            }
+        }
+    }
+
+    fn renderscan(&mut self) {
+        // VRAM offset for the tile map
+        let mut bg_map_offset: u16 = if self.registers.control.contains(BG_TILE_MAP) { 0x1C00 } else { 0x1800 };
+
+        // Which line of tiles to use in the map
+        bg_map_offset += (self.registers.ly.wrapping_add(self.registers.scroll_y) as u16 >> 3) * 32;
+
+        // Which tile to start with in the map line
+        let mut x_tile_offset: u16 = self.registers.scroll_x as u16 >> 3;
+
+        // Which line of pixels to use in the tiles
+        let tile_y_offset = self.registers.ly.wrapping_add(self.registers.scroll_y) % 8;
+
+        // Where in the tile line to start
+        let mut tile_x_offset = self.registers.scroll_x % 8;
+
+        // Read tile index from the background map
+        //var colour;
+        let mut tile_index: usize = self.vram[(bg_map_offset + x_tile_offset) as usize] as usize;
+
+        // If the tile data set in use is #1, the
+        // indices are signed; calculate a real tile offset
+        if !self.registers.control.contains(BG_WIN_TILE_SET) { tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize;};
+
+        let slice_start = SCREEN_WIDTH * self.registers.ly as usize;
+        let slice_end = slice_start + SCREEN_WIDTH;
+        let pixels = &mut self.screen_buffer[slice_start..slice_end];
+
+        for i in 0..160 {
+            let tile_addr = (tile_index << 4) + (tile_y_offset as usize * 2);
+            let low = self.vram[tile_addr];
+            let high = self.vram[tile_addr + 1usize];
+
+            let colour = ((low>>(7-tile_x_offset)) & 0x01) | (((high>>((7-tile_x_offset))) & 0x01)<<1);
+            // TODO - Use palette
+
+            // Plot the pixel to canvas
+            pixels[i] = colour as u8;
+
+            // When this tile ends, read another
+            tile_x_offset += 1;
+            if tile_x_offset == 8 {
+                tile_x_offset = 0;
+                x_tile_offset = (x_tile_offset + 1) & 31;
+                tile_index = self.vram[(bg_map_offset + x_tile_offset) as usize] as usize;
+                if !self.registers.control.contains(BG_WIN_TILE_SET) { tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize;};
             }
         }
     }
@@ -175,7 +239,8 @@ impl PPU {
 }
 
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiSetCond_FirstUseEver, Ui};
+use imgui::{ImGuiSetCond_FirstUseEver, Ui, ImVec2, ImVec4};
+use imgui_sys;
 impl ImguiDebuggable for PPU {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("PPU"))
@@ -199,6 +264,10 @@ impl ImguiDebuggable for PPU {
                     ui.separator();
 
                     ui.text(im_str!("Mode: {:?}", self.mode));
+                    // Uncomment below when custom textures get supported
+                    unsafe {
+                        imgui_sys::igImage(self.get_tex_id(), ImVec2::new(160.0, 144.0), ImVec2::new(0.0, 0.0), ImVec2::new(1.0, 1.0), ImVec4::new(0.0, 0.0, 0.0, 1.0), ImVec4::new(1.0, 0.0, 0.0, 1.0));
+                    }
                 });
 
         ui.window(im_str!("PPU-registers"))
