@@ -35,6 +35,8 @@ mod cpu;
 use cpu::CPU;
 mod ppu;
 use ppu::PPU;
+mod joypad;
+use joypad::Joypad;
 
 const CLEAR_COLOR: (f32, f32, f32, f32) = (0.8784, 0.9725, 0.8156, 1.0);
 
@@ -59,9 +61,10 @@ fn main() {
     f.read_to_end(&mut data).expect("Unable to read data");
     println!("File length: {}", data.len());
 
+    let mut joypad = Joypad::new();
     let mut cart = Cart::new(data);
     let mut ppu = PPU::new(&gui.display);
-    let mut mmu = MMU::new(&mut cart, &mut ppu);
+    let mut mmu = MMU::new(&mut cart, &mut ppu, &mut joypad);
     let mut cpu = CPU::new(&mut mmu);
     cpu.post_boot_reset();
 
@@ -74,7 +77,7 @@ fn main() {
             lameboy.run_frame();
         }
 
-        gui.update_events(&mut imgui_debug);
+        gui.update_events(&mut imgui_debug, &mut lameboy);
 
         if !imgui_debug.active {
             break;

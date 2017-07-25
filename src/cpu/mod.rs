@@ -4,7 +4,8 @@ use cpu::registers::*;
 pub mod instructions;
 use cpu::instructions::*;
 
-use self::super::mmu::MMU;
+use mmu::MMU;
+use mmu::mmuobject::MmuObject;
 
 pub struct CPU<'c> {
     pub registers: Registers,

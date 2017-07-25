@@ -1,9 +1,14 @@
-use self::super::cart::Cart;
-use self::super::ppu::PPU;
+use cart::Cart;
+use ppu::PPU;
+use joypad::Joypad;
+
+pub mod mmuobject;
+use mmu::mmuobject::MmuObject;
 
 pub struct MMU<'m> {
     pub cart: &'m mut Cart,
     pub ppu: &'m mut PPU,
+    pub joypad: &'m mut Joypad,
 	/// Work RAM 0 [0xC000 - 0xCFFF]
 	wram0: Box<[u8; 0x1000]>,
 	/// Work RAM 1 [0xD000 - 0xDFFF] (Bank 1-7 in CGB Mode)
@@ -21,10 +26,11 @@ pub struct MMU<'m> {
 }
 
 impl<'m> MMU<'m> {
-    pub fn new(cart: &'m mut Cart, ppu: &'m mut PPU) -> MMU<'m> {
+    pub fn new(cart: &'m mut Cart, ppu: &'m mut PPU, joypad: &'m mut Joypad) -> MMU<'m> {
         MMU {
             cart: cart,
             ppu: ppu,
+            joypad: joypad,
             wram0: Box::new([0; 0x1000]),
             wram1: Box::new([0; 0x1000]),
             oam: Box::new([0; 0x00A0]),
@@ -69,7 +75,16 @@ impl<'m> MMU<'m> {
         self.write8(0xFFFF, 0x00);
     }
 
-    pub fn read8(&self, addr: u16) -> u8 {
+    pub fn read16(&self, addr: u16) -> u16 {
+        let low = self.read8(addr);
+        let high = self.read8(addr+1);
+
+        ((high as u16) << 8) | (low as u16)
+    }
+}
+
+impl<'m> MmuObject for MMU<'m> {
+    fn read8(&self, addr: u16) -> u8 {
         match addr {
             0x0000...0x7FFF |
             0xA000...0xBFFF => self.cart.read(addr),
@@ -82,7 +97,7 @@ impl<'m> MMU<'m> {
             0xFEA0...0xFEFF => self.unusable,
             0xFF00...0xFF7F => {
                 match addr {
-                    0xFF00 => 0xDF /* Stubbed in hopefully no-buttons byte value */,
+                    0xFF00 => self.joypad.read8(addr),
                     0xFF40...0xFF4B => self.ppu.read8(addr),
                     0xFF01...0xFF3F |
                     0xFF4C...0xFF7F => self.io[(addr as usize) & 0x00FF],
@@ -95,14 +110,7 @@ impl<'m> MMU<'m> {
         }
     }
 
-    pub fn read16(&self, addr: u16) -> u16 {
-        let low = self.read8(addr);
-        let high = self.read8(addr+1);
-
-        ((high as u16) << 8) | (low as u16)
-    }
-
-    pub fn write8(&mut self, addr: u16, data: u8) {
+    fn write8(&mut self, addr: u16, data: u8) {
         match addr {
             0x0000...0x7FFF |
             0xA000...0xBFFF => self.cart.write(addr, data),
@@ -115,7 +123,7 @@ impl<'m> MMU<'m> {
             0xFEA0...0xFEFF => (),
             0xFF00...0xFF7F => {
                 match addr {
-                    0xFF00 => {/* swallow joypad writes */},
+                    0xFF00 => self.joypad.write8(addr, data),
                     0xFF40...0xFF4B => self.ppu.write8(addr, data),
                     0xFF01...0xFF3F |
                     0xFF4C...0xFF7F => self.io[(addr as usize) & 0x00FF] = data,

@@ -6,7 +6,7 @@ use imgui::{ImGui, Ui, ImGuiKey, ImStr};
 use imgui::glium_renderer::Renderer;
 use std::time::Instant;
 
-use self::super::Lameboy;
+use lameboy::Lameboy;
 
 pub mod imguidebug;
 use gui::imguidebug::ImguiDebug;
@@ -108,7 +108,7 @@ impl GUI {
         target.finish().unwrap();
     }
 
-    pub fn update_events(&mut self, mut gui_state: &mut ImguiDebug) -> () {
+    pub fn update_events(&mut self, mut gui_state: &mut ImguiDebug, lameboy: &mut Lameboy) -> () {
         for event in self.display.poll_events() {
             match event {
                 Event::Closed => gui_state.active = false,
@@ -116,19 +116,20 @@ impl GUI {
                     let pressed = state == ElementState::Pressed;
                     match code {
                         Some(VirtualKeyCode::Tab) => self.imgui.set_key(0, pressed),
-                        Some(VirtualKeyCode::Left) => self.imgui.set_key(1, pressed),
-                        Some(VirtualKeyCode::Right) => self.imgui.set_key(2, pressed),
-                        Some(VirtualKeyCode::Up) => self.imgui.set_key(3, pressed),
-                        Some(VirtualKeyCode::Down) => self.imgui.set_key(4, pressed),
+                        Some(VirtualKeyCode::Left) => {self.imgui.set_key(1, pressed); lameboy.get_joypad().left = pressed},
+                        Some(VirtualKeyCode::Right) => {self.imgui.set_key(2, pressed); lameboy.get_joypad().right = pressed},
+                        Some(VirtualKeyCode::Up) => {self.imgui.set_key(3, pressed); lameboy.get_joypad().up = pressed},
+                        Some(VirtualKeyCode::Down) => {self.imgui.set_key(4, pressed); lameboy.get_joypad().down = pressed},
                         Some(VirtualKeyCode::PageUp) => self.imgui.set_key(5, pressed),
                         Some(VirtualKeyCode::PageDown) => self.imgui.set_key(6, pressed),
                         Some(VirtualKeyCode::Home) => self.imgui.set_key(7, pressed),
                         Some(VirtualKeyCode::End) => self.imgui.set_key(8, pressed),
                         Some(VirtualKeyCode::Delete) => self.imgui.set_key(9, pressed),
                         Some(VirtualKeyCode::Back) => self.imgui.set_key(10, pressed),
-                        Some(VirtualKeyCode::Return) => self.imgui.set_key(11, pressed),
+                        Some(VirtualKeyCode::Return) => {self.imgui.set_key(11, pressed); lameboy.get_joypad().start = pressed},
                         Some(VirtualKeyCode::Escape) => self.imgui.set_key(12, pressed),
-                        Some(VirtualKeyCode::A) => self.imgui.set_key(13, pressed),
+                        Some(VirtualKeyCode::A) => {self.imgui.set_key(13, pressed); lameboy.get_joypad().a = pressed},
+                        Some(VirtualKeyCode::S) => {lameboy.get_joypad().b = pressed},
                         Some(VirtualKeyCode::C) => self.imgui.set_key(14, pressed),
                         Some(VirtualKeyCode::V) => self.imgui.set_key(15, pressed),
                         Some(VirtualKeyCode::X) => self.imgui.set_key(16, pressed),
@@ -138,7 +139,7 @@ impl GUI {
                         Some(VirtualKeyCode::LControl) |
                         Some(VirtualKeyCode::RControl) => self.imgui.set_key_ctrl(pressed),
                         Some(VirtualKeyCode::LShift) |
-                        Some(VirtualKeyCode::RShift) => self.imgui.set_key_shift(pressed),
+                        Some(VirtualKeyCode::RShift) => {self.imgui.set_key_shift(pressed); lameboy.get_joypad().select = pressed}
                         Some(VirtualKeyCode::LAlt) |
                         Some(VirtualKeyCode::RAlt) => self.imgui.set_key_alt(pressed),
                         Some(VirtualKeyCode::LWin) |

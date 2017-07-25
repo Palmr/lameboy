@@ -52,26 +52,7 @@ impl PPU {
         }
     }
 
-    /// Handle memory reads from the PPU data registers only, otherwise panic
-    pub fn read8(&self, addr: u16) -> u8 {
-        match addr {
-            0x8000...0x9FFF => self.vram[(addr as usize) & 0x1FFF],
-            0xFF40 => self.registers.control.bits(),
-            0xFF41 => self.combine_status_mode(),
-            0xFF42 => self.registers.scroll_y,
-            0xFF43 => self.registers.scroll_x,
-            0xFF44 => self.registers.ly,
-            0xFF45 => self.registers.lyc,
-            0xFF46 => self.registers.dma,
-            0xFF47 => self.registers.bg_palette,
-            0xFF48 => self.registers.obj0_palette,
-            0xFF49 => self.registers.obj1_palette,
-            0xFF4A => self.registers.window_y,
-            0xFF4B => self.registers.window_x,
-            _ => panic!("Attempted to access [RD] PPU memory from an invalid address: {:#X}", addr)
-        }
-    }
-
+    /// Add the current PPU mode to the status as the two lowest bits
     fn combine_status_mode(&self) -> u8 {
         // Mask away any existing mode
         let stat = self.registers.status & 0b11111100;
@@ -81,26 +62,6 @@ impl PPU {
             Mode::VBlank => stat | 0x01,
             Mode::ReadOam => stat | 0x02,
             Mode::ReadVram => stat | 0x03,
-        }
-    }
-
-    /// Handle memory writes to the PPU data registers only, otherwise panic
-    pub fn write8(&mut self, addr: u16, data: u8) {
-        match addr {
-            0x8000...0x9FFF => self.vram[(addr as usize) & 0x1FFF] = data,
-            0xFF40 => self.registers.control = ControlFlags::from_bits_truncate(data),
-            0xFF41 => self.registers.status = data,
-            0xFF42 => self.registers.scroll_y = data,
-            0xFF43 => self.registers.scroll_x = data,
-            0xFF44 => self.registers.ly = data,
-            0xFF45 => self.registers.lyc = data,
-            0xFF46 => self.registers.dma = data,
-            0xFF47 => self.registers.bg_palette = data,
-            0xFF48 => self.registers.obj0_palette = data,
-            0xFF49 => self.registers.obj1_palette = data,
-            0xFF4A => self.registers.window_y = data,
-            0xFF4B => self.registers.window_x = data,
-            _ => panic!("Attempted to access [WR] PPU memory from an invalid address: {:#X}", addr)
         }
     }
 
@@ -238,6 +199,49 @@ impl PPU {
                     }
 
             }
+        }
+    }
+}
+
+use mmu::mmuobject::MmuObject;
+impl MmuObject for PPU {
+    /// Handle memory reads from the PPU data registers only, otherwise panic
+    fn read8(&self, addr: u16) -> u8 {
+        match addr {
+            0x8000...0x9FFF => self.vram[(addr as usize) & 0x1FFF],
+            0xFF40 => self.registers.control.bits(),
+            0xFF41 => self.combine_status_mode(),
+            0xFF42 => self.registers.scroll_y,
+            0xFF43 => self.registers.scroll_x,
+            0xFF44 => self.registers.ly,
+            0xFF45 => self.registers.lyc,
+            0xFF46 => self.registers.dma,
+            0xFF47 => self.registers.bg_palette,
+            0xFF48 => self.registers.obj0_palette,
+            0xFF49 => self.registers.obj1_palette,
+            0xFF4A => self.registers.window_y,
+            0xFF4B => self.registers.window_x,
+            _ => panic!("Attempted to access [RD] PPU memory from an invalid address: {:#X}", addr)
+        }
+    }
+
+    /// Handle memory writes to the PPU data registers only, otherwise panic
+    fn write8(&mut self, addr: u16, data: u8) {
+        match addr {
+            0x8000...0x9FFF => self.vram[(addr as usize) & 0x1FFF] = data,
+            0xFF40 => self.registers.control = ControlFlags::from_bits_truncate(data),
+            0xFF41 => self.registers.status = data,
+            0xFF42 => self.registers.scroll_y = data,
+            0xFF43 => self.registers.scroll_x = data,
+            0xFF44 => self.registers.ly = data,
+            0xFF45 => self.registers.lyc = data,
+            0xFF46 => self.registers.dma = data,
+            0xFF47 => self.registers.bg_palette = data,
+            0xFF48 => self.registers.obj0_palette = data,
+            0xFF49 => self.registers.obj1_palette = data,
+            0xFF4A => self.registers.window_y = data,
+            0xFF4B => self.registers.window_x = data,
+            _ => panic!("Attempted to access [WR] PPU memory from an invalid address: {:#X}", addr)
         }
     }
 }
