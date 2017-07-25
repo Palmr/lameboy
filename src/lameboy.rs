@@ -61,7 +61,7 @@ impl<'l> Lameboy<'l> {
 }
 
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiSetCond_FirstUseEver, Ui, ImGuiSelectableFlags, ImVec2, ImGuiInputTextFlags_CharsHexadecimal};
+use imgui::{ImGuiSetCond_FirstUseEver, Ui, ImGuiSelectableFlags, ImVec2};
 impl<'c> ImguiDebuggable for Lameboy<'c> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("Emulator"))
@@ -83,7 +83,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 ui.separator();
 
                 ui.input_int(im_str!("Addr"), &mut imgui_debug.input_addr)
-                    .flags(ImGuiInputTextFlags_CharsHexadecimal)
+                    .chars_hexadecimal(true)
                     .build();
 
                 if ui.small_button(im_str!("Add")) {

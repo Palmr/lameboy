@@ -82,8 +82,9 @@ impl<'m> MMU<'m> {
             0xFEA0...0xFEFF => self.unusable,
             0xFF00...0xFF7F => {
                 match addr {
+                    0xFF00 => 0xDF /* Stubbed in hopefully no-buttons byte value */,
                     0xFF40...0xFF4B => self.ppu.read8(addr),
-                    0xFF00...0xFF3F |
+                    0xFF01...0xFF3F |
                     0xFF4C...0xFF7F => self.io[(addr as usize) & 0x00FF],
                     _ => panic!("Attempted to access [RD] memory from an invalid address: {:#X}", addr)
                 }
@@ -114,8 +115,9 @@ impl<'m> MMU<'m> {
             0xFEA0...0xFEFF => (),
             0xFF00...0xFF7F => {
                 match addr {
+                    0xFF00 => {/* swallow joypad writes */},
                     0xFF40...0xFF4B => self.ppu.write8(addr, data),
-                    0xFF00...0xFF3F |
+                    0xFF01...0xFF3F |
                     0xFF4C...0xFF7F => self.io[(addr as usize) & 0x00FF] = data,
                     _ => panic!("Attempted to access [WR] memory from an invalid address: {:#X}", addr)
                 }
@@ -128,7 +130,7 @@ impl<'m> MMU<'m> {
 }
 
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiSetCond_FirstUseEver, Ui, ImGuiInputTextFlags_CharsHexadecimal};
+use imgui::{ImGuiSetCond_FirstUseEver, Ui};
 impl<'m> ImguiDebuggable for MMU<'m> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("MMU"))
@@ -144,7 +146,7 @@ impl<'m> ImguiDebuggable for MMU<'m> {
                     .chars_hexadecimal(true)
                     .build();
                 if ui.small_button(im_str!("Write")) {
-                    let byte = self.write8(imgui_debug.input_addr as u16, imgui_debug.input_d8 as u8);
+                    self.write8(imgui_debug.input_addr as u16, imgui_debug.input_d8 as u8);
                 }
             });
     }
