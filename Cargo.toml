@@ -2,7 +2,7 @@
 name = "lameboy"
 version = "0.1.0"
 authors = ["Nick Palmer <nick@palmr.co.uk>"]
-description = "Yet another Gameboy emulator"
+description = "Yet another Game Boy emulator"
 readme = "Readme.md"
 homepage = "https://github.com/palmr/lameboy"
 repository = "https://github.com/palmr/lameboy"

@@ -1,7 +1,9 @@
-use imgui::Ui;
+use imgui::{Ui, ImGuiSetCond_Always, ImVec2};
 
 use lameboy::Lameboy;
 use ppu::TestPattern;
+
+use {PKG_NAME, PKG_VERSION, PKG_DESCRIPTION, PKG_AUTHORS};
 
 pub trait ImguiDebuggable {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug);
@@ -11,6 +13,7 @@ pub struct ImguiDebug {
     pub active: bool,
     pub show_imgui_metrics: bool,
     pub show_menu: bool,
+    pub show_emulator: bool,
     pub show_cart: bool,
     pub show_memory: bool,
     pub show_cpu: bool,
@@ -29,6 +32,7 @@ impl ImguiDebug {
             active: true,
             show_imgui_metrics: false,
             show_menu: false,
+            show_emulator: false,
             show_cart: false,
             show_memory: false,
             show_cpu: false,
@@ -42,7 +46,7 @@ impl ImguiDebug {
         }
     }
 
-    pub fn draw<'a>(&mut self, ui: &Ui<'a>, mut emu: &mut Lameboy) {
+    pub fn draw<'a>(&mut self, ui: &Ui<'a>, mut lameboy: &mut Lameboy) {
         if self.show_menu {
             ui.main_menu_bar(|| {
                 ui.menu(im_str!("File"))
@@ -62,9 +66,16 @@ impl ImguiDebug {
                             .build();
                     });
                 ui.menu(im_str!("Options"))
-                    .build(|| {});
+                    .build(|| {
+                        ui.menu_item(im_str!("TODO"))
+                            .enabled(false)
+                            .build();
+                    });
                 ui.menu(im_str!("Debug"))
                     .build(|| {
+                        ui.menu_item(im_str!("Emulator"))
+                            .selected(&mut self.show_emulator)
+                            .build();
                         ui.menu_item(im_str!("Cart"))
                             .selected(&mut self.show_cart)
                             .build();
@@ -95,24 +106,42 @@ impl ImguiDebug {
         }
 
         if self.show_cart {
-            emu.get_cart().imgui_display(ui, self);
+            lameboy.get_cart().imgui_display(ui, self);
         }
 
         if self.show_memory {
-            emu.get_mmu().imgui_display(ui, self);
+            lameboy.get_mmu().imgui_display(ui, self);
         }
 
         if self.show_cpu {
-            emu.get_cpu().imgui_display(ui, self);
+            lameboy.get_cpu().imgui_display(ui, self);
         }
 
         if self.show_ppu {
-            emu.get_ppu().imgui_display(ui, self);
+            lameboy.get_ppu().imgui_display(ui, self);
         }
         if self.apply_test_pattern {
-            emu.get_ppu().apply_test_pattern(&self.test_pattern_type, self.ppu_mod as usize);
+            lameboy.get_ppu().apply_test_pattern(&self.test_pattern_type, self.ppu_mod as usize);
         }
 
-        emu.imgui_display(ui, self);
+        if self.show_emulator {
+            lameboy.imgui_display(ui, self);
+        }
+
+        if self.show_about {
+            ui.window(im_str!("About - {} v{}", PKG_NAME, PKG_VERSION))
+                .size((250.0, 100.0), ImGuiSetCond_Always)
+                .collapsible(false)
+                .resizable(false)
+                .show_borders(false)
+                .movable(false)
+                .build(|| {
+                    ui.text(im_str!("{}", PKG_DESCRIPTION));
+                    ui.text(im_str!("{}", PKG_AUTHORS));
+                    if ui.button(im_str!("Close"), ImVec2::new(75.0, 30.0)) {
+                        self.show_about = false;
+                    }
+                });
+        }
     }
 }

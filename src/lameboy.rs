@@ -98,7 +98,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 ui.checkbox(im_str!("running"), &mut self.running);
             });
         ui.window(im_str!("Breakpoints"))
-            .size((260.0, 80.0), ImGuiSetCond_FirstUseEver)
+            .size((225.0, 150.0), ImGuiSetCond_FirstUseEver)
             .resizable(true)
             .build(|| {
                 if ui.button(im_str!("Set"), ImVec2::new(0.0, 0.0)) {

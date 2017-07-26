@@ -34,14 +34,18 @@ use ppu::PPU;
 mod joypad;
 use joypad::Joypad;
 
+const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
+const PKG_VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const PKG_DESCRIPTION: &'static str = env!("CARGO_PKG_DESCRIPTION");
+const PKG_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
+
 const CLEAR_COLOR: (f32, f32, f32, f32) = (0.8784, 0.9725, 0.8156, 1.0);
 
-
 fn main() {
-    let matches = clap::App::new("Lameboy")
-        .version("0.1.0")
+    let matches = clap::App::new(PKG_NAME)
+        .version(PKG_VERSION)
         .author("Nick Palmer <nick@palmr.co.uk>")
-        .about("Yet another Gameboy emulator")
+        .about(PKG_DESCRIPTION)
         .arg(clap::Arg::with_name("file")
             .help("ROM file to load")
             .required(false))
@@ -63,10 +67,9 @@ fn main() {
     let mut ppu = PPU::new(&gui.display);
     let mut mmu = MMU::new(&mut cart, &mut ppu, &mut joypad);
     let cpu = CPU::new(&mut mmu);
+
     let mut lameboy = Lameboy::new(cpu);
-
     lameboy.reset();
-
 
     let mut imgui_debug = ImguiDebug::new();
 
