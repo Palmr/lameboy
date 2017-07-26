@@ -44,9 +44,8 @@ impl<'l> Lameboy<'l> {
         let cpu_duration = self.cpu.cycle();
 
         // Run the PPU for one cycle getting any updated interrupt flags back
-        let mut int_flags = self.get_mmu().read8(0xFF0F);
+        let int_flags = self.get_mmu().read8(0xFF0F);
         let ppu_int_flags = self.get_ppu().cycle(cpu_duration);
-
         self.get_mmu().write8(0xFF0F, int_flags | ppu_int_flags);
 
         return cpu_duration;
