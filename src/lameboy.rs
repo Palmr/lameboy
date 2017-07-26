@@ -25,7 +25,7 @@ impl<'l> Lameboy<'l> {
     pub fn run_frame(&mut self) {
         let mut t_clk: u32 = 0;
         while t_clk < 70224 {
-            // Break on breakpoints
+            // Stop emulator running if the current PC is a breakpoint
             let current_pc = self.get_cpu().registers.pc;
             if self.breakpoints.contains(&current_pc) {
                 println!("Breakpoint hit: 0x{:04X}", current_pc);
@@ -33,13 +33,21 @@ impl<'l> Lameboy<'l> {
                 return;
             }
 
+            // Step the emulator through a single opcode
             t_clk += self.step() as u32;
         }
     }
 
+    // Let the CPU fetch, decode, and execute an opcode and update the PPU
     pub fn step(&mut self) -> u8 {
+        // Run the CPU for one opcode and get its cycle duration for the PPU
         let cpu_duration = self.cpu.cycle();
-        self.get_ppu().cycle(cpu_duration);
+
+        // Run the PPU for one cycle getting any updated interrupt flags back
+        let mut int_flags = self.get_mmu().read8(0xFF0F);
+        let ppu_int_flags = self.get_ppu().cycle(cpu_duration);
+
+        self.get_mmu().write8(0xFF0F, int_flags | ppu_int_flags);
 
         return cpu_duration;
     }
@@ -90,33 +98,33 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
             .resizable(true)
             .build(|| {
                 if ui.button(im_str!("Set"), ImVec2::new(0.0, 0.0)) {
-                    self.breakpoints.push(imgui_debug.input_addr as u16);
+                    let breakpoint_addr = imgui_debug.input_addr as u16;
+                    if !self.breakpoints.contains(&breakpoint_addr) {
+                        self.breakpoints.push(breakpoint_addr);
+                    }
                 }
                 ui.same_line(0.0);
                 ui.input_int(im_str!("Addr"), &mut imgui_debug.input_addr)
                     .chars_hexadecimal(true)
                     .build();
 
-                if ui.button(im_str!("List/Remove"), ImVec2::new(0.0, 0.0)) {
-                    ui.open_popup(im_str!("breakpoints"));
+                if ui.button(im_str!("Clear All"), ImVec2::new(0.0, 0.0)) {
+                    self.breakpoints.clear();
                 }
 
                 let mut removal_index: Option<usize> = None;
-                ui.popup(im_str!("breakpoints"), || {
-                    ui.text(im_str!("Breakpoints:"));
-                    ui.separator();
-                    if self.breakpoints.len() == 0{
-                        ui.text(im_str!("None yet"));
-                    }
-                    else {
-                        for index in 0..self.breakpoints.len() {
-                            if ui.selectable(im_str!("0x{:04X}", self.breakpoints[index]), false, ImGuiSelectableFlags::empty(), ImVec2::new(0.0, 0.0)) {
-                                println!("Removing index {}", index);
-                                removal_index = Some(index);
-                            }
+                ui.text(im_str!("Breakpoints:"));
+                ui.separator();
+                if self.breakpoints.len() == 0{
+                    ui.text(im_str!("None yet"));
+                }
+                else {
+                    for index in 0..self.breakpoints.len() {
+                        if ui.selectable(im_str!("0x{:04X}", self.breakpoints[index]), false, ImGuiSelectableFlags::empty(), ImVec2::new(0.0, 0.0)) {
+                            removal_index = Some(index);
                         }
                     }
-                });
+                }
                 match removal_index {
                     Some(index) => {self.breakpoints.remove(index);},
                     None => (),

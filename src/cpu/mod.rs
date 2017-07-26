@@ -4,6 +4,9 @@ use cpu::registers::*;
 pub mod instructions;
 use cpu::instructions::*;
 
+pub mod interrupts;
+use cpu::interrupts::*;
+
 use mmu::MMU;
 use mmu::mmuobject::MmuObject;
 
@@ -29,6 +32,8 @@ impl<'c> CPU<'c> {
     pub fn post_boot_reset(&mut self) {
         self.registers.post_boot_reset();
         self.mmu.post_boot_reset();
+        self.ime = true;
+        self.halt = false;
     }
 
     /// Read an 8-bit value using the PC register as the address, then move the PC register forward
@@ -62,17 +67,51 @@ impl<'c> CPU<'c> {
         // ??
     }
 
+    pub fn handle_interrupt(&mut self) -> u8 {
+        let int_enable = self.mmu.read8(0xFFFF);
+        let mut int_flags = self.mmu.read8(0xFF0F);
+	    if self.ime && int_enable > 0 && int_flags > 0 {
+	        self.halt = false;
+            self.ime = false;
+
+            let duration = match int_enable & int_flags {
+                INT_VBLANK    => {int_flags &= !INT_VBLANK; self.do_interrupt(0x0040)},
+                INT_LCD_STAT  => {int_flags &= !INT_LCD_STAT; self.do_interrupt(0x0048)},
+                INT_TIME      => {int_flags &= !INT_TIME; self.do_interrupt(0x0050)},
+                INT_SERIAL    => {int_flags &= !INT_SERIAL; self.do_interrupt(0x0058)},
+                INT_JOYPAD    => {int_flags &= !INT_JOYPAD; self.do_interrupt(0x0060)},
+                _ => {self.ime = true; 0},
+            };
+
+            self.mmu.write8(0xFF0F, int_flags);
+            return duration;
+	    }
+
+        return 0
+    }
+
+    /// Interrupt instruction
+    fn do_interrupt(&mut self, addr: u16) -> u8 {
+        // Disable further interrupts
+        self.ime = false;
+
+        // Save current PC on the stack
+        let current_pc = self.registers.pc;
+        push_stack_d16(self, current_pc);
+
+        // Jump to handler
+        self.registers.pc = addr;
+
+        12
+    }
+
     /// Run a fetch, decode, and execute cycle on the CPU
     pub fn cycle(&mut self) -> u8 {
         // Fetch
-        let op = self.mmu.read8(self.registers.pc);
-        //
-
-        // Move PC
-        self.registers.pc = self.registers.pc.wrapping_add(1);
+        let op = self.fetch8();
 
         // Decode & Execute
-        let duration = match op {
+        let mut duration = match op {
             0x00 => { nop(self)},
             0x01 => { load_r16_d16(self, &Reg16::BC)},
             0x02 => { load_indirect_r16_r8(self, &Reg16::BC, &Reg8::A)},
@@ -353,16 +392,14 @@ impl<'c> CPU<'c> {
             _ => panic!("Unhandled Op: {:02X}", op)
         };
 
+        duration += self.handle_interrupt();
+
         return duration;
     }
 
     fn decode_cb_prefixed(&mut self) -> u8 {
         // Fetch
-        let op = self.mmu.read8(self.registers.pc);
-
-
-        // Move PC
-        self.registers.pc += 1;
+        let op = self.fetch8();
 
         // Decode & Execute
         let duration = match op {

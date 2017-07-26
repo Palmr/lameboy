@@ -41,7 +41,7 @@ impl Joypad {
                 if self.left    { mask &= 0b1101 }
                 if self.right   { mask &= 0b1110 }
             },
-            _ => panic!("Attempted to access [RD] Joypad after selecting an invalid column: {:#X}", self.selected_column)
+            _ => {},
         }
         return 0x0F & mask;
     }

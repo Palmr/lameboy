@@ -12,12 +12,11 @@ bitflags! {
 }
 
 bitflags! {
-    pub struct StatusFlags: u8 {
-        const COINCIDENCE   = 0b_0000_0100;
-        const INT_HBLANK    = 0b_0000_1000;
-        const INT_VBLANK    = 0b_0001_0000;
-        const INT_OAM       = 0b_0010_0000;
-        const INT_LYC       = 0b_0100_0000;
+    pub struct StatusInterruptFlags: u8 {
+        const INT_ENABLE_HBLANK    = 0b_0000_1000;
+        const INT_ENABLE_VBLANK    = 0b_0001_0000;
+        const INT_ENABLE_OAM       = 0b_0010_0000;
+        const INT_ENABLE_LYC       = 0b_0100_0000;
     }
 }
 

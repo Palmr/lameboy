@@ -7,6 +7,8 @@ use ppu::gpu::*;
 pub mod registers;
 use ppu::registers::*;
 
+use cpu::interrupts::{INT_VBLANK, INT_LCD_STAT};
+
 pub const SCREEN_WIDTH: usize = 160;
 pub const SCREEN_HEIGHT: usize = 144;
 
@@ -50,11 +52,18 @@ impl PPU {
         }
     }
 
-    /// Add the current PPU mode to the status as the two lowest bits
+    /// Build the stat register using its writable value and then overriding the last 4 bits with
+    /// status information.
     fn combine_status_mode(&self) -> u8 {
-        // Mask away any existing mode
-        let stat = self.registers.status & 0b11111100;
+        // Mask away any existing read-only bits
+        let mut stat = self.registers.status & 0b1111_1000;
 
+        // Set coincidence flag
+        if self.registers.ly == self.registers.lyc {
+            stat |= 0b0000_0100
+        }
+
+        // Set mode flag
         match self.mode {
             Mode::HBlank => stat | 0x00,
             Mode::VBlank => stat | 0x01,
@@ -63,8 +72,20 @@ impl PPU {
         }
     }
 
-    pub fn cycle(&mut self, cpu_duration: u8) {
+    /// Cycle the PPU based on the how long the CPU spent since it last cycled.
+    /// Return a byte containing the Interrupt Flag value from the PPU
+    pub fn cycle(&mut self, cpu_duration: u8) -> u8 {
         self.mode_clock += cpu_duration as usize;
+
+        let mut int_flag = 0x00;
+
+        let status_int_flags: StatusInterruptFlags = StatusInterruptFlags::from_bits_truncate(self.read8(0xFF41));
+
+        // If the interrupt for LY Coincidence is set, and it's a coincidence, set interrupt bit
+        if status_int_flags.contains(INT_ENABLE_LYC) && self.registers.ly == self.registers.lyc {
+            // Set interrupt bit
+            int_flag |= INT_LCD_STAT;
+        }
 
 	    match self.mode	{
             // OAM read mode, scanline active
@@ -82,6 +103,10 @@ impl PPU {
                     // Enter hblank
                     self.mode_clock = 0;
                     self.mode = Mode::HBlank;
+                    if status_int_flags.contains(INT_ENABLE_HBLANK) {
+                        // Set interrupt bit
+                        int_flag |= INT_LCD_STAT;
+                    }
 
                     // Write a scanline to the framebuffer
                     self.renderscan();
@@ -98,10 +123,20 @@ impl PPU {
                     if self.registers.ly == 144 {
                         // Enter vblank
                         self.mode = Mode::VBlank;
+                        // Set interrupt bit
+                        int_flag |= INT_VBLANK;
+                        if status_int_flags.contains(INT_ENABLE_VBLANK) {
+                            // Set interrupt bit
+                            int_flag |= INT_LCD_STAT;
+                        }
                         self.gpu.load_texture(&self.screen_buffer);
                     }
                     else {
                         self.mode = Mode::ReadOam;
+                        if status_int_flags.contains(INT_ENABLE_OAM) {
+                            // Set interrupt bit
+                            int_flag |= INT_LCD_STAT;
+                        }
                     }
                 }
             },
@@ -120,6 +155,8 @@ impl PPU {
                 }
             }
         }
+
+        return int_flag;
     }
 
     fn renderscan(&mut self) {
@@ -272,7 +309,7 @@ impl ImguiDebuggable for PPU {
             .resizable(true)
             .build(|| {
                 ui.text(im_str!("Control: {:?}", self.registers.control));
-                ui.text(im_str!("Status: {:?} - {:?}", self.registers.status, StatusFlags::from_bits_truncate(self.registers.status)));
+                ui.text(im_str!("Status: {:?} - {:?}", self.registers.status, StatusInterruptFlags::from_bits_truncate(self.registers.status)));
                 ui.text(im_str!("Scroll Y: {:?}", self.registers.scroll_y));
                 ui.text(im_str!("Scroll X: {:?}", self.registers.scroll_x));
                 ui.text(im_str!("LY: {:?}", self.registers.ly));

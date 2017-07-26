@@ -835,7 +835,7 @@ fn push_stack_d8(mut cpu: &mut CPU, d8: u8) -> () {
 
 /// Push a 16-bit value to the stack.
 /// Pushing the high byte of the value first, then the low byte.
-fn push_stack_d16(mut cpu: &mut CPU, d16: u16) -> () {
+pub fn push_stack_d16(mut cpu: &mut CPU, d16: u16) -> () {
     // Write high byte
     push_stack_d8(cpu, ((d16 >> 8) & 0xFF) as u8);
     // Write low byte
