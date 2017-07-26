@@ -52,6 +52,10 @@ impl PPU {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.registers.reset();
+    }
+
     /// Build the stat register using its writable value and then overriding the last 4 bits with
     /// status information.
     fn combine_status_mode(&self) -> u8 {

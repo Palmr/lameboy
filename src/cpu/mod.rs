@@ -29,9 +29,8 @@ impl<'c> CPU<'c> {
 
     /// Set the registers and memory up as if the DMG boot rom had just finished loading and handed
     /// execution to the game.
-    pub fn post_boot_reset(&mut self) {
-        self.registers.post_boot_reset();
-        self.mmu.post_boot_reset();
+    pub fn reset(&mut self) {
+        self.registers.reset();
         self.ime = true;
         self.halt = false;
     }

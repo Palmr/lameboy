@@ -52,6 +52,12 @@ impl<'l> Lameboy<'l> {
         return cpu_duration;
     }
 
+    pub fn reset(&mut self) {
+        self.get_cpu().reset();
+        self.get_mmu().reset();
+        self.get_ppu().reset();
+    }
+
     pub fn get_cpu(&mut self) -> &mut CPU<'l> {
         &mut self.cpu
     }
@@ -82,9 +88,8 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
             .size((200.0, 55.0), ImGuiSetCond_FirstUseEver)
             .resizable(true)
             .build(|| {
-
                 if ui.button(im_str!("Reset"), ImVec2::new(0.0, 0.0)) {
-                    self.get_cpu().post_boot_reset();
+                    self.reset();
                 }
                 ui.same_line(0.0);
                 if ui.button(im_str!("Step"), ImVec2::new(0.0, 0.0)) {

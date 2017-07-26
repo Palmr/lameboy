@@ -38,7 +38,7 @@ pub fn stop(mut cpu: &mut CPU) -> u8 {
     let value = cpu.fetch8();
 
     if value != 0 {
-        panic!("Stop instruction should be followed by a zero but found: 0x{:02X}", value);
+        panic!("Stop instruction should be followed by a zero but found: 0x{:02X} at pc=0x{:04X}", value, cpu.registers.pc);
     }
 
     // TODO - Halt the CPU & LCD display until a button is pressed

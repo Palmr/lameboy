@@ -41,7 +41,7 @@ impl<'m> MMU<'m> {
         }
     }
 
-    pub fn post_boot_reset(&mut self) {
+    pub fn reset(&mut self) {
         self.write8(0xFF05, 0x00);
         self.write8(0xFF06, 0x00);
         self.write8(0xFF07, 0x00);

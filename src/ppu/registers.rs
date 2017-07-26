@@ -53,4 +53,19 @@ impl Registers {
             window_x: 0,
         }
     }
+
+    pub fn reset(&mut self) {
+        self.control = ControlFlags::empty();
+        self.status = 0;
+        self.scroll_y = 0;
+        self.scroll_x = 0;
+        self.ly = 0;
+        self.lyc = 0;
+        self.dma = 0;
+        self.bg_palette = 0;
+        self.obj0_palette = 0;
+        self.obj1_palette = 0;
+        self.window_y = 0;
+        self.window_x = 0;
+    }
 }

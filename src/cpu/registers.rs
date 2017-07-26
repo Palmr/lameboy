@@ -57,7 +57,7 @@ impl Registers {
         }
     }
 
-    pub fn post_boot_reset(&mut self) {
+    pub fn reset(&mut self) {
         self.a = 0x01;
         self.f = ZERO | HALF_CARRY | CARRY;
         self.b = 0x00;
