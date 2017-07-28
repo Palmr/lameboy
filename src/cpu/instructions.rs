@@ -4,8 +4,8 @@ use cpu::registers::*;
 use mmu::mmuobject::MmuObject;
 
 /// Panic if anything tries to run an undefined opcode, likely means the emulator has a bug.
-pub fn undefined(_: &CPU, opcode: u8) -> u8 {
-    panic!("Undefined opcode 0x{:02X}", opcode)
+pub fn undefined(cpu: &CPU, opcode: u8) -> u8 {
+    panic!("Undefined opcode 0x{:02X} at pc=0x{:04X}", opcode, cpu.registers.pc)
 }
 
 /// No operation instruction, does nothing.
@@ -187,11 +187,12 @@ pub fn complement_carry_flag(mut cpu: &mut CPU) -> u8 {
 pub fn inc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     let mut value = cpu.registers.read8(r8);
 
+    cpu.registers.f.set(HALF_CARRY, value  & 0xf == 0xf);
+
     value = value.wrapping_add(1);
 
     cpu.registers.f.set(ZERO, value == 0);
     cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, value  & 0xf == 0xf);
 
     cpu.registers.write8(r8, value);
 
@@ -211,11 +212,12 @@ pub fn inc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 pub fn dec_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     let mut value = cpu.registers.read8(r8);
 
+    cpu.registers.f.set(HALF_CARRY, value  & 0xf == 0x0);
+
     value = value.wrapping_sub(1);
 
     cpu.registers.f.set(ZERO, value == 0);
     cpu.registers.f.set(SUBTRACT, true);
-    cpu.registers.f.set(HALF_CARRY, value  & 0xf == 0x0);
 
     cpu.registers.write8(r8, value);
 
@@ -835,7 +837,7 @@ fn push_stack_d8(mut cpu: &mut CPU, d8: u8) -> () {
 
 /// Push a 16-bit value to the stack.
 /// Pushing the high byte of the value first, then the low byte.
-pub fn push_stack_d16(mut cpu: &mut CPU, d16: u16) -> () {
+fn push_stack_d16(mut cpu: &mut CPU, d16: u16) -> () {
     // Write high byte
     push_stack_d8(cpu, ((d16 >> 8) & 0xFF) as u8);
     // Write low byte
@@ -848,7 +850,7 @@ fn pop_stack_d8(mut cpu: &mut CPU) -> u8 {
     // Read byte from stack
     let value = cpu.mmu.read8(cpu.registers.sp);
 
-    // Decrement stack pointer
+    // Increment stack pointer
     cpu.registers.sp = cpu.registers.sp.wrapping_add(1);
 
     return value;
@@ -968,6 +970,24 @@ pub fn ret(mut cpu: &mut CPU) -> u8 {
     cpu.registers.pc = jump_target;
 
     return 16
+}
+
+/// Called internally by the CPU to jump to a different address using 16-bit interrupt handler
+/// address after first pushing the current PC.
+///
+/// Takes 12 cycles.
+pub fn call_interrupt(cpu: &mut CPU, addr: u16) -> u8 {
+    // Disable further interrupts
+    cpu.ime = false;
+
+    // Save current PC on the stack
+    let current_pc = cpu.registers.pc;
+    push_stack_d16(cpu, current_pc);
+
+    // Jump to handler
+    cpu.registers.pc = addr;
+
+    12
 }
 
 /// Return to an address that was pushed to the stack.

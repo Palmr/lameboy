@@ -74,11 +74,11 @@ impl<'c> CPU<'c> {
             self.ime = false;
 
             let duration = match int_enable & int_flags {
-                INT_VBLANK    => {int_flags &= !INT_VBLANK; self.do_interrupt(0x0040)},
-                INT_LCD_STAT  => {int_flags &= !INT_LCD_STAT; self.do_interrupt(0x0048)},
-                INT_TIME      => {int_flags &= !INT_TIME; self.do_interrupt(0x0050)},
-                INT_SERIAL    => {int_flags &= !INT_SERIAL; self.do_interrupt(0x0058)},
-                INT_JOYPAD    => {int_flags &= !INT_JOYPAD; self.do_interrupt(0x0060)},
+                INT_VBLANK    => {int_flags &= !INT_VBLANK; call_interrupt(self, 0x0040)},
+                INT_LCD_STAT  => {int_flags &= !INT_LCD_STAT; call_interrupt(self, 0x0048)},
+                INT_TIME      => {int_flags &= !INT_TIME; call_interrupt(self, 0x0050)},
+                INT_SERIAL    => {int_flags &= !INT_SERIAL; call_interrupt(self, 0x0058)},
+                INT_JOYPAD    => {int_flags &= !INT_JOYPAD; call_interrupt(self, 0x0060)},
                 _ => {self.ime = true; 0},
             };
 
@@ -87,21 +87,6 @@ impl<'c> CPU<'c> {
 	    }
 
         return 0
-    }
-
-    /// Interrupt instruction
-    fn do_interrupt(&mut self, addr: u16) -> u8 {
-        // Disable further interrupts
-        self.ime = false;
-
-        // Save current PC on the stack
-        let current_pc = self.registers.pc;
-        push_stack_d16(self, current_pc);
-
-        // Jump to handler
-        self.registers.pc = addr;
-
-        12
     }
 
     /// Run a fetch, decode, and execute cycle on the CPU

@@ -52,9 +52,9 @@ impl<'l> Lameboy<'l> {
     }
 
     pub fn reset(&mut self) {
+        self.get_ppu().reset();
         self.get_cpu().reset();
         self.get_mmu().reset();
-        self.get_ppu().reset();
     }
 
     pub fn get_cpu(&mut self) -> &mut CPU<'l> {
@@ -102,13 +102,13 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
             .resizable(true)
             .build(|| {
                 if ui.button(im_str!("Set"), ImVec2::new(0.0, 0.0)) {
-                    let breakpoint_addr = imgui_debug.input_addr as u16;
+                    let breakpoint_addr = imgui_debug.input_breakpoint_addr as u16;
                     if !self.breakpoints.contains(&breakpoint_addr) {
                         self.breakpoints.push(breakpoint_addr);
                     }
                 }
                 ui.same_line(0.0);
-                ui.input_int(im_str!("Addr"), &mut imgui_debug.input_addr)
+                ui.input_int(im_str!("Addr"), &mut imgui_debug.input_breakpoint_addr)
                     .chars_hexadecimal(true)
                     .build();
 

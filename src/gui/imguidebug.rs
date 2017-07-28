@@ -21,9 +21,11 @@ pub struct ImguiDebug {
     pub apply_test_pattern: bool,
     pub test_pattern_type: TestPattern,
     pub ppu_mod: i32,
+    pub ppu_sprite_index: i32,
     pub show_about: bool,
-    pub input_addr: i32,
-    pub input_d8: i32,
+    pub input_breakpoint_addr: i32,
+    pub input_memory_addr: i32,
+    pub input_memory_value: i32,
 }
 
 impl ImguiDebug {
@@ -32,7 +34,7 @@ impl ImguiDebug {
             active: true,
             show_imgui_metrics: false,
             show_menu: false,
-            show_emulator: false,
+            show_emulator: true,
             show_cart: false,
             show_memory: false,
             show_cpu: false,
@@ -40,9 +42,11 @@ impl ImguiDebug {
             apply_test_pattern: false,
             test_pattern_type: TestPattern::BLANK,
             ppu_mod: 4,
+            ppu_sprite_index: 0,
             show_about: false,
-            input_addr: 0,
-            input_d8: 0,
+            input_breakpoint_addr: 0,
+            input_memory_addr: 0,
+            input_memory_value: 0,
         }
     }
 

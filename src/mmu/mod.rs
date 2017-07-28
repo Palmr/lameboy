@@ -13,8 +13,6 @@ pub struct MMU<'m> {
 	wram0: Box<[u8; 0x1000]>,
 	/// Work RAM 1 [0xD000 - 0xDFFF] (Bank 1-7 in CGB Mode)
 	wram1: Box<[u8; 0x1000]>,
-	/// Sprite Attribute Table [0xFE00 - 0xFE9F]
-	oam: Box<[u8; 0x00A0]>,
 	/// Unusable region [0xFEA0 - 0xFEFF]
 	unusable: u8,
 	/// I/O Ports [FF00 - 0xFF7F]
@@ -33,8 +31,7 @@ impl<'m> MMU<'m> {
             joypad: joypad,
             wram0: Box::new([0; 0x1000]),
             wram1: Box::new([0; 0x1000]),
-            oam: Box::new([0; 0x00A0]),
-            unusable: 0x00,
+            unusable: 0xFF,
             io: Box::new([0; 0x0080]),
             hram: Box::new([0; 0x007F]),
             ier: 0x00,
@@ -88,12 +85,28 @@ impl<'m> MmuObject for MMU<'m> {
         match addr {
             0x0000...0x7FFF |
             0xA000...0xBFFF => self.cart.read8(addr),
-            0x8000...0x9FFF => self.ppu.read8(addr),
+            0x8000...0x9FFF => {
+                // Return undefined data if accessing VRAM
+                if self.ppu.is_vram_accessible() {
+                    self.ppu.read8(addr)
+                }
+                else {
+                    0xFF
+                }
+            },
             0xC000...0xCFFF |
             0xE000...0xEFFF => self.wram0[(addr as usize) & 0x0FFF],
             0xD000...0xDFFF |
             0xF000...0xFDFF => self.wram1[(addr as usize) & 0x0FFF],
-            0xFE00...0xFE9F => self.oam[(addr as usize) & 0x00FF],
+            0xFE00...0xFE9F => {
+                // Return undefined data if accessing VRAM or OAM
+                if self.ppu.is_oam_accessible() {
+                    self.ppu.read8(addr)
+                }
+                else {
+                    0xFF
+                }
+            },
             0xFEA0...0xFEFF => self.unusable,
             0xFF00...0xFF7F => {
                 match addr {
@@ -114,16 +127,35 @@ impl<'m> MmuObject for MMU<'m> {
         match addr {
             0x0000...0x7FFF |
             0xA000...0xBFFF => self.cart.write8(addr, data),
-            0x8000...0x9FFF => self.ppu.write8(addr, data),
+            0x8000...0x9FFF => {
+                // Ignore update if PPU is accessing VRAM
+                if self.ppu.is_vram_accessible() || true { // TODO - disabled temporarily
+                    self.ppu.write8(addr, data)
+                }
+            },
             0xC000...0xCFFF |
             0xE000...0xEFFF => self.wram0[(addr as usize) & 0x0FFF] = data,
             0xD000...0xDFFF |
             0xF000...0xFDFF => self.wram1[(addr as usize) & 0x0FFF] = data,
-            0xFE00...0xFE9F => self.oam[(addr as usize) & 0x00FF] = data,
+            0xFE00...0xFE9F => {
+                // Ignore update if PPU is accessing VRAM or OAM
+                if self.ppu.is_oam_accessible() || true { // TODO - disabled temporarily
+                    self.ppu.write8(addr, data)
+                }
+            },
             0xFEA0...0xFEFF => (),
             0xFF00...0xFF7F => {
                 match addr {
                     0xFF00 => self.joypad.write8(addr, data),
+                    0xFF46 => {
+                        // DMA
+                        let source_addr = (data as u16) << 8;
+                        println!("DMA [{:04X}]", source_addr);
+                        for i in 0..160 {
+                            let val = self.read8(source_addr + i);
+                            self.write8(0xFE00 + i, val);
+                        }
+                    },
                     0xFF40...0xFF4B => self.ppu.write8(addr, data),
                     0xFF01...0xFF3F |
                     0xFF4C...0xFF7F => self.io[(addr as usize) & 0x00FF] = data,
@@ -145,16 +177,16 @@ impl<'m> ImguiDebuggable for MMU<'m> {
             .size((285.0, 122.0), ImGuiSetCond_FirstUseEver)
             .resizable(true)
             .build(|| {
-                ui.input_int(im_str!("Addr"), &mut imgui_debug.input_addr)
+                ui.input_int(im_str!("Addr"), &mut imgui_debug.input_memory_addr)
                     .chars_hexadecimal(true)
                     .build();
-                ui.text(im_str!("[0x{:04X}] = 0x{:02x}", imgui_debug.input_addr, self.read8(imgui_debug.input_addr as u16)));
+                ui.text(im_str!("[0x{:04X}] = 0x{:02x}", imgui_debug.input_memory_addr, self.read8(imgui_debug.input_memory_addr as u16)));
                 ui.separator();
-                ui.input_int(im_str!("Value"), &mut imgui_debug.input_d8)
+                ui.input_int(im_str!("Value"), &mut imgui_debug.input_memory_value)
                     .chars_hexadecimal(true)
                     .build();
                 if ui.small_button(im_str!("Write")) {
-                    self.write8(imgui_debug.input_addr as u16, imgui_debug.input_d8 as u8);
+                    self.write8(imgui_debug.input_memory_addr as u16, imgui_debug.input_memory_value as u8);
                 }
             });
     }
