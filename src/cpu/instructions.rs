@@ -1,8 +1,6 @@
 use cpu::CPU;
 use cpu::registers::*;
 
-use mmu::mmuobject::MmuObject;
-
 /// Panic if anything tries to run an undefined opcode, likely means the emulator has a bug.
 pub fn undefined(cpu: &CPU, opcode: u8) -> u8 {
     panic!("Undefined opcode 0x{:02X} at pc=0x{:04X}", opcode, cpu.registers.pc)

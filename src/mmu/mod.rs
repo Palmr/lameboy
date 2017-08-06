@@ -21,6 +21,8 @@ pub struct MMU<'m> {
 	hram: Box<[u8; 0x007F]>,
 	/// Interrupt Enable Register [0xFFFF]
 	ier: u8,
+    pub memory_breakpoints: Vec<u16>,
+    pub breakpoint_hit: u16,
 }
 
 impl<'m> MMU<'m> {
@@ -35,6 +37,8 @@ impl<'m> MMU<'m> {
             io: Box::new([0; 0x0080]),
             hram: Box::new([0; 0x007F]),
             ier: 0x00,
+            memory_breakpoints: Vec::new(),
+            breakpoint_hit: 0x0000,
         }
     }
 
@@ -72,16 +76,11 @@ impl<'m> MMU<'m> {
         self.write8(0xFFFF, 0x00);
     }
 
-    pub fn read16(&self, addr: u16) -> u16 {
-        let low = self.read8(addr);
-        let high = self.read8(addr+1);
+    pub fn read8(&mut self, addr: u16) -> u8 {
+        if self.memory_breakpoints.contains(&addr) {
+            self.breakpoint_hit = addr;
+        }
 
-        ((high as u16) << 8) | (low as u16)
-    }
-}
-
-impl<'m> MmuObject for MMU<'m> {
-    fn read8(&self, addr: u16) -> u8 {
         match addr {
             0x0000...0x7FFF |
             0xA000...0xBFFF => self.cart.read8(addr),
@@ -123,7 +122,11 @@ impl<'m> MmuObject for MMU<'m> {
         }
     }
 
-    fn write8(&mut self, addr: u16, data: u8) {
+    pub fn write8(&mut self, addr: u16, data: u8) {
+        if self.memory_breakpoints.contains(&addr) {
+            self.breakpoint_hit = addr;
+        }
+
         match addr {
             0x0000...0x7FFF |
             0xA000...0xBFFF => self.cart.write8(addr, data),
@@ -150,7 +153,6 @@ impl<'m> MmuObject for MMU<'m> {
                     0xFF46 => {
                         // DMA
                         let source_addr = (data as u16) << 8;
-                        println!("DMA [{:04X}]", source_addr);
                         for i in 0..160 {
                             let val = self.read8(source_addr + i);
                             self.write8(0xFE00 + i, val);
@@ -166,6 +168,13 @@ impl<'m> MmuObject for MMU<'m> {
             0xFFFF => self.ier = data,
             _ => panic!("Attempted to access [WR] memory from an invalid address: {:#X}", addr)
         }
+    }
+
+    pub fn read16(&mut self, addr: u16) -> u16 {
+        let low = self.read8(addr);
+        let high = self.read8(addr.wrapping_add(1));
+
+        ((high as u16) << 8) | (low as u16)
     }
 }
 

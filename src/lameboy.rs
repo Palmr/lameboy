@@ -8,6 +8,7 @@ pub struct Lameboy<'l> {
     cpu:  CPU<'l>,
     running: bool,
     breakpoints: Vec<u16>,
+    memory_breakpoints: Vec<u16>,
 }
 impl<'l> Lameboy<'l> {
     pub fn new(cpu: CPU<'l>) -> Lameboy<'l> {
@@ -15,6 +16,7 @@ impl<'l> Lameboy<'l> {
             cpu: cpu,
             running: false,
             breakpoints: Vec::new(),
+            memory_breakpoints: Vec::new(),
         }
     }
 
@@ -32,6 +34,14 @@ impl<'l> Lameboy<'l> {
                 self.running = false;
                 return;
             }
+            let breakpoint_hit = self.get_mmu().breakpoint_hit;
+            if breakpoint_hit != 0x0000 {
+                println!("Memory Breakpoint hit: 0x{:04X}", breakpoint_hit);
+                self.running = false;
+                self.get_mmu().breakpoint_hit = 0x0000;
+                return;
+            }
+            self.get_mmu().memory_breakpoints = self.memory_breakpoints.clone();
 
             // Step the emulator through a single opcode
             t_clk += self.step() as u32;
@@ -96,6 +106,13 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 }
                 ui.same_line(0.0);
                 ui.checkbox(im_str!("running"), &mut self.running);
+                if ui.button(im_str!("Dump op history"), ImVec2::new(0.0, 0.0)) {
+                    println!("Dumping op history");
+                    for i in (1..0xffff).rev() {
+                        let hp = self.get_cpu().op_history_pointer.wrapping_sub(i);
+                        println!("RAN[{}] - 0x{:04X}", i, self.get_cpu().op_history[hp as usize]);
+                    }
+                }
             });
         ui.window(im_str!("Breakpoints"))
             .size((225.0, 150.0), ImGuiSetCond_FirstUseEver)
@@ -131,6 +148,43 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 }
                 match removal_index {
                     Some(index) => {self.breakpoints.remove(index);},
+                    None => (),
+                }
+            });
+        ui.window(im_str!("Memory Breakpoints"))
+            .size((225.0, 150.0), ImGuiSetCond_FirstUseEver)
+            .resizable(true)
+            .build(|| {
+                if ui.button(im_str!("Set"), ImVec2::new(0.0, 0.0)) {
+                    let breakpoint_addr = imgui_debug.input_breakpoint_addr as u16;
+                    if !self.memory_breakpoints.contains(&breakpoint_addr) {
+                        self.memory_breakpoints.push(breakpoint_addr);
+                    }
+                }
+                ui.same_line(0.0);
+                ui.input_int(im_str!("Addr"), &mut imgui_debug.input_breakpoint_addr)
+                    .chars_hexadecimal(true)
+                    .build();
+
+                if ui.button(im_str!("Clear All"), ImVec2::new(0.0, 0.0)) {
+                    self.memory_breakpoints.clear();
+                }
+
+                let mut removal_index: Option<usize> = None;
+                ui.text(im_str!("Breakpoints:"));
+                ui.separator();
+                if self.memory_breakpoints.len() == 0{
+                    ui.text(im_str!("None yet"));
+                }
+                else {
+                    for index in 0..self.memory_breakpoints.len() {
+                        if ui.selectable(im_str!("0x{:04X}", self.memory_breakpoints[index]), false, ImGuiSelectableFlags::empty(), ImVec2::new(0.0, 0.0)) {
+                            removal_index = Some(index);
+                        }
+                    }
+                }
+                match removal_index {
+                    Some(index) => {self.memory_breakpoints.remove(index);},
                     None => (),
                 }
             });

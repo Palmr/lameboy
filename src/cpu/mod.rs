@@ -8,22 +8,30 @@ pub mod interrupts;
 use cpu::interrupts::*;
 
 use mmu::MMU;
-use mmu::mmuobject::MmuObject;
 
 pub struct CPU<'c> {
     pub registers: Registers,
     pub mmu: &'c mut MMU<'c>,
     ime: bool,
     halt: bool,
+    pub op_history: Vec<u16>,
+    pub op_history_pointer: u16
 }
 
 impl<'c> CPU<'c> {
     pub fn new(mmu: &'c mut MMU<'c>) -> CPU<'c> {
+        let mut op_history = Vec::with_capacity(0x10000);
+        for _ in 0..0x10000 {
+            op_history.push(0);
+        }
+
         CPU {
             registers: Registers::new(),
             mmu: mmu,
             ime: true,
             halt: false,
+            op_history: op_history,
+            op_history_pointer: 0,
         }
     }
 
@@ -31,7 +39,7 @@ impl<'c> CPU<'c> {
     /// execution to the game.
     pub fn reset(&mut self) {
         self.registers.reset();
-        self.ime = true;
+        //self.ime = true;
         self.halt = false;
     }
 
@@ -51,12 +59,10 @@ impl<'c> CPU<'c> {
     /// by two.
     pub fn fetch16(&mut self) -> u16 {
         // Read 16-bit value
-        let value: u16 = self.mmu.read16(self.registers.pc);
+        let low = self.fetch8();
+        let high = self.fetch8();
 
-        // Move PC on
-        self.registers.pc = self.registers.pc.wrapping_add(2);
-
-        return value;
+        return ((high as u16) << 8) | (low as u16);
     }
 
     fn halt(&mut self) {
@@ -67,13 +73,13 @@ impl<'c> CPU<'c> {
     }
 
     pub fn handle_interrupt(&mut self) -> u8 {
-        let int_enable = self.mmu.read8(0xFFFF);
+        let int_enable_mask = self.mmu.read8(0xFFFF);
         let mut int_flags = self.mmu.read8(0xFF0F);
-	    if self.ime && int_enable > 0 && int_flags > 0 {
+	    if self.ime && int_enable_mask > 0 && int_flags > 0 {
 	        self.halt = false;
             self.ime = false;
 
-            let duration = match int_enable & int_flags {
+            let duration = match int_enable_mask & int_flags {
                 INT_VBLANK    => {int_flags &= !INT_VBLANK; call_interrupt(self, 0x0040)},
                 INT_LCD_STAT  => {int_flags &= !INT_LCD_STAT; call_interrupt(self, 0x0048)},
                 INT_TIME      => {int_flags &= !INT_TIME; call_interrupt(self, 0x0050)},
@@ -91,6 +97,9 @@ impl<'c> CPU<'c> {
 
     /// Run a fetch, decode, and execute cycle on the CPU
     pub fn cycle(&mut self) -> u8 {
+        self.op_history[self.op_history_pointer as usize] = self.registers.pc;
+        self.op_history_pointer = self.op_history_pointer.wrapping_add(1);
+
         // Fetch
         let op = self.fetch8();
 
@@ -481,6 +490,25 @@ impl<'c> ImguiDebuggable for CPU<'c> {
                 ui.text(im_str!(" D: 0x{:02X}   -  E: 0x{:02X}", self.registers.d, self.registers.e));
                 ui.text(im_str!(" H: 0x{:02X}   -  L: 0x{:02X}", self.registers.h, self.registers.l));
                 ui.text(im_str!("Flags: {:?}", self.registers.f));
+            });
+        ui.window(im_str!("CPU - Stack"))
+            .size((260.0, 140.0), ImGuiSetCond_FirstUseEver)
+            .resizable(true)
+            .build(|| {
+                let display_stack_entry_count = 50;
+                let stack_addr_bottom = self.registers.sp.wrapping_sub(2);
+                let stack_addr_top = stack_addr_bottom.wrapping_add(display_stack_entry_count * 2);
+
+                let mut stack_addr = stack_addr_top;
+                while stack_addr > stack_addr_bottom {
+                    ui.text_colored((0.7, 0.7, 0.7, 1.0), im_str!("[0x{:04X}]", stack_addr));
+                    ui.same_line(0.0);
+                    ui.text(im_str!(" - "));
+                    ui.same_line(0.0);
+                    ui.text_colored((1.0, 1.0, 0.0, 1.0), im_str!("0x{:04X}", self.mmu.read16(stack_addr)));
+
+                    stack_addr = stack_addr.wrapping_sub(2);
+                }
             });
     }
 }
