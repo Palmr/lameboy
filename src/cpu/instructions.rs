@@ -985,7 +985,7 @@ pub fn call_interrupt(cpu: &mut CPU, addr: u16) -> u8 {
     // Jump to handler
     cpu.registers.pc = addr;
 
-    12
+    return 12
 }
 
 /// Return to an address that was pushed to the stack.
@@ -1000,7 +1000,8 @@ pub fn call_interrupt(cpu: &mut CPU, addr: u16) -> u8 {
 /// ```
 pub fn ret_interrupt(mut cpu: &mut CPU) -> u8 {
     cpu.ime = true;
-    ret(cpu)
+
+    return ret(cpu)
 }
 
 /// Return to an address that was pushed to the stack if a given flag status condition matches.
