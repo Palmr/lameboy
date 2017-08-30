@@ -198,5 +198,49 @@ impl<'m> ImguiDebuggable for MMU<'m> {
                     self.write8(imgui_debug.input_memory_addr as u16, imgui_debug.input_memory_value as u8);
                 }
             });
+        ui.window(im_str!("MMU - dump"))
+            .size((260.0, 140.0), ImGuiSetCond_FirstUseEver)
+            .resizable(true)
+            .build(|| {
+                ui.input_int(im_str!("Addr"), &mut imgui_debug.dump_memory_addr)
+                    .chars_hexadecimal(true)
+                    .build();
+                ui.same_line(0.0);
+                ui.checkbox(im_str!("Lock to PC"), &mut imgui_debug.dump_memory_pc_lock);
+                ui.separator();
+
+                let bytes_per_row = 16;
+                let context_size = 5;
+
+                let dump_memory_addr: u16 = imgui_debug.dump_memory_addr as u16;
+                let memory_addr_row = dump_memory_addr - (dump_memory_addr % bytes_per_row);
+
+                let mut memory_addr_low = memory_addr_row.wrapping_sub(context_size * bytes_per_row);
+                let memory_addr_high = memory_addr_row.wrapping_add(context_size * bytes_per_row);
+
+                if memory_addr_low > memory_addr_high {
+                    memory_addr_low = 0;
+                }
+
+                for row in 0..(context_size * 2) {
+                    let row_addr = memory_addr_low + row * bytes_per_row;
+
+                    ui.text_colored((0.7, 0.7, 0.7, 1.0), im_str!("[0x{:04X}]", row_addr));
+
+                    for offset in 0..bytes_per_row {
+                        let colour;
+                        let mem_ptr = row_addr + offset;
+                        if mem_ptr == dump_memory_addr {
+                            colour = (0.5, 1.0, 0.5, 1.0);
+                        }
+                        else {
+                            colour = (0.8, 0.8, 0.8, 1.0);
+                        }
+
+                        ui.same_line(0.0);
+                        ui.text_colored(colour, im_str!("{:02X}", self.read8(mem_ptr)));
+                    }
+                }
+            });
     }
 }

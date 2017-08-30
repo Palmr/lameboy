@@ -26,6 +26,8 @@ pub struct ImguiDebug {
     pub input_breakpoint_addr: i32,
     pub input_memory_addr: i32,
     pub input_memory_value: i32,
+    pub dump_memory_addr: i32,
+    pub dump_memory_pc_lock: bool,
 }
 
 impl ImguiDebug {
@@ -47,6 +49,8 @@ impl ImguiDebug {
             input_breakpoint_addr: 0,
             input_memory_addr: 0,
             input_memory_value: 0,
+            dump_memory_addr: 0,
+            dump_memory_pc_lock: false,
         }
     }
 

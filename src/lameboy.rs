@@ -93,8 +93,13 @@ use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
 use imgui::{ImGuiSetCond_FirstUseEver, Ui, ImGuiSelectableFlags, ImVec2};
 impl<'c> ImguiDebuggable for Lameboy<'c> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
+        // TODO - This should be in the memory debug impl but it doesn't have a ref to CPU currently
+        if imgui_debug.dump_memory_pc_lock {
+            imgui_debug.dump_memory_addr = self.get_cpu().registers.pc as i32;
+        }
+
         ui.window(im_str!("Emulator"))
-            .size((200.0, 55.0), ImGuiSetCond_FirstUseEver)
+            .size((255.0, 75.0), ImGuiSetCond_FirstUseEver)
             .resizable(true)
             .build(|| {
                 if ui.button(im_str!("Reset"), ImVec2::new(0.0, 0.0)) {
@@ -103,6 +108,11 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 ui.same_line(0.0);
                 if ui.button(im_str!("Step"), ImVec2::new(0.0, 0.0)) {
                     self.step();
+                }
+                ui.same_line(0.0);
+                if ui.button(im_str!("Continue"), ImVec2::new(0.0, 0.0)) {
+                    self.step();
+                    self.running = true;
                 }
                 ui.same_line(0.0);
                 ui.checkbox(im_str!("running"), &mut self.running);
