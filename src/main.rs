@@ -8,6 +8,7 @@ extern crate glium;
 extern crate imgui;
 
 extern crate imgui_sys;
+extern crate imgui_glium_renderer;
 
 extern crate nalgebra;
 
