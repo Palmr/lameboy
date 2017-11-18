@@ -1,5 +1,6 @@
 use cpu::CPU;
-use cpu::registers::*;
+use cpu::registers::{Reg8, Reg16};
+use cpu::registers::Flags as RegisterFlags;
 
 /// Panic if anything tries to run an undefined opcode, likely means the emulator has a bug.
 pub fn undefined(cpu: &CPU, opcode: u8) -> u8 {
@@ -90,30 +91,30 @@ pub fn interrupts(mut cpu: &mut CPU, enabled: bool) -> u8 {
 pub fn decimal_adjust(mut cpu: &mut CPU) -> u8 {
     let mut carry = false;
 
-    if !cpu.registers.f.contains(SUBTRACT) {
-      if cpu.registers.f.contains(CARRY) || cpu.registers.a > 0x99 {
+    if !cpu.registers.f.contains(RegisterFlags::SUBTRACT) {
+      if cpu.registers.f.contains(RegisterFlags::CARRY) || cpu.registers.a > 0x99 {
         cpu.registers.a = cpu.registers.a.wrapping_add(0x60);
         carry = true;
       }
-      if cpu.registers.f.contains(HALF_CARRY) || cpu.registers.a & 0x0F > 0x09 {
+      if cpu.registers.f.contains(RegisterFlags::HALF_CARRY) || cpu.registers.a & 0x0F > 0x09 {
         cpu.registers.a = cpu.registers.a.wrapping_add(0x06);
       }
-    } else if cpu.registers.f.contains(CARRY) {
+    } else if cpu.registers.f.contains(RegisterFlags::CARRY) {
       carry = true;
       cpu.registers.a = cpu.registers.a.wrapping_add(
-        if cpu.registers.f.contains(HALF_CARRY) {
+        if cpu.registers.f.contains(RegisterFlags::HALF_CARRY) {
             0x9A
         }
         else {
             0xA0
         });
-    } else if cpu.registers.f.contains(HALF_CARRY) {
+    } else if cpu.registers.f.contains(RegisterFlags::HALF_CARRY) {
       cpu.registers.a = cpu.registers.a.wrapping_add(0xFA);
     }
 
-    cpu.registers.f.set(ZERO, cpu.registers.a == 0);
-    cpu.registers.f.set(HALF_CARRY, false);
-    cpu.registers.f.set(CARRY, carry);
+    cpu.registers.f.set(RegisterFlags::ZERO, cpu.registers.a == 0);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
+    cpu.registers.f.set(RegisterFlags::CARRY, carry);
 
     return 4
 }
@@ -131,8 +132,8 @@ pub fn complement(mut cpu: &mut CPU) -> u8 {
     let value = cpu.registers.a;
     cpu.registers.a = !value;
 
-    cpu.registers.f.set(SUBTRACT, true);
-    cpu.registers.f.set(HALF_CARRY, true);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, true);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, true);
 
     return 4
 }
@@ -144,12 +145,12 @@ pub fn complement(mut cpu: &mut CPU) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// SCF ; Flag::CARRY = 1
+/// SCF ; Flag::RegisterFlags::CARRY = 1
 /// ```
 pub fn set_carry_flag(mut cpu: &mut CPU) -> u8 {
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, false);
-    cpu.registers.f.set(CARRY, true);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
+    cpu.registers.f.set(RegisterFlags::CARRY, true);
 
     return 4
 }
@@ -161,12 +162,12 @@ pub fn set_carry_flag(mut cpu: &mut CPU) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// CCF ; Flag::CARRY = !Flag::CARRY
+/// CCF ; Flag::RegisterFlags::CARRY = !Flag::RegisterFlags::CARRY
 /// ```
 pub fn complement_carry_flag(mut cpu: &mut CPU) -> u8 {
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, false);
-    cpu.registers.f.toggle(CARRY);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
+    cpu.registers.f.toggle(RegisterFlags::CARRY);
 
     return 4
 }
@@ -185,12 +186,12 @@ pub fn complement_carry_flag(mut cpu: &mut CPU) -> u8 {
 pub fn inc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     let mut value = cpu.registers.read8(r8);
 
-    cpu.registers.f.set(HALF_CARRY, value  & 0xf == 0xf);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, value  & 0xf == 0xf);
 
     value = value.wrapping_add(1);
 
-    cpu.registers.f.set(ZERO, value == 0);
-    cpu.registers.f.set(SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::ZERO, value == 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
 
     cpu.registers.write8(r8, value);
 
@@ -210,12 +211,12 @@ pub fn inc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 pub fn dec_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     let mut value = cpu.registers.read8(r8);
 
-    cpu.registers.f.set(HALF_CARRY, value  & 0xf == 0x0);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, value  & 0xf == 0x0);
 
     value = value.wrapping_sub(1);
 
-    cpu.registers.f.set(ZERO, value == 0);
-    cpu.registers.f.set(SUBTRACT, true);
+    cpu.registers.f.set(RegisterFlags::ZERO, value == 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, true);
 
     cpu.registers.write8(r8, value);
 
@@ -685,10 +686,10 @@ pub fn load_reg_hl_reg_sp_d8(mut cpu: &mut CPU) -> u8 {
 
     cpu.registers.write16(&Reg16::HL, combined);
 
-    cpu.registers.f.set(ZERO, false);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, ((cpu.registers.sp & 0x0F00) + (value & 0x0F00)) > 0x0F00);
-    cpu.registers.f.set(CARRY, ((cpu.registers.sp as u32) + (value as u32)) > 0xFFFF);
+    cpu.registers.f.set(RegisterFlags::ZERO, false);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, ((cpu.registers.sp & 0x0F00) + (value & 0x0F00)) > 0x0F00);
+    cpu.registers.f.set(RegisterFlags::CARRY, ((cpu.registers.sp as u32) + (value as u32)) > 0xFFFF);
 
     return 12
 }
@@ -708,10 +709,10 @@ pub fn load_reg_hl_reg_sp_d8(mut cpu: &mut CPU) -> u8 {
 fn test_jump_condition(cpu: &CPU, opcode: u8) -> bool {
     let cc = (opcode & 0b00011000) >> 3;
     match cc {
-        0b00 => !cpu.registers.f.contains(ZERO),
-        0b01 => cpu.registers.f.contains(ZERO),
-        0b10 => !cpu.registers.f.contains(CARRY),
-        0b11 => cpu.registers.f.contains(CARRY),
+        0b00 => !cpu.registers.f.contains(RegisterFlags::ZERO),
+        0b01 => cpu.registers.f.contains(RegisterFlags::ZERO),
+        0b10 => !cpu.registers.f.contains(RegisterFlags::CARRY),
+        0b11 => cpu.registers.f.contains(RegisterFlags::CARRY),
         _ => {println!("Unhandled condition: {}", cc); false},
     }
 }
@@ -743,7 +744,7 @@ pub fn jump_d16(mut cpu: &mut CPU) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// JP NZ $0150 ; IF !Flags::ZERO { PC <- 0x0150 }
+/// JP NZ $0150 ; IF !Flags::RegisterFlags::ZERO { PC <- 0x0150 }
 /// ```
 pub fn jump_conditional_d16(mut cpu: &mut CPU, opcode: u8) -> u8 {
     // Read 16-bit jump target address
@@ -805,7 +806,7 @@ pub fn jump_relative_d8(mut cpu: &mut  CPU) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// JR NZ $DA ; IF !Flags::ZERO { PC <- PC + $DA }
+/// JR NZ $DA ; IF !Flags::RegisterFlags::ZERO { PC <- PC + $DA }
 /// ```
 pub fn jump_relative_conditional_d8(mut cpu: &mut  CPU, opcode: u8) -> u8 {
     // Read signed 8-bit jump offset
@@ -930,7 +931,7 @@ pub fn call_d16(mut cpu: &mut CPU) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// CALL NZ $0150 ; IF !Flags::ZERO { STACK <<- PC; PC <- 0x0150 }
+/// CALL NZ $0150 ; IF !Flags::RegisterFlags::ZERO { STACK <<- PC; PC <- 0x0150 }
 /// ```
 pub fn call_conditional_d16(mut cpu: &mut CPU, opcode: u8) -> u8 {
     // Read 16-bit jump target address
@@ -1064,10 +1065,10 @@ pub fn add_hl_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     cpu.registers.write16(&Reg16::HL, combined);
 
-    // No change for ZERO
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, ((original_hl & 0x0F00) + (value & 0x0F00)) > 0x0F00);
-    cpu.registers.f.set(CARRY, ((original_hl as u32) + (value as u32)) > 0xFFFF);
+    // No change for RegisterFlags::ZERO
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, ((original_hl & 0x0F00) + (value & 0x0F00)) > 0x0F00);
+    cpu.registers.f.set(RegisterFlags::CARRY, ((original_hl as u32) + (value as u32)) > 0xFFFF);
 
     return 8
 }
@@ -1089,10 +1090,10 @@ pub fn add_sp_d8(mut cpu: &mut CPU) -> u8 {
 
     cpu.registers.sp = original_sp.wrapping_add(value);
 
-    cpu.registers.f.set(ZERO, false);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, ((original_sp & 0x0F00) + (value & 0x0F00)) > 0x0F00);
-    cpu.registers.f.set(CARRY, ((original_sp as u32) + (value as u32)) > 0xFFFF);
+    cpu.registers.f.set(RegisterFlags::ZERO, false);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, ((original_sp & 0x0F00) + (value & 0x0F00)) > 0x0F00);
+    cpu.registers.f.set(RegisterFlags::CARRY, ((original_sp as u32) + (value as u32)) > 0xFFFF);
 
     return 16
 }
@@ -1103,33 +1104,33 @@ pub fn add_sp_d8(mut cpu: &mut CPU) -> u8 {
 ///
 /// Update flags:
 ///
-/// ## ZERO
+/// ## RegisterFlags::ZERO
 ///
 /// Set if the result equals zero.
 ///
-/// ## SUBTRACT
+/// ## RegisterFlags::SUBTRACT
 ///
 /// Always unset
 ///
-/// ## HALF_CARRY
+/// ## RegisterFlags::HALF_CARRY
 ///
 /// Set if the lower nibble of the value added to the lower nibble of A was too large to fit in a u4
 ///
-/// ## CARRY
+/// ## RegisterFlags::CARRY
 ///
 /// Set if the value added to A would have been too large to fit in a u8
 ///
 fn alu_add_8bit(mut cpu: &mut CPU, d8: u8, use_carry: bool) -> () {
     let original_a = cpu.registers.a;
 
-    let cy = if use_carry && cpu.registers.f.contains(CARRY) {1} else {0};
+    let cy = if use_carry && cpu.registers.f.contains(RegisterFlags::CARRY) {1} else {0};
 
     cpu.registers.a = original_a.wrapping_add(d8).wrapping_add(cy);
 
-    cpu.registers.f.set(ZERO, original_a == 0);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, ((original_a & 0x0F) + (d8 & 0x0F) + cy) > 0x0F);
-    cpu.registers.f.set(CARRY, ((original_a as u16) + (d8 as u16) + (cy as u16)) > 0xFF);
+    cpu.registers.f.set(RegisterFlags::ZERO, original_a == 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, ((original_a & 0x0F) + (d8 & 0x0F) + cy) > 0x0F);
+    cpu.registers.f.set(RegisterFlags::CARRY, ((original_a as u16) + (d8 as u16) + (cy as u16)) > 0xFF);
 }
 
 /// ADD 8-bit register with register A, storing the result in A.
@@ -1191,7 +1192,7 @@ pub fn add_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// ADC B ; A <- A + B + Flag::CARRY
+/// ADC B ; A <- A + B + Flag::RegisterFlags::CARRY
 /// ```
 pub fn adc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
@@ -1208,7 +1209,7 @@ pub fn adc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// ADC $DA ; A <- A + 0x0DA + Flag::CARRY
+/// ADC $DA ; A <- A + 0x0DA + Flag::RegisterFlags::CARRY
 /// ```
 pub fn adc_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
@@ -1227,7 +1228,7 @@ pub fn adc_d8(mut cpu: &mut CPU) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// ADC (HL) ; A <- A + memory[HL] + Flag::CARRY
+/// ADC (HL) ; A <- A + memory[HL] + Flag::RegisterFlags::CARRY
 /// ```
 pub fn adc_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
     let value = cpu.mmu.read8(cpu.registers.read16(r16));
@@ -1243,34 +1244,34 @@ pub fn adc_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 ///
 /// Update flags:
 ///
-/// ## ZERO
+/// ## RegisterFlags::ZERO
 ///
 /// Set if the result equals zero.
 ///
-/// ## SUBTRACT
+/// ## RegisterFlags::SUBTRACT
 ///
 /// Always set
 ///
-/// ## HALF_CARRY
+/// ## RegisterFlags::HALF_CARRY
 ///
 /// Set if the lower nibble of the value subtracted from the lower nibble of A would have attempted
 /// to borrow a bit. i.e. the lower nibble of the value is larger than the lower nibble of A.
 ///
-/// ## CARRY
+/// ## RegisterFlags::CARRY
 ///
 /// Set if the value subtracted from A would have required a borrow, otherwise reset
 ///
 fn alu_sub_8bit(mut cpu: &mut CPU, d8: u8, use_carry: bool) -> () {
     let original_a = cpu.registers.a;
 
-    let cy = if use_carry && cpu.registers.f.contains(CARRY) {1} else {0};
+    let cy = if use_carry && cpu.registers.f.contains(RegisterFlags::CARRY) {1} else {0};
 
     cpu.registers.a = original_a.wrapping_sub(d8).wrapping_sub(cy);
 
-    cpu.registers.f.set(ZERO, cpu.registers.a == 0);
-    cpu.registers.f.set(SUBTRACT, true);
-    cpu.registers.f.set(HALF_CARRY, (original_a & 0x0F) < (d8 & 0x0F) + cy);
-    cpu.registers.f.set(CARRY, (original_a as u16) < (d8 as u16) + (cy as u16));
+    cpu.registers.f.set(RegisterFlags::ZERO, cpu.registers.a == 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, true);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, (original_a & 0x0F) < (d8 & 0x0F) + cy);
+    cpu.registers.f.set(RegisterFlags::CARRY, (original_a as u16) < (d8 as u16) + (cy as u16));
 }
 
 /// Subtract 8-bit register from register A, storing the result in A.
@@ -1333,7 +1334,7 @@ pub fn sub_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// SBC B ; A <- A - B - Flag::CARRY
+/// SBC B ; A <- A - B - Flag::RegisterFlags::CARRY
 /// ```
 pub fn sbc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
@@ -1350,7 +1351,7 @@ pub fn sbc_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// SBC $DA ; A <- A - 0xDA - Flag::CARRY
+/// SBC $DA ; A <- A - 0xDA - Flag::RegisterFlags::CARRY
 /// ```
 pub fn sbc_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
@@ -1369,7 +1370,7 @@ pub fn sbc_d8(mut cpu: &mut CPU) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// SBC (HL) ; A <- A - memory[HL] - Flag::CARRY
+/// SBC (HL) ; A <- A - memory[HL] - Flag::RegisterFlags::CARRY
 /// ```
 pub fn sbc_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
     let value = cpu.mmu.read8(cpu.registers.read16(r16));
@@ -1383,29 +1384,29 @@ pub fn sbc_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 ///
 /// Update flags:
 ///
-/// ## ZERO
+/// ## RegisterFlags::ZERO
 ///
 /// Set if the result equals zero.
 ///
-/// ## SUBTRACT
+/// ## RegisterFlags::SUBTRACT
 ///
 /// Always reset
 ///
-/// ## HALF_CARRY
+/// ## RegisterFlags::HALF_CARRY
 ///
 /// Always set
 ///
-/// ## CARRY
+/// ## RegisterFlags::CARRY
 ///
 /// Always reset
 ///
 fn alu_and_8bit(mut cpu: &mut CPU, d8: u8) -> () {
     cpu.registers.a = cpu.registers.a & d8;
 
-    cpu.registers.f.set(ZERO, cpu.registers.a == 0);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, true);
-    cpu.registers.f.set(CARRY, false);
+    cpu.registers.f.set(RegisterFlags::ZERO, cpu.registers.a == 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, true);
+    cpu.registers.f.set(RegisterFlags::CARRY, false);
 }
 
 /// AND 8-bit register with register A, storing the result in A.
@@ -1465,29 +1466,29 @@ pub fn and_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 ///
 /// Update flags:
 ///
-/// ## ZERO
+/// ## RegisterFlags::ZERO
 ///
 /// Set if the result equals zero.
 ///
-/// ## SUBTRACT
+/// ## RegisterFlags::SUBTRACT
 ///
 /// Always reset
 ///
-/// ## HALF_CARRY
+/// ## RegisterFlags::HALF_CARRY
 ///
 /// Always reset
 ///
-/// ## CARRY
+/// ## RegisterFlags::CARRY
 ///
 /// Always reset
 ///
 fn alu_xor_8bit(mut cpu: &mut CPU, d8: u8) -> () {
     cpu.registers.a = cpu.registers.a ^ d8;
 
-    cpu.registers.f.set(ZERO, cpu.registers.a == 0);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, false);
-    cpu.registers.f.set(CARRY, false);
+    cpu.registers.f.set(RegisterFlags::ZERO, cpu.registers.a == 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
+    cpu.registers.f.set(RegisterFlags::CARRY, false);
 }
 
 /// XOR 8-bit register with register A, storing the result in A.
@@ -1547,29 +1548,29 @@ pub fn xor_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 ///
 /// Update flags:
 ///
-/// ## ZERO
+/// ## RegisterFlags::ZERO
 ///
 /// Set if the result equals zero.
 ///
-/// ## SUBTRACT
+/// ## RegisterFlags::SUBTRACT
 ///
 /// Always reset
 ///
-/// ## HALF_CARRY
+/// ## RegisterFlags::HALF_CARRY
 ///
 /// Always reset
 ///
-/// ## CARRY
+/// ## RegisterFlags::CARRY
 ///
 /// Always reset
 ///
 fn alu_or_8bit(mut cpu: &mut CPU, d8: u8) -> () {
     cpu.registers.a = cpu.registers.a | d8;
 
-    cpu.registers.f.set(ZERO, cpu.registers.a == 0);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, false);
-    cpu.registers.f.set(CARRY, false);
+    cpu.registers.f.set(RegisterFlags::ZERO, cpu.registers.a == 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
+    cpu.registers.f.set(RegisterFlags::CARRY, false);
 }
 
 /// OR 8-bit register with register A, storing the result in A.
@@ -1630,28 +1631,28 @@ pub fn or_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 ///
 /// Update flags:
 ///
-/// ## ZERO
+/// ## RegisterFlags::ZERO
 ///
 /// Set if the result equals zero.
 ///
-/// ## SUBTRACT
+/// ## RegisterFlags::SUBTRACT
 ///
 /// Always set
 ///
-/// ## HALF_CARRY
+/// ## RegisterFlags::HALF_CARRY
 ///
 /// Set if the lower nibble of the value subtracted from the lower nibble of A would have attempted
 /// to borrow a bit. i.e. the lower nibble of the value is larger than the lower nibble of A.
 ///
-/// ## CARRY
+/// ## RegisterFlags::CARRY
 ///
 /// Set if the value subtracted from A would have required a borrow, otherwise reset
 ///
 fn alu_cp_8bit(mut cpu: &mut CPU, d8: u8) -> () {
-    cpu.registers.f.set(ZERO, cpu.registers.a.wrapping_sub(d8) == 0);
-    cpu.registers.f.set(SUBTRACT, true);
-    cpu.registers.f.set(HALF_CARRY, (cpu.registers.a & 0x0F) < (d8 & 0x0F));
-    cpu.registers.f.set(CARRY, cpu.registers.a < d8);
+    cpu.registers.f.set(RegisterFlags::ZERO, cpu.registers.a.wrapping_sub(d8) == 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, true);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, (cpu.registers.a & 0x0F) < (d8 & 0x0F));
+    cpu.registers.f.set(RegisterFlags::CARRY, cpu.registers.a < d8);
 }
 
 /// Subtract 8-bit register from register A, but don't store the result. Zero flag will be set if
@@ -1662,7 +1663,7 @@ fn alu_cp_8bit(mut cpu: &mut CPU, d8: u8) -> () {
 /// # Examples
 ///
 /// ```asm
-/// CP B ; Flag::ZERO true if A == B, Flag::CARRY true if A < B
+/// CP B ; Flag::RegisterFlags::ZERO true if A == B, Flag::RegisterFlags::CARRY true if A < B
 /// ```
 pub fn cp_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
@@ -1680,7 +1681,7 @@ pub fn cp_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// CP $DA ; Flag::ZERO true if A == 0xDA, Flag::CARRY true if A < 0xDA
+/// CP $DA ; Flag::RegisterFlags::ZERO true if A == 0xDA, Flag::RegisterFlags::CARRY true if A < 0xDA
 /// ```
 pub fn cp_d8(mut cpu: &mut CPU) -> u8 {
     // Read 8-bit value
@@ -1699,7 +1700,7 @@ pub fn cp_d8(mut cpu: &mut CPU) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// CP (HL) ; Flag::ZERO true if A == memory[HL], Flag::CARRY true if A < memory[HL]
+/// CP (HL) ; Flag::RegisterFlags::ZERO true if A == memory[HL], Flag::RegisterFlags::CARRY true if A < memory[HL]
 /// ```
 pub fn cp_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
     // Read 8-bit value
@@ -1712,35 +1713,35 @@ pub fn cp_indirect_r16(mut cpu: &mut CPU, r16: &Reg16) -> u8 {
 
 /// Rotate an 8-bit register to the left.
 ///
-/// If through_carry is true then the high bit will go into the CARRY flag and the old value of the
-/// CARRY flag will become the new low bit.
-/// If it is not true the high bit will become the low bit as well as going into the CARRY flag.
+/// If through_carry is true then the high bit will go into the RegisterFlags::CARRY flag and the old value of the
+/// RegisterFlags::CARRY flag will become the new low bit.
+/// If it is not true the high bit will become the low bit as well as going into the RegisterFlags::CARRY flag.
 ///
-/// If reset_zero is true the ZERO flag will always be reset.
-/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+/// If reset_zero is true the RegisterFlags::ZERO flag will always be reset.
+/// If it is not true the RegisterFlags::ZERO flag will be set only if the rotated value equals zero.
 ///
 fn alu_rotate_left(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: bool) -> u8 {
-    let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
+    let cy = if cpu.registers.f.contains(RegisterFlags::CARRY) {1} else {0};
     let high_bit = (d8 & 0x80) >> 7;
     let new_low_bit = if through_carry {cy} else {high_bit};
     let rotated_value = (d8 << 1) | new_low_bit;
 
-    cpu.registers.f.set(ZERO, rotated_value == 0 && !reset_zero);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, false);
-    cpu.registers.f.set(CARRY, high_bit != 0);
+    cpu.registers.f.set(RegisterFlags::ZERO, rotated_value == 0 && !reset_zero);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
+    cpu.registers.f.set(RegisterFlags::CARRY, high_bit != 0);
 
     return rotated_value
 }
 
 /// Rotate an 8-bit register to the left.
 ///
-/// If through_carry is true then the high bit will go into the CARRY flag and the old value of the
-/// CARRY flag will become the new low bit.
-/// If it is not true the high bit will become the low bit as well as going into the CARRY flag.
+/// If through_carry is true then the high bit will go into the RegisterFlags::CARRY flag and the old value of the
+/// RegisterFlags::CARRY flag will become the new low bit.
+/// If it is not true the high bit will become the low bit as well as going into the RegisterFlags::CARRY flag.
 ///
-/// If reset_zero is true the ZERO flag will always be reset.
-/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+/// If reset_zero is true the RegisterFlags::ZERO flag will always be reset.
+/// If it is not true the RegisterFlags::ZERO flag will be set only if the rotated value equals zero.
 ///
 /// Takes 4 cycles if always using A, otherwise 8 cycles
 ///
@@ -1748,12 +1749,12 @@ fn alu_rotate_left(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: b
 ///
 /// ```asm
 /// ; 4 cycle
-/// RLCA  ; Rotate A left (resets Flag::ZERO)
-/// RLA   ; Rotate A left through the carry flag (resets Flag::ZERO)
+/// RLCA  ; Rotate A left (resets Flag::RegisterFlags::ZERO)
+/// RLA   ; Rotate A left through the carry flag (resets Flag::RegisterFlags::ZERO)
 ///
 /// ; 8 cycle
-/// RLC B ; Rotate B left (sets Flag::ZERO if rotated result == 0)
-/// RL B  ; Rotate B left through the carry flag (sets Flag::ZERO if rotated result == 0)
+/// RLC B ; Rotate B left (sets Flag::RegisterFlags::ZERO if rotated result == 0)
+/// RL B  ; Rotate B left through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 ///
 /// ```
 pub fn rotate_left_r8(mut cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero: bool) -> u8 {
@@ -1768,20 +1769,20 @@ pub fn rotate_left_r8(mut cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_z
 
 /// Rotate an indirect value, taken from memory using a 16-bit register as an address to the left.
 ///
-/// If through_carry is true then the high bit will go into the CARRY flag and the old value of the
-/// CARRY flag will become the new low bit.
-/// If it is not true the high bit will become the low bit as well as going into the CARRY flag.
+/// If through_carry is true then the high bit will go into the RegisterFlags::CARRY flag and the old value of the
+/// RegisterFlags::CARRY flag will become the new low bit.
+/// If it is not true the high bit will become the low bit as well as going into the RegisterFlags::CARRY flag.
 ///
-/// If reset_zero is true the ZERO flag will always be reset.
-/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+/// If reset_zero is true the RegisterFlags::ZERO flag will always be reset.
+/// If it is not true the RegisterFlags::ZERO flag will be set only if the rotated value equals zero.
 ///
 /// Takes 16 cycles.
 ///
 /// # Examples
 ///
 /// ```asm
-/// RLC (HL) ; Rotate memory[hl] left (sets Flag::ZERO if rotated result == 0)
-/// RL (HL)  ; Rotate memory[hl] left through the carry flag (sets Flag::ZERO if rotated result == 0)
+/// RLC (HL) ; Rotate memory[hl] left (sets Flag::RegisterFlags::ZERO if rotated result == 0)
+/// RL (HL)  ; Rotate memory[hl] left through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 ///
 /// ```
 pub fn rotate_left_indirect_hl(mut cpu: &mut CPU, through_carry: bool, reset_zero: bool) -> u8 {
@@ -1797,36 +1798,36 @@ pub fn rotate_left_indirect_hl(mut cpu: &mut CPU, through_carry: bool, reset_zer
 
 /// Rotate an 8-bit value to the right.
 ///
-/// If through_carry is true then the low bit will go into the CARRY flag and the old value of the
-/// CARRY flag will become the new high bit.
-/// If it is not true the low bit will become the high bit as well as going into the CARRY flag.
+/// If through_carry is true then the low bit will go into the RegisterFlags::CARRY flag and the old value of the
+/// RegisterFlags::CARRY flag will become the new high bit.
+/// If it is not true the low bit will become the high bit as well as going into the RegisterFlags::CARRY flag.
 ///
-/// If reset_zero is true the ZERO flag will always be reset.
-/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+/// If reset_zero is true the RegisterFlags::ZERO flag will always be reset.
+/// If it is not true the RegisterFlags::ZERO flag will be set only if the rotated value equals zero.
 ///
 fn alu_rotate_right(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: bool) -> u8 {
-    let cy = if cpu.registers.f.contains(CARRY) {1} else {0};
+    let cy = if cpu.registers.f.contains(RegisterFlags::CARRY) {1} else {0};
     let low_bit = d8 & 0x01;
     let new_high_bit = if through_carry {cy} else {low_bit};
 
     let rotated_value = (d8 >> 1) | (new_high_bit << 7);
 
-    cpu.registers.f.set(ZERO, rotated_value == 0 && !reset_zero);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, false);
-    cpu.registers.f.set(CARRY, low_bit != 0);
+    cpu.registers.f.set(RegisterFlags::ZERO, rotated_value == 0 && !reset_zero);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
+    cpu.registers.f.set(RegisterFlags::CARRY, low_bit != 0);
 
     return rotated_value
 }
 
 /// Rotate an 8-bit register to the right.
 ///
-/// If through_carry is true then the low bit will go into the CARRY flag and the old value of the
-/// CARRY flag will become the new high bit.
-/// If it is not true the low bit will become the high bit as well as going into the CARRY flag.
+/// If through_carry is true then the low bit will go into the RegisterFlags::CARRY flag and the old value of the
+/// RegisterFlags::CARRY flag will become the new high bit.
+/// If it is not true the low bit will become the high bit as well as going into the RegisterFlags::CARRY flag.
 ///
-/// If reset_zero is true the ZERO flag will always be reset.
-/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+/// If reset_zero is true the RegisterFlags::ZERO flag will always be reset.
+/// If it is not true the RegisterFlags::ZERO flag will be set only if the rotated value equals zero.
 ///
 /// Takes 4 cycles if always using A, otherwise 8 cycles
 ///
@@ -1834,12 +1835,12 @@ fn alu_rotate_right(mut cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: 
 ///
 /// ```asm
 /// ; 4 cycle
-/// RRCA  ; Rotate A right (resets Flag::ZERO)
-/// RRA   ; Rotate A right through the carry flag (resets Flag::ZERO)
+/// RRCA  ; Rotate A right (resets Flag::RegisterFlags::ZERO)
+/// RRA   ; Rotate A right through the carry flag (resets Flag::RegisterFlags::ZERO)
 ///
 /// ; 8 cycle
-/// RRC B ; Rotate B right (sets Flag::ZERO if rotated result == 0)
-/// RR B  ; Rotate B right through the carry flag (sets Flag::ZERO if rotated result == 0)
+/// RRC B ; Rotate B right (sets Flag::RegisterFlags::ZERO if rotated result == 0)
+/// RR B  ; Rotate B right through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 ///
 /// ```
 pub fn rotate_right_r8(mut cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero: bool) -> u8 {
@@ -1854,20 +1855,20 @@ pub fn rotate_right_r8(mut cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_
 
 /// Rotate an indirect value, taken from memory using a 16-bit register as an address to the right.
 ///
-/// If through_carry is true then the low bit will go into the CARRY flag and the old value of the
-/// CARRY flag will become the new high bit.
-/// If it is not true the low bit will become the high bit as well as going into the CARRY flag.
+/// If through_carry is true then the low bit will go into the RegisterFlags::CARRY flag and the old value of the
+/// RegisterFlags::CARRY flag will become the new high bit.
+/// If it is not true the low bit will become the high bit as well as going into the RegisterFlags::CARRY flag.
 ///
-/// If reset_zero is true the ZERO flag will always be reset.
-/// If it is not true the ZERO flag will be set only if the rotated value equals zero.
+/// If reset_zero is true the RegisterFlags::ZERO flag will always be reset.
+/// If it is not true the RegisterFlags::ZERO flag will be set only if the rotated value equals zero.
 ///
 /// Takes 16 cycles.
 ///
 /// # Examples
 ///
 /// ```asm
-/// RRC (HL) ; Rotate memory[hl] right (sets Flag::ZERO if rotated result == 0)
-/// RR (HL)  ; Rotate memory[hl] right through the carry flag (sets Flag::ZERO if rotated result == 0)
+/// RRC (HL) ; Rotate memory[hl] right (sets Flag::RegisterFlags::ZERO if rotated result == 0)
+/// RR (HL)  ; Rotate memory[hl] right through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 ///
 /// ```
 pub fn rotate_right_indirect_hl(mut cpu: &mut CPU, through_carry: bool, reset_zero: bool) -> u8 {
@@ -1887,10 +1888,10 @@ fn alu_shift_left(mut cpu: &mut CPU, d8: u8) -> u8 {
     let high_bit = d8 & 0x80;
     let shifted_value = d8 << 1;
 
-    cpu.registers.f.set(ZERO, shifted_value == 0);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, false);
-    cpu.registers.f.set(CARRY, high_bit != 0);
+    cpu.registers.f.set(RegisterFlags::ZERO, shifted_value == 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
+    cpu.registers.f.set(RegisterFlags::CARRY, high_bit != 0);
 
     return shifted_value
 }
@@ -1902,7 +1903,7 @@ fn alu_shift_left(mut cpu: &mut CPU, d8: u8) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// SLA B  ; Shift B left through the carry flag (sets Flag::ZERO if rotated result == 0)
+/// SLA B  ; Shift B left through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 /// ```
 pub fn shift_left_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
@@ -1921,7 +1922,7 @@ pub fn shift_left_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// SLA (HL) ; Shift memory[hl] left (sets Flag::ZERO if rotated result == 0)
+/// SLA (HL) ; Shift memory[hl] left (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 /// ```
 pub fn shift_left_indirect_hl(mut cpu: &mut CPU) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
@@ -1941,10 +1942,10 @@ fn alu_shift_right(mut cpu: &mut CPU, d8: u8, reset_high_bit: bool) -> u8 {
     let low_bit = d8 & 0x01;
     let shifted_value = (d8 >> 1) | high_bit;
 
-    cpu.registers.f.set(ZERO, shifted_value == 0);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, false);
-    cpu.registers.f.set(CARRY, low_bit != 0);
+    cpu.registers.f.set(RegisterFlags::ZERO, shifted_value == 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
+    cpu.registers.f.set(RegisterFlags::CARRY, low_bit != 0);
 
     return shifted_value
 }
@@ -1959,8 +1960,8 @@ fn alu_shift_right(mut cpu: &mut CPU, d8: u8, reset_high_bit: bool) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// SRA B  ; Shift B right through the carry flag (sets Flag::ZERO if rotated result == 0)
-/// SRL B  ; Shift B right through the carry flag (sets Flag::ZERO if rotated result == 0)
+/// SRA B  ; Shift B right through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
+/// SRL B  ; Shift B right through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 /// ```
 pub fn shift_right_r8(mut cpu: &mut CPU, r8: &Reg8, reset_high_bit: bool) -> u8 {
     let value = cpu.registers.read8(r8);
@@ -1982,8 +1983,8 @@ pub fn shift_right_r8(mut cpu: &mut CPU, r8: &Reg8, reset_high_bit: bool) -> u8 
 /// # Examples
 ///
 /// ```asm
-/// SRA (HL) ; Shift memory[hl] right (sets Flag::ZERO if rotated result == 0)
-/// SRL (HL) ; Shift memory[hl] right (sets Flag::ZERO if rotated result == 0)
+/// SRA (HL) ; Shift memory[hl] right (sets Flag::RegisterFlags::ZERO if rotated result == 0)
+/// SRL (HL) ; Shift memory[hl] right (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 /// ```
 pub fn shift_right_indirect_hl(mut cpu: &mut CPU, reset_high_bit: bool) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
@@ -2001,10 +2002,10 @@ pub fn shift_right_indirect_hl(mut cpu: &mut CPU, reset_high_bit: bool) -> u8 {
 fn alu_swap(mut cpu: &mut CPU, d8: u8) -> u8 {
     let swapped_value = (d8 & 0x0F << 4) & (d8 & 0xF0 >> 4);
 
-    cpu.registers.f.set(ZERO, swapped_value == 0);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, false);
-    cpu.registers.f.set(CARRY, false);
+    cpu.registers.f.set(RegisterFlags::ZERO, swapped_value == 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
+    cpu.registers.f.set(RegisterFlags::CARRY, false);
 
     return swapped_value
 }
@@ -2036,7 +2037,7 @@ pub fn swap_r8(mut cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// SLA (HL) ; Shift memory[hl] left (sets Flag::ZERO if rotated result == 0)
+/// SLA (HL) ; Shift memory[hl] left (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 /// ```
 pub fn swap_indirect_hl(mut cpu: &mut CPU) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
@@ -2049,14 +2050,14 @@ pub fn swap_indirect_hl(mut cpu: &mut CPU) -> u8 {
     return 16
 }
 
-/// Put the complement of an 8-bit values single bit into the ZERO flag.
+/// Put the complement of an 8-bit values single bit into the RegisterFlags::ZERO flag.
 ///
 /// Takes 8 cycles unless operating on an indirectly addressed value, then 16 cycles.
 ///
 /// # Examples
 ///
 /// ```asm
-/// BIT 4, B  ; Flag::ZERO = (B & 0x01 << 4)
+/// BIT 4, B  ; Flag::RegisterFlags::ZERO = (B & 0x01 << 4)
 /// ```
 pub fn bit_test(mut cpu: &mut CPU, opcode: u8) -> u8 {
     let register = opcode & 0b00000111;
@@ -2076,10 +2077,10 @@ pub fn bit_test(mut cpu: &mut CPU, opcode: u8) -> u8 {
 
     let tested_value = value & (0x01 << bit_index);
 
-    cpu.registers.f.set(ZERO, tested_value != 0);
-    cpu.registers.f.set(SUBTRACT, false);
-    cpu.registers.f.set(HALF_CARRY, false);
-    cpu.registers.f.set(CARRY, false);
+    cpu.registers.f.set(RegisterFlags::ZERO, tested_value != 0);
+    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
+    cpu.registers.f.set(RegisterFlags::CARRY, false);
 
     return duration
 }

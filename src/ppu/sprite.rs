@@ -44,10 +44,10 @@ impl Sprite {
             y: sprite_y,
             x: sprite_x,
             tile_index: tile,
-            priority: if flags.contains(BACKGROUND_PRIORITY) { SpritePriority::BelowBackground } else { SpritePriority::AboveBackground },
-            flip_y: flags.contains(Y_FLIP),
-            flip_x: flags.contains(X_FLIP),
-            palette: if flags.contains(PALETTE) { ObjectPalette::Palette1 } else { ObjectPalette::Palette0 },
+            priority: if flags.contains(SpriteFlags::BACKGROUND_PRIORITY) { SpritePriority::BelowBackground } else { SpritePriority::AboveBackground },
+            flip_y: flags.contains(SpriteFlags::Y_FLIP),
+            flip_x: flags.contains(SpriteFlags::X_FLIP),
+            palette: if flags.contains(SpriteFlags::PALETTE) { ObjectPalette::Palette1 } else { ObjectPalette::Palette0 },
         }
     }
 }

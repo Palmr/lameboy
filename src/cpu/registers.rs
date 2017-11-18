@@ -59,7 +59,7 @@ impl Registers {
 
     pub fn reset(&mut self) {
         self.a = 0x01;
-        self.f = ZERO | HALF_CARRY | CARRY;
+        self.f = Flags::ZERO | Flags::HALF_CARRY | Flags::CARRY;
         self.b = 0x00;
         self.c = 0x13;
         self.d = 0x00;

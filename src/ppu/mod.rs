@@ -5,7 +5,9 @@ pub mod gpu;
 use ppu::gpu::*;
 
 pub mod registers;
-use ppu::registers::*;
+use ppu::registers::Registers;
+use ppu::registers::ControlFlags as ControlFlags;
+use ppu::registers::StatusInterruptFlags as StatusInterruptFlags;
 
 pub mod palette;
 use ppu::palette::*;
@@ -110,13 +112,13 @@ impl PPU {
     pub fn cycle(&mut self, cpu_duration: u8) -> u8 {
         let mut int_flag = 0x00;
 
-        if self.registers.control.contains(DISPLAY_ENABLE) {
+        if self.registers.control.contains(ControlFlags::DISPLAY_ENABLE) {
             self.mode_clock += cpu_duration as usize;
 
             let status_int_flags: StatusInterruptFlags = StatusInterruptFlags::from_bits_truncate(self.read8(0xFF41));
 
             // If the interrupt for LY Coincidence is set, and it's a coincidence, set interrupt bit
-            if status_int_flags.contains(INT_ENABLE_LYC) && self.registers.ly == self.registers.lyc {
+            if status_int_flags.contains(StatusInterruptFlags::INT_ENABLE_LYC) && self.registers.ly == self.registers.lyc {
                 // Set interrupt bit
                 int_flag |= INT_LCD_STAT;
             }
@@ -137,7 +139,7 @@ impl PPU {
                         // Enter hblank
                         self.mode_clock = 0;
                         self.mode = Mode::HBlank;
-                        if status_int_flags.contains(INT_ENABLE_HBLANK) {
+                        if status_int_flags.contains(StatusInterruptFlags::INT_ENABLE_HBLANK) {
                             // Set interrupt bit
                             int_flag |= INT_LCD_STAT;
                         }
@@ -159,7 +161,7 @@ impl PPU {
                             self.mode = Mode::VBlank;
                             // Set interrupt bit
                             int_flag |= INT_VBLANK;
-                            if status_int_flags.contains(INT_ENABLE_VBLANK) {
+                            if status_int_flags.contains(StatusInterruptFlags::INT_ENABLE_VBLANK) {
                                 // Set interrupt bit
                                 int_flag |= INT_LCD_STAT;
                             }
@@ -167,7 +169,7 @@ impl PPU {
                         }
                         else {
                             self.mode = Mode::ReadOam;
-                            if status_int_flags.contains(INT_ENABLE_OAM) {
+                            if status_int_flags.contains(StatusInterruptFlags::INT_ENABLE_OAM) {
                                 // Set interrupt bit
                                 int_flag |= INT_LCD_STAT;
                             }
@@ -199,9 +201,9 @@ impl PPU {
 
         let bg_palette = unpack_palette(self.registers.bg_palette);
 
-        if self.registers.control.contains(BG_DISPLAY) {
+        if self.registers.control.contains(ControlFlags::BG_DISPLAY) {
             // VRAM offset for the tile map
-            let mut bg_map_offset: u16 = if self.registers.control.contains(BG_TILE_MAP) { 0x1C00 } else { 0x1800 };
+            let mut bg_map_offset: u16 = if self.registers.control.contains(ControlFlags::BG_TILE_MAP) { 0x1C00 } else { 0x1800 };
 
             // Which line of tiles to use in the map
             bg_map_offset += (self.registers.ly.wrapping_add(self.registers.scroll_y) as u16 >> 3) * 32;
@@ -221,7 +223,7 @@ impl PPU {
 
             // If the tile data set in use is #1, the
             // indices are signed; calculate a real tile offset
-            if !self.registers.control.contains(BG_WIN_TILE_SET) { tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize; };
+            if !self.registers.control.contains(ControlFlags::BG_WIN_TILE_SET) { tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize; };
 
             for i in 0..160 {
                 let tile_addr = (tile_index << 4) + (tile_y_offset as usize * 2);
@@ -239,13 +241,13 @@ impl PPU {
                     tile_x_offset = 0;
                     x_tile_offset = (x_tile_offset + 1) & 31;
                     tile_index = self.vram[(bg_map_offset + x_tile_offset) as usize] as usize;
-                    if !self.registers.control.contains(BG_WIN_TILE_SET) { tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize; };
+                    if !self.registers.control.contains(ControlFlags::BG_WIN_TILE_SET) { tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize; };
                 }
             }
         }
 
-        if self.registers.control.contains(OBJ_DISPLAY) {
-            let sprite_height = if self.registers.control.contains(OBJ_SIZE) { 16 } else { 8 };
+        if self.registers.control.contains(ControlFlags::OBJ_DISPLAY) {
+            let sprite_height = if self.registers.control.contains(ControlFlags::OBJ_SIZE) { 16 } else { 8 };
 
             for sprite_index in  0..40 {
                 let sprite = Sprite::new(self, sprite_index);
