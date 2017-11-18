@@ -21,9 +21,11 @@ Plenty of debug windows are implemented which helps track down issues as they co
   - Verify all existing instructions work
   - Re-write all the PPU code
 - Handle all interrupt types & HALT 
+- Support all MBC variants
 - Handle the construction of the various components better in rust
 - Game Boy Color support
 - Sound
 - Serial support
+- Game Boy Camera & Printer support
 - Add a decompiler to make memory debugging easier
 - Ever more debug windows
