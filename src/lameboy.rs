@@ -90,7 +90,7 @@ impl<'l> Lameboy<'l> {
 
 use mmu::mmuobject::MmuObject;
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiSetCond_FirstUseEver, Ui, ImGuiSelectableFlags, ImVec2};
+use imgui::{ImGuiCond, Ui, ImGuiSelectableFlags, ImVec2};
 impl<'c> ImguiDebuggable for Lameboy<'c> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         // TODO - This should be in the memory debug impl but it doesn't have a ref to CPU currently
@@ -99,7 +99,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
         }
 
         ui.window(im_str!("Emulator"))
-            .size((255.0, 75.0), ImGuiSetCond_FirstUseEver)
+            .size((255.0, 75.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
                 if ui.button(im_str!("Reset"), ImVec2::new(0.0, 0.0)) {
@@ -125,7 +125,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 }
             });
         ui.window(im_str!("Breakpoints"))
-            .size((225.0, 150.0), ImGuiSetCond_FirstUseEver)
+            .size((225.0, 150.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
                 if ui.button(im_str!("Set"), ImVec2::new(0.0, 0.0)) {
@@ -162,7 +162,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 }
             });
         ui.window(im_str!("Memory Breakpoints"))
-            .size((225.0, 150.0), ImGuiSetCond_FirstUseEver)
+            .size((225.0, 150.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
                 if ui.button(im_str!("Set"), ImVec2::new(0.0, 0.0)) {
@@ -199,7 +199,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 }
             });
         ui.window(im_str!("Joypad"))
-            .size((150.0, 115.0), ImGuiSetCond_FirstUseEver)
+            .size((150.0, 115.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.text(im_str!("A = {}", self.get_joypad().a));

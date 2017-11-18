@@ -477,11 +477,11 @@ impl<'c> CPU<'c> {
 }
 
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiSetCond_FirstUseEver, Ui};
+use imgui::{ImGuiCond, Ui};
 impl<'c> ImguiDebuggable for CPU<'c> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebug) {
         ui.window(im_str!("CPU"))
-            .size((260.0, 140.0), ImGuiSetCond_FirstUseEver)
+            .size((260.0, 140.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.text(im_str!("PC: 0x{:04X} - SP: 0x{:04X}", self.registers.pc, self.registers.sp));
@@ -492,7 +492,7 @@ impl<'c> ImguiDebuggable for CPU<'c> {
                 ui.text(im_str!("Flags: {:?}", self.registers.f));
             });
         ui.window(im_str!("CPU - Stack"))
-            .size((260.0, 140.0), ImGuiSetCond_FirstUseEver)
+            .size((260.0, 140.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
                 let display_stack_entry_count = 50;

@@ -12,8 +12,8 @@ license = "MIT"
 clap = "~2.27"
 bitflags = "1.0"
 nalgebra = "0.13"
-imgui = "0.0.15"
-imgui-glium-renderer = { version = "0.0.15" }
-imgui-sys = { version = "0.0.15", features = ["glium"] }
-glium = { version = "0.17", default-features = true }
-glutin = "0.9"
+imgui = "0.0.17"
+imgui-glium-renderer = { version = "0.0.17" }
+imgui-sys = { version = "0.0.17", features = ["glium"] }
+glium = { version = "0.18", default-features = true }
+glutin = "0.10"

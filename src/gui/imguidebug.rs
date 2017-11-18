@@ -1,4 +1,4 @@
-use imgui::{Ui, ImGuiSetCond_Always, ImVec2};
+use imgui::{Ui, ImGuiCond, ImVec2};
 
 use lameboy::Lameboy;
 use ppu::TestPattern;
@@ -138,7 +138,7 @@ impl ImguiDebug {
 
         if self.show_about {
             ui.window(im_str!("About - {} v{}", PKG_NAME, PKG_VERSION))
-                .size((250.0, 100.0), ImGuiSetCond_Always)
+                .size((250.0, 100.0), ImGuiCond::Always)
                 .collapsible(false)
                 .resizable(false)
                 .show_borders(false)

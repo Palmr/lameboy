@@ -365,11 +365,11 @@ impl MmuObject for PPU {
 }
 
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiSetCond_FirstUseEver, Ui};
+use imgui::{ImGuiCond, Ui};
 impl ImguiDebuggable for PPU {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("PPU"))
-                .size((180.0, 115.0), ImGuiSetCond_FirstUseEver)
+                .size((180.0, 115.0), ImGuiCond::FirstUseEver)
                 .resizable(true)
                 .build(|| {
                     ui.checkbox(im_str!("Apply test"), &mut imgui_debug.apply_test_pattern);
@@ -392,7 +392,7 @@ impl ImguiDebuggable for PPU {
                 });
 
         ui.window(im_str!("PPU-registers"))
-            .size((224.0, 230.0), ImGuiSetCond_FirstUseEver)
+            .size((224.0, 230.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.text(im_str!("Control: {:?}", self.registers.control));
@@ -410,7 +410,7 @@ impl ImguiDebuggable for PPU {
             });
 
         ui.window(im_str!("PPU-OAM"))
-            .size((224.0, 230.0), ImGuiSetCond_FirstUseEver)
+            .size((224.0, 230.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.input_int(im_str!("Sprite Index"), &mut imgui_debug.ppu_sprite_index).build();

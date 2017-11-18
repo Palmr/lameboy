@@ -179,11 +179,11 @@ impl<'m> MMU<'m> {
 }
 
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiSetCond_FirstUseEver, Ui};
+use imgui::{ImGuiCond, Ui};
 impl<'m> ImguiDebuggable for MMU<'m> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("MMU"))
-            .size((285.0, 122.0), ImGuiSetCond_FirstUseEver)
+            .size((285.0, 122.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.input_int(im_str!("Addr"), &mut imgui_debug.input_memory_addr)
@@ -199,7 +199,7 @@ impl<'m> ImguiDebuggable for MMU<'m> {
                 }
             });
         ui.window(im_str!("MMU - dump"))
-            .size((260.0, 140.0), ImGuiSetCond_FirstUseEver)
+            .size((260.0, 140.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.input_int(im_str!("Addr"), &mut imgui_debug.dump_memory_addr)
