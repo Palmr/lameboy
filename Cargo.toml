@@ -9,7 +9,7 @@ repository = "https://github.com/palmr/lameboy"
 license = "MIT"
 
 [dependencies]
-clap = "2"
+clap = "~2.27"
 bitflags = "0.9.1"
 nalgebra = "0.13"
 imgui = "0.0.15"
