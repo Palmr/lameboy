@@ -54,7 +54,7 @@ impl ImguiDebug {
         }
     }
 
-    pub fn draw<'a>(&mut self, ui: &Ui<'a>, mut lameboy: &mut Lameboy) {
+    pub fn draw<'a>(&mut self, ui: &Ui<'a>, lameboy: &mut Lameboy) {
         if self.show_menu {
             ui.main_menu_bar(|| {
                 ui.menu(im_str!("File"))
