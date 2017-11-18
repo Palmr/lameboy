@@ -29,11 +29,11 @@ pub struct GUI {
 }
 
 impl GUI {
-    pub fn init(window_size: (u32, u32)) -> GUI {
+    pub fn init(window_size: (u32, u32), rom_file_name: &str) -> GUI {
         let events_loop = glutin::EventsLoop::new();
         let context = glutin::ContextBuilder::new().with_vsync(true);
         let window = glutin::WindowBuilder::new()
-            .with_title("Lameboy - v0.1")
+            .with_title(format!("{} - Lameboy - v0.1", rom_file_name))
             .with_dimensions(window_size.0, window_size.1);
         let display = Display::new(window, context, &events_loop).unwrap();
 

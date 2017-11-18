@@ -20,6 +20,7 @@ extern crate clap;
 
 use std::io::prelude::*;
 use std::fs::File;
+use std::path::Path;
 
 mod lameboy;
 use lameboy::Lameboy;
@@ -52,15 +53,16 @@ fn main() {
             .required(false))
         .get_matches();
 
-    let mut gui = GUI::init((640, 576));
-
     let rom_file = matches.value_of("file").unwrap_or("roms/tetris.gb");
-    println!("Value for file: {}", rom_file);
+    let rom_file_name = Path::new(rom_file).file_name().unwrap().to_str().unwrap();
+    println!("Filename: {}", rom_file_name);
 
     let mut data = Vec::new();
     let mut f = File::open(rom_file).expect("Unable to open ROM");
     f.read_to_end(&mut data).expect("Unable to read data");
     println!("File length: {}", data.len());
+
+    let mut gui = GUI::init((640, 576), rom_file_name);
 
     // Create all our hardware instances
     let mut joypad = Joypad::new();
