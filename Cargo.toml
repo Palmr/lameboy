@@ -9,11 +9,11 @@ repository = "https://github.com/palmr/lameboy"
 license = "MIT"
 
 [dependencies]
-clap = "~2.27"
+clap = "~2.31"
 bitflags = "1.0"
-nalgebra = "0.13"
-imgui = "0.0.17"
-imgui-glium-renderer = { version = "0.0.17" }
-imgui-sys = { version = "0.0.17", features = ["glium"] }
-glium = { version = "0.18", default-features = true }
-glutin = "0.10"
+nalgebra = "0.14"
+imgui = "0.0.18"
+imgui-glium-renderer = { version = "0.0.18" }
+imgui-sys = { version = "0.0.18", features = ["glium"] }
+glium = { version = "0.19", default-features = true }
+glutin = "*"

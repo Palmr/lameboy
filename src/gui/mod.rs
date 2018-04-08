@@ -108,8 +108,12 @@ impl GUI {
         lameboy.get_ppu().draw(&mut target);
 
         let window = self.display.gl_window();
-        let size_points = window.get_inner_size_points().unwrap();
-        let size_pixels = window.get_inner_size_pixels().unwrap();
+        let size_pixels = window.get_inner_size().unwrap();
+        let hdipi = window.hidpi_factor();
+        let size_points = (
+            (size_pixels.0 as f32 / hdipi) as u32,
+            (size_pixels.1 as f32 / hdipi) as u32,
+        );
 
         if self.show_imgui {
             let ui = self.imgui.frame(size_points, size_pixels, delta_s);
@@ -191,7 +195,7 @@ impl GUI {
                         }
                     }
 
-                    MouseMoved { position: (x, y), .. } => mouse.pos = (x as i32, y as i32),
+                    CursorMoved { position: (x, y), .. } => mouse.pos = (x as i32, y as i32),
                     MouseInput { state, button, .. } => {
                         match button {
                             MouseButton::Left => mouse.pressed.0 = state == Pressed,
@@ -210,8 +214,8 @@ impl GUI {
                         phase: TouchPhase::Moved,
                         ..
                     } => mouse.wheel = y,
-                    MouseEntered { .. } => gui_state.show_menu = true,
-                    MouseLeft { .. } => gui_state.show_menu = false,
+                    CursorEntered { .. } => gui_state.show_menu = true,
+                    CursorLeft { .. } => gui_state.show_menu = false,
                     ReceivedCharacter(c) => im.add_input_character(c),
                     _ => (),
                 }
