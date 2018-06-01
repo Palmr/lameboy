@@ -14,24 +14,21 @@ pub struct CPU<'c> {
     pub mmu: &'c mut MMU<'c>,
     ime: bool,
     halt: bool,
-    pub op_history: Vec<u16>,
-    pub op_history_pointer: u16
+    pub pc_history: Vec<u16>,
+    pub pc_history_pointer: usize
 }
 
 impl<'c> CPU<'c> {
     pub fn new(mmu: &'c mut MMU<'c>) -> CPU<'c> {
-        let mut op_history = Vec::with_capacity(0x10000);
-        for _ in 0..0x10000 {
-            op_history.push(0);
-        }
+        let pc_history = vec![0x00; 200];
 
         CPU {
             registers: Registers::new(),
             mmu: mmu,
             ime: true,
             halt: false,
-            op_history: op_history,
-            op_history_pointer: 0,
+            pc_history: pc_history,
+            pc_history_pointer: 0,
         }
     }
 
@@ -97,8 +94,8 @@ impl<'c> CPU<'c> {
 
     /// Run a fetch, decode, and execute cycle on the CPU
     pub fn cycle(&mut self) -> u8 {
-        self.op_history[self.op_history_pointer as usize] = self.registers.pc;
-        self.op_history_pointer = self.op_history_pointer.wrapping_add(1);
+        self.pc_history[self.pc_history_pointer as usize] = self.registers.pc;
+        self.pc_history_pointer = self.pc_history_pointer.wrapping_add(1) % self.pc_history.len();
 
         // Fetch
         let op = self.fetch8();

@@ -116,11 +116,11 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 }
                 ui.same_line(0.0);
                 ui.checkbox(im_str!("running"), &mut self.running);
-                if ui.button(im_str!("Dump op history"), ImVec2::new(0.0, 0.0)) {
-                    println!("Dumping op history");
-                    for i in (1..0xffff).rev() {
-                        let hp = self.get_cpu().op_history_pointer.wrapping_sub(i);
-                        println!("RAN[{}] - 0x{:04X}", i, self.get_cpu().op_history[hp as usize]);
+                if ui.button(im_str!("Dump PC history"), ImVec2::new(0.0, 0.0)) {
+                    println!("Dumping PC history");
+                    for i in 0..self.get_cpu().pc_history.len() {
+                        let hp = self.get_cpu().pc_history_pointer.wrapping_add(i) % self.get_cpu().pc_history.len();
+                        println!("[{}] - PC = 0x{:04X}", i, self.get_cpu().pc_history[hp]);
                     }
                 }
             });
