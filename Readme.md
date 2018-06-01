@@ -1,5 +1,9 @@
 # Lameboy
 
+
+[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.txt)
+[![Build Status](https://travis-ci.org/Palmr/lameboy.svg?branch=master)](https://travis-ci.org/Palmr/lameboy)
+
 Yet another Game Boy emulator.
 
 This emulator is a rust learning project for me. It currently isn't aiming to be the most accurate emulator, the fastest
