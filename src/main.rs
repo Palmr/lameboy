@@ -64,7 +64,7 @@ fn main() {
     f.read_to_end(&mut data).expect("Unable to read data");
     println!("File length: {}", data.len());
 
-    let mut gui = GUI::init((640, 576), rom_file_name);
+    let mut gui = GUI::init((640f64, 576f64), rom_file_name);
 
     // Create all our hardware instances
     let mut joypad = Joypad::new();

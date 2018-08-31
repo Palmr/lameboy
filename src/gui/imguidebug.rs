@@ -141,7 +141,6 @@ impl ImguiDebug {
                 .size((250.0, 100.0), ImGuiCond::Always)
                 .collapsible(false)
                 .resizable(false)
-                .show_borders(false)
                 .movable(false)
                 .build(|| {
                     ui.text(im_str!("{}", PKG_DESCRIPTION));

@@ -1,7 +1,7 @@
 use glium::{Display, Surface};
 use glium::glutin;
 use glium::glutin::EventsLoop;
-use imgui::{ImGui, Ui, ImGuiKey, ImString};
+use imgui::{ImGui, Ui, ImGuiKey, ImString, FrameSize};
 use imgui_glium_renderer::Renderer;
 use std::time::Instant;
 
@@ -20,6 +20,7 @@ struct MouseState {
 
 pub struct GUI {
     pub display: Display,
+    hidpi_factor: f64,
     events_loop: EventsLoop,
     imgui: ImGui,
     renderer: Renderer,
@@ -29,13 +30,14 @@ pub struct GUI {
 }
 
 impl GUI {
-    pub fn init(window_size: (u32, u32), rom_file_name: &str) -> GUI {
+    pub fn init(window_size: (f64, f64), rom_file_name: &str) -> GUI {
         let events_loop = glutin::EventsLoop::new();
         let context = glutin::ContextBuilder::new().with_vsync(true);
         let window = glutin::WindowBuilder::new()
             .with_title(format!("{} - Lameboy - v0.1", rom_file_name))
-            .with_dimensions(window_size.0, window_size.1);
+            .with_dimensions(glutin::dpi::LogicalSize::new(window_size.0, window_size.1));
         let display = Display::new(window, context, &events_loop).unwrap();
+        let hidpi_factor = display.gl_window().get_hidpi_factor();
 
         let mut imgui = ImGui::init();
         imgui.set_ini_filename(Some(ImString::new("lameboy.ini")));
@@ -66,6 +68,7 @@ impl GUI {
 
         GUI {
             display: display,
+            hidpi_factor: hidpi_factor,
             events_loop: events_loop,
             imgui: imgui,
             renderer: renderer,
@@ -82,7 +85,7 @@ impl GUI {
             self.mouse_state.pos.1 as f32 / scale.1,
         );
         self.imgui.set_mouse_down(
-            &[
+            [
                 self.mouse_state.pressed.0,
                 self.mouse_state.pressed.1,
                 self.mouse_state.pressed.2,
@@ -108,15 +111,19 @@ impl GUI {
         lameboy.get_ppu().draw(&mut target);
 
         let window = self.display.gl_window();
-        let size_pixels = window.get_inner_size().unwrap();
-        let hdipi = window.hidpi_factor();
-        let size_points = (
-            (size_pixels.0 as f32 / hdipi) as u32,
-            (size_pixels.1 as f32 / hdipi) as u32,
-        );
+        let physical_size = window
+            .get_inner_size()
+            .unwrap()
+            .to_physical(window.get_hidpi_factor());
+        let logical_size = physical_size.to_logical(self.hidpi_factor);
+
+        let frame_size = FrameSize {
+            logical_size: logical_size.into(),
+            hidpi_factor: self.hidpi_factor,
+        };
 
         if self.show_imgui {
-            let ui = self.imgui.frame(size_points, size_pixels, delta_s);
+            let ui = self.imgui.frame(frame_size, delta_s);
 
             run_ui(&ui, &mut lameboy);
 
@@ -127,95 +134,107 @@ impl GUI {
     }
 
     pub fn update_events(&mut self, gui_state: &mut ImguiDebug, lameboy: &mut Lameboy) -> () {
-        use glium::glutin::WindowEvent::*;
-        use glium::glutin::ElementState::Pressed;
-        use glium::glutin::{Event, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode};
-
         let im = &mut self.imgui;
         let mouse = &mut self.mouse_state;
+        let hidpi_factor = &self.hidpi_factor;
 
         self.events_loop.poll_events(|event| {
+            use glium::glutin::ElementState::Pressed;
+            use glium::glutin::WindowEvent::*;
+            use glium::glutin::{Event, MouseButton, MouseScrollDelta, TouchPhase};
+
             if let Event::WindowEvent { event, .. } = event {
                 match event {
-                    Closed => gui_state.active = false,
+                    CloseRequested => gui_state.active = false,
                     KeyboardInput { input, .. } => {
+                        use glium::glutin::VirtualKeyCode as Key;
+
                         let pressed = input.state == Pressed;
                         match input.virtual_keycode {
-                            Some(VirtualKeyCode::Tab) => im.set_key(0, pressed),
-                            Some(VirtualKeyCode::Left) => {
+                            Some(Key::Tab) => im.set_key(0, pressed),
+                            Some(Key::Left) => {
                                 im.set_key(1, pressed);
                                 lameboy.get_joypad().left = pressed
                             }
-                            Some(VirtualKeyCode::Right) => {
+                            Some(Key::Right) => {
                                 im.set_key(2, pressed);
                                 lameboy.get_joypad().right = pressed
                             }
-                            Some(VirtualKeyCode::Up) => {
+                            Some(Key::Up) => {
                                 im.set_key(3, pressed);
                                 lameboy.get_joypad().up = pressed
                             }
-                            Some(VirtualKeyCode::Down) => {
+                            Some(Key::Down) => {
                                 im.set_key(4, pressed);
                                 lameboy.get_joypad().down = pressed
                             }
-                            Some(VirtualKeyCode::PageUp) => im.set_key(5, pressed),
-                            Some(VirtualKeyCode::PageDown) => im.set_key(6, pressed),
-                            Some(VirtualKeyCode::Home) => im.set_key(7, pressed),
-                            Some(VirtualKeyCode::End) => im.set_key(8, pressed),
-                            Some(VirtualKeyCode::Delete) => im.set_key(9, pressed),
-                            Some(VirtualKeyCode::Back) => im.set_key(10, pressed),
-                            Some(VirtualKeyCode::Return) => {
+                            Some(Key::PageUp) => im.set_key(5, pressed),
+                            Some(Key::PageDown) => im.set_key(6, pressed),
+                            Some(Key::Home) => im.set_key(7, pressed),
+                            Some(Key::End) => im.set_key(8, pressed),
+                            Some(Key::Delete) => im.set_key(9, pressed),
+                            Some(Key::Back) => im.set_key(10, pressed),
+                            Some(Key::Return) => {
                                 im.set_key(11, pressed);
                                 lameboy.get_joypad().start = pressed
                             }
-                            Some(VirtualKeyCode::Escape) => im.set_key(12, pressed),
-                            Some(VirtualKeyCode::A) => {
+                            Some(Key::Escape) => im.set_key(12, pressed),
+                            Some(Key::A) => {
                                 im.set_key(13, pressed);
                                 lameboy.get_joypad().a = pressed
                             }
-                            Some(VirtualKeyCode::S) => { lameboy.get_joypad().b = pressed }
-                            Some(VirtualKeyCode::C) => im.set_key(14, pressed),
-                            Some(VirtualKeyCode::V) => im.set_key(15, pressed),
-                            Some(VirtualKeyCode::X) => im.set_key(16, pressed),
-                            Some(VirtualKeyCode::Y) => im.set_key(17, pressed),
-                            Some(VirtualKeyCode::Z) => im.set_key(18, pressed),
-                            Some(VirtualKeyCode::Space) => im.set_key(20, pressed),
-                            Some(VirtualKeyCode::LControl) |
-                            Some(VirtualKeyCode::RControl) => im.set_key_ctrl(pressed),
-                            Some(VirtualKeyCode::LShift) |
-                            Some(VirtualKeyCode::RShift) => {
+                            Some(Key::S) => { lameboy.get_joypad().b = pressed }
+                            Some(Key::C) => im.set_key(14, pressed),
+                            Some(Key::V) => im.set_key(15, pressed),
+                            Some(Key::X) => im.set_key(16, pressed),
+                            Some(Key::Y) => im.set_key(17, pressed),
+                            Some(Key::Z) => im.set_key(18, pressed),
+                            Some(Key::LControl) | Some(Key::RControl) => {
+                                im.set_key_ctrl(pressed)
+                            },
+                            Some(Key::LShift) |
+                            Some(Key::RShift) => {
                                 im.set_key_shift(pressed);
                                 lameboy.get_joypad().select = pressed
-                            }
-                            Some(VirtualKeyCode::LAlt) |
-                            Some(VirtualKeyCode::RAlt) => im.set_key_alt(pressed),
-                            Some(VirtualKeyCode::LWin) |
-                            Some(VirtualKeyCode::RWin) => im.set_key_super(pressed),
+                            },
+                            Some(Key::LAlt) | Some(Key::RAlt) => im.set_key_alt(pressed),
+                            Some(Key::LWin) | Some(Key::RWin) => im.set_key_super(pressed),
                             _ => {}
                         }
                     }
-
-                    CursorMoved { position: (x, y), .. } => mouse.pos = (x as i32, y as i32),
-                    MouseInput { state, button, .. } => {
-                        match button {
-                            MouseButton::Left => mouse.pressed.0 = state == Pressed,
-                            MouseButton::Right => mouse.pressed.1 = state == Pressed,
-                            MouseButton::Middle => mouse.pressed.2 = state == Pressed,
-                            _ => {}
-                        }
-                    }
+                    CursorMoved { position: pos, .. } => {
+                        // Rescale position from glutin logical coordinates to our logical
+                        // coordinates
+                        mouse.pos = pos
+                            .to_physical(hidpi_factor.clone())
+                            .to_logical(hidpi_factor.round())
+                            .into();
+                    },
+                    CursorEntered { .. } => gui_state.show_menu = true,
+                    CursorLeft { .. } => gui_state.show_menu = false,
+                    MouseInput { state, button, .. } => match button {
+                        MouseButton::Left => mouse.pressed.0 = state == Pressed,
+                        MouseButton::Right => mouse.pressed.1 = state == Pressed,
+                        MouseButton::Middle => mouse.pressed.2 = state == Pressed,
+                        _ => {}
+                    },
                     MouseWheel {
                         delta: MouseScrollDelta::LineDelta(_, y),
                         phase: TouchPhase::Moved,
                         ..
-                    } |
+                    } => mouse.wheel = y,
                     MouseWheel {
-                        delta: MouseScrollDelta::PixelDelta(_, y),
+                        delta: MouseScrollDelta::PixelDelta(pos),
                         phase: TouchPhase::Moved,
                         ..
-                    } => mouse.wheel = y,
-                    CursorEntered { .. } => gui_state.show_menu = true,
-                    CursorLeft { .. } => gui_state.show_menu = false,
+                    } => {
+                        // Rescale pixel delta from glutin logical coordinates to our logical
+                        // coordinates
+                        mouse.wheel = pos
+                            .to_physical(hidpi_factor.clone())
+                            .to_logical(hidpi_factor.round())
+                            .y as f32;
+                    }
                     ReceivedCharacter(c) => im.add_input_character(c),
                     _ => (),
                 }
