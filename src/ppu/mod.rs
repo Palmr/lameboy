@@ -61,8 +61,8 @@ impl PPU {
             mode_clock: 0,
             mode: Mode::HBlank,
             registers: Registers::new(),
-            gpu: gpu,
-            screen_buffer: screen_buffer,
+            gpu,
+            screen_buffer,
         }
     }
 

@@ -19,6 +19,6 @@ impl Tile {
             }
         }
 
-        Tile { rows: rows }
+        Tile { rows }
     }
 }

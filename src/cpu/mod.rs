@@ -24,10 +24,10 @@ impl<'c> CPU<'c> {
 
         CPU {
             registers: Registers::new(),
-            mmu: mmu,
+            mmu,
             ime: true,
             halt: false,
-            pc_history: pc_history,
+            pc_history,
             pc_history_pointer: 0,
         }
     }

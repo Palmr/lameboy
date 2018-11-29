@@ -28,9 +28,9 @@ pub struct MMU<'m> {
 impl<'m> MMU<'m> {
     pub fn new(cart: &'m mut Cart, ppu: &'m mut PPU, joypad: &'m mut Joypad) -> MMU<'m> {
         MMU {
-            cart: cart,
-            ppu: ppu,
-            joypad: joypad,
+            cart,
+            ppu,
+            joypad,
             wram0: Box::new([0; 0x1000]),
             wram1: Box::new([0; 0x1000]),
             unusable: 0xFF,

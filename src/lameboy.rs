@@ -13,7 +13,7 @@ pub struct Lameboy<'l> {
 impl<'l> Lameboy<'l> {
     pub fn new(cpu: CPU<'l>) -> Lameboy<'l> {
         Lameboy {
-            cpu: cpu,
+            cpu,
             running: false,
             breakpoints: Vec::new(),
             memory_breakpoints: Vec::new(),

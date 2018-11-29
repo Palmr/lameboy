@@ -31,7 +31,7 @@ const GLOBAL_CHECKSUM_LENGTH: usize = 0x02;
 
 impl Cart {
     pub fn new(data: Vec<u8>) -> Self {
-        Cart { data: data }
+        Cart { data }
     }
 
     pub fn get_size(&self) -> usize {

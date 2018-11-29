@@ -127,12 +127,12 @@ impl GPU {
         ) / 255.0;
 
         GPU {
-            vertex_buffer: vertex_buffer,
-            index_buffer: index_buffer,
-            program: program,
-            texture: texture,
-            palette: palette,
-            pixel_buffer: pixel_buffer,
+            vertex_buffer,
+            index_buffer,
+            program,
+            texture,
+            palette,
+            pixel_buffer,
         }
     }
 

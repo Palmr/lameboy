@@ -66,13 +66,13 @@ impl GUI {
         let mouse_state = MouseState::default();
 
         GUI {
-            display: display,
-            hidpi_factor: hidpi_factor,
-            events_loop: events_loop,
-            imgui: imgui,
-            renderer: renderer,
+            display,
+            hidpi_factor,
+            events_loop,
+            imgui,
+            renderer,
             last_frame: Instant::now(),
-            mouse_state: mouse_state,
+            mouse_state,
             show_imgui: true,
         }
     }
