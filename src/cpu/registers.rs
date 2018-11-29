@@ -73,60 +73,60 @@ impl Registers {
     pub fn read8(&self, r8: &Reg8) -> u8 {
         use self::Reg8::*;
         match r8 {
-            &A => self.a,
-            &B => self.b,
-            &C => self.c,
-            &D => self.d,
-            &E => self.e,
-            &H => self.h,
-            &L => self.l,
+            A => self.a,
+            B => self.b,
+            C => self.c,
+            D => self.d,
+            E => self.e,
+            H => self.h,
+            L => self.l,
         }
     }
 
     pub fn write8(&mut self, r8: &Reg8, value: u8) {
         use self::Reg8::*;
         match r8 {
-            &A => self.a = value,
-            &B => self.b = value,
-            &C => self.c = value,
-            &D => self.d = value,
-            &E => self.e = value,
-            &H => self.h = value,
-            &L => self.l = value,
+            A => self.a = value,
+            B => self.b = value,
+            C => self.c = value,
+            D => self.d = value,
+            E => self.e = value,
+            H => self.h = value,
+            L => self.l = value,
         }
     }
 
     pub fn read16(&self, r16: &Reg16) -> u16 {
         use self::Reg16::*;
         match r16 {
-            &AF => ((self.a as u16) << 8) | (self.f.bits() as u16),
-            &BC => ((self.b as u16) << 8) | (self.c as u16),
-            &DE => ((self.d as u16) << 8) | (self.e as u16),
-            &HL => ((self.h as u16) << 8) | (self.l as u16),
-            &SP => self.sp,
+            AF => ((u16::from(self.a) << 8) | (u16::from(self.f.bits()))),
+            BC => ((u16::from(self.b) << 8) | (u16::from(self.c))),
+            DE => ((u16::from(self.d) << 8) | (u16::from(self.e))),
+            HL => ((u16::from(self.h) << 8) | (u16::from(self.l))),
+            SP => self.sp,
         }
     }
 
     pub fn write16(&mut self, r16: &Reg16, value: u16) {
         use self::Reg16::*;
         match r16 {
-            &AF => {
+            AF => {
                 self.a = (value >> 8) as u8;
                 self.f = Flags::from_bits_truncate(value as u8)
             }
-            &BC => {
+            BC => {
                 self.b = (value >> 8) as u8;
                 self.c = value as u8
             }
-            &DE => {
+            DE => {
                 self.d = (value >> 8) as u8;
                 self.e = value as u8
             }
-            &HL => {
+            HL => {
                 self.h = (value >> 8) as u8;
                 self.l = value as u8
             }
-            &SP => self.sp = value,
+            SP => self.sp = value,
         }
     }
 }

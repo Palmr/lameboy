@@ -42,10 +42,10 @@ use ppu::PPU;
 mod joypad;
 use joypad::Joypad;
 
-const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
-const PKG_VERSION: &'static str = env!("CARGO_PKG_VERSION");
-const PKG_DESCRIPTION: &'static str = env!("CARGO_PKG_DESCRIPTION");
-const PKG_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
+const PKG_NAME: &str = env!("CARGO_PKG_NAME");
+const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
+const PKG_DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
+const PKG_AUTHORS: &str = env!("CARGO_PKG_AUTHORS");
 
 const CLEAR_COLOR: (f32, f32, f32, f32) = (0.8784, 0.9725, 0.8156, 1.0);
 

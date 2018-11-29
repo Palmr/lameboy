@@ -21,7 +21,7 @@ pub fn undefined(cpu: &CPU, opcode: u8) -> u8 {
 /// ```
 pub fn nop(_: &CPU) -> u8 {
     // Do nothing
-    return 4;
+    4
 }
 
 /// Stop the system clock and oscillator circuit to stop the CPU and LCD controller.
@@ -48,7 +48,7 @@ pub fn stop(cpu: &mut CPU) -> u8 {
 
     // TODO - Halt the CPU & LCD display until a button is pressed
 
-    return 4;
+    4
 }
 
 /// Halt the system clock, though let the oscillator and LCD controller continue to run.
@@ -65,7 +65,7 @@ pub fn stop(cpu: &mut CPU) -> u8 {
 pub fn halt(cpu: &mut CPU) -> u8 {
     cpu.halt = true;
 
-    return 4;
+    4
 }
 
 /// Enable or disable interrupts.
@@ -81,7 +81,7 @@ pub fn halt(cpu: &mut CPU) -> u8 {
 pub fn interrupts(cpu: &mut CPU, enabled: bool) -> u8 {
     cpu.ime = enabled;
 
-    return 4;
+    4
 }
 
 /// This instruction conditionally adjusts the accumulator for BCD addition and subtraction
@@ -125,7 +125,7 @@ pub fn decimal_adjust(cpu: &mut CPU) -> u8 {
     cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
     cpu.registers.f.set(RegisterFlags::CARRY, carry);
 
-    return 4;
+    4
 }
 
 /// Complement A register, flipping all bits.
@@ -144,7 +144,7 @@ pub fn complement(cpu: &mut CPU) -> u8 {
     cpu.registers.f.set(RegisterFlags::SUBTRACT, true);
     cpu.registers.f.set(RegisterFlags::HALF_CARRY, true);
 
-    return 4;
+    4
 }
 
 /// Set the carry flag.
@@ -161,7 +161,7 @@ pub fn set_carry_flag(cpu: &mut CPU) -> u8 {
     cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
     cpu.registers.f.set(RegisterFlags::CARRY, true);
 
-    return 4;
+    4
 }
 
 /// Complement the carry flag.
@@ -178,7 +178,7 @@ pub fn complement_carry_flag(cpu: &mut CPU) -> u8 {
     cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
     cpu.registers.f.toggle(RegisterFlags::CARRY);
 
-    return 4;
+    4
 }
 
 /// Increment 8-bit registers.
@@ -205,7 +205,7 @@ pub fn inc_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     cpu.registers.write8(r8, value);
 
-    return 4;
+    4
 }
 
 /// Decrement 8-bit registers.
@@ -232,7 +232,7 @@ pub fn dec_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     cpu.registers.write8(r8, value);
 
-    return 4;
+    4
 }
 
 /// Increment 16-bit registers.
@@ -252,7 +252,7 @@ pub fn inc_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     cpu.registers.write16(r16, value);
 
-    return 8;
+    8
 }
 
 /// Decrement 16-bit registers.
@@ -272,7 +272,7 @@ pub fn dec_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     cpu.registers.write16(r16, value);
 
-    return 8;
+    8
 }
 
 /// Increment memory using a 16-bit register as an address.
@@ -293,7 +293,7 @@ pub fn inc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     cpu.mmu.write8(a16_addr, value);
 
-    return 12;
+    12
 }
 
 /// Decrement memory using a 16-bit register as an address.
@@ -314,7 +314,7 @@ pub fn dec_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     cpu.mmu.write8(a16_addr, value);
 
-    return 12;
+    12
 }
 
 /// Load an 8-bit register into another 8-bit register.
@@ -332,7 +332,7 @@ pub fn load_r8_r8(cpu: &mut CPU, r8_target: &Reg8, r8_source: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8_source);
     cpu.registers.write8(r8_target, value);
 
-    return 4;
+    4
 }
 
 /// Load an 8-bit value into a 8-bit register.
@@ -352,7 +352,7 @@ pub fn load_r8_d8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     // Write it to the register
     cpu.registers.write8(r8, value);
 
-    return 8;
+    8
 }
 
 /// Load an 8-bit register into memory using a 16-bit register as an address. Then increment that 16-bit register.
@@ -376,7 +376,7 @@ pub fn load_indirect_r16_increment_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, 
     cpu.registers
         .write16(r16_indirect_addr, a16_addr.wrapping_add(1));
 
-    return 8;
+    8
 }
 
 /// Load an 8-bit register with an indirect value, taken from memory using a 16-bit register as an
@@ -401,7 +401,7 @@ pub fn load_indirect_r16_decrement_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, 
     cpu.registers
         .write16(r16_indirect_addr, a16_addr.wrapping_sub(1));
 
-    return 8;
+    8
 }
 
 /// Load an 8-bit register with an indirect value, taken from memory using a 16-bit register as an
@@ -419,7 +419,7 @@ pub fn load_r8_indirect_r16(cpu: &mut CPU, r8_target: &Reg8, r16_indirect_addr: 
     let value = cpu.mmu.read8(cpu.registers.read16(r16_indirect_addr));
     cpu.registers.write8(r8_target, value);
 
-    return 8;
+    8
 }
 
 /// Load an 8-bit register with an indirect value, taken from memory using a 16-bit register as an
@@ -447,7 +447,7 @@ pub fn load_r8_indirect_r16_increment(
     cpu.registers
         .write16(r16_indirect_addr, r16_value.wrapping_add(1));
 
-    return 8;
+    8
 }
 
 /// Load an 8-bit register with an indirect value, taken from memory using a 16-bit register as an
@@ -475,7 +475,7 @@ pub fn load_r8_indirect_r16_decrement(
     cpu.registers
         .write16(r16_indirect_addr, r16_value.wrapping_sub(1));
 
-    return 8;
+    8
 }
 
 /// Load memory, using a 16-bit register as an address, with an 8-bit register value.
@@ -494,7 +494,7 @@ pub fn load_indirect_r16_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, r8_source:
         cpu.registers.read8(r8_source),
     );
 
-    return 8;
+    8
 }
 
 /// Load memory, using a 16-bit register as an address, with an 8-bit value.
@@ -514,7 +514,7 @@ pub fn load_indirect_r16_d8(cpu: &mut CPU, r16_indirect_addr: &Reg16) -> u8 {
     cpu.mmu
         .write8(cpu.registers.read16(r16_indirect_addr), value);
 
-    return 12;
+    12
 }
 
 /// Load a 16-bit register into a 16-bit register.
@@ -531,7 +531,7 @@ pub fn load_r16_r16(cpu: &mut CPU, r16_target: &Reg16, r16_source: &Reg16) -> u8
     let value = cpu.registers.read16(r16_source);
     cpu.registers.write16(r16_target, value);
 
-    return 8;
+    8
 }
 
 /// Load a 16-bit value into a 16-bit register.
@@ -551,7 +551,7 @@ pub fn load_r16_d16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     // Write it to the register
     cpu.registers.write16(r16, value);
 
-    return 12;
+    12
 }
 
 /// Load memory, using a 16-bit register as an address, with an 8-bit register value.
@@ -569,14 +569,14 @@ pub fn load_indirect_a16_r16(cpu: &mut CPU, r16_source: &Reg16) -> u8 {
 
     // Split 16-bit register to low/high
     let r16_value = cpu.registers.read16(r16_source);
-    let r16_high: u8 = ((r16_value & 0xFF00) >> 8) as u8;
-    let r16_low: u8 = (r16_value & 0x00FF) as u8;
+    let r16_high = ((r16_value & 0xFF00) >> 8) as u8;
+    let r16_low = (r16_value & 0x00FF) as u8;
 
     // Write the two bytes to memory
     cpu.mmu.write8(a16_addr, r16_low);
     cpu.mmu.write8(a16_addr + 1, r16_high);
 
-    return 20;
+    20
 }
 
 /// Load memory, using an 8-bit value added to 0xFF00 as an address, with the A register value.
@@ -590,12 +590,12 @@ pub fn load_indirect_a16_r16(cpu: &mut CPU, r16_source: &Reg16) -> u8 {
 /// ```
 pub fn load_high_mem_d8_reg_a(cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let address = 0xFF00 + cpu.fetch8() as u16;
+    let address = 0xFF00 + u16::from(cpu.fetch8());
 
     // Write the byte to memory
     cpu.mmu.write8(address, cpu.registers.a);
 
-    return 12;
+    12
 }
 
 /// Load the A register with a value from memory, using an 8-bit value added to 0xFF00 as an
@@ -610,14 +610,14 @@ pub fn load_high_mem_d8_reg_a(cpu: &mut CPU) -> u8 {
 /// ```
 pub fn load_reg_a_high_mem_d8(cpu: &mut CPU) -> u8 {
     // Address is offset plus 8-bit data
-    let addr = 0xFF00 + cpu.fetch8() as u16;
+    let addr = 0xFF00 + u16::from(cpu.fetch8());
 
     // Read 8-bit value
     let value = cpu.mmu.read8(addr);
 
     cpu.registers.a = value;
 
-    return 12;
+    12
 }
 
 /// Load memory, using the register C value added to 0xFF00 as an address, with the A register
@@ -631,12 +631,12 @@ pub fn load_reg_a_high_mem_d8(cpu: &mut CPU) -> u8 {
 /// LD (C), A ; memory[0xFF00 + C] <- A
 /// ```
 pub fn load_high_mem_reg_c_reg_a(cpu: &mut CPU) -> u8 {
-    let address = 0xFF00 + cpu.registers.c as u16;
+    let address = 0xFF00 + u16::from(cpu.registers.c);;
 
     // Write the byte to memory
     cpu.mmu.write8(address, cpu.registers.a);
 
-    return 8;
+    8
 }
 
 /// Load the A register with a value from memory, using the value of register C added to 0xFF00 as
@@ -650,11 +650,11 @@ pub fn load_high_mem_reg_c_reg_a(cpu: &mut CPU) -> u8 {
 /// LDH A, (C) ; A <- memory[0xFF00 + C]
 /// ```
 pub fn load_reg_a_high_mem_reg_c(cpu: &mut CPU) -> u8 {
-    let address = 0xFF00 + cpu.registers.c as u16;
+    let address = 0xFF00 + u16::from(cpu.registers.c);;
 
     cpu.registers.a = cpu.mmu.read8(address);
 
-    return 8;
+    8
 }
 
 /// Load memory, using a 16-bit value address, with the A register value.
@@ -673,7 +673,7 @@ pub fn load_a16_reg_a(cpu: &mut CPU) -> u8 {
     // Write the byte to memory
     cpu.mmu.write8(addr, cpu.registers.a);
 
-    return 16;
+    16
 }
 
 /// Load the A register with a value from memory, using a 16-bit value as an address.
@@ -693,7 +693,7 @@ pub fn load_reg_a_a16(cpu: &mut CPU) -> u8 {
 
     cpu.registers.a = value;
 
-    return 16;
+    16
 }
 
 /// Load the HL register with the value of the SP register added to an 8-bit value.
@@ -708,7 +708,7 @@ pub fn load_reg_a_a16(cpu: &mut CPU) -> u8 {
 pub fn load_reg_hl_reg_sp_d8(cpu: &mut CPU) -> u8 {
     // TODO - Could combine logic with add_sp_d8
     // Read 8-bit value
-    let value = cpu.fetch8() as u16;
+    let value = u16::from(cpu.fetch8());
 
     let combined = cpu.registers.sp.wrapping_add(value);
 
@@ -722,10 +722,10 @@ pub fn load_reg_hl_reg_sp_d8(cpu: &mut CPU) -> u8 {
     );
     cpu.registers.f.set(
         RegisterFlags::CARRY,
-        ((cpu.registers.sp as u32) + (value as u32)) > 0xFFFF,
+        (u32::from(cpu.registers.sp) + u32::from(value)) > 0xFFFF,
     );
 
-    return 12;
+    12
 }
 
 /// Test a jump condition against the flags register of a CPU and return the result as a bool.
@@ -741,7 +741,7 @@ pub fn load_reg_hl_reg_sp_d8(cpu: &mut CPU) -> u8 {
 /// | 11 | C         | CY = 0 |
 ///
 fn test_jump_condition(cpu: &CPU, opcode: u8) -> bool {
-    let cc = (opcode & 0b00011000) >> 3;
+    let cc = (opcode & 0b0001_1000) >> 3;
     match cc {
         0b00 => !cpu.registers.f.contains(RegisterFlags::ZERO),
         0b01 => cpu.registers.f.contains(RegisterFlags::ZERO),
@@ -770,7 +770,7 @@ pub fn jump_d16(cpu: &mut CPU) -> u8 {
     // Jump PC to that target address
     cpu.registers.pc = jump_target;
 
-    return 16;
+    16
 }
 
 /// Jump to a different address using 16-bit data as an address if a given flag status condition
@@ -792,9 +792,9 @@ pub fn jump_conditional_d16(cpu: &mut CPU, opcode: u8) -> u8 {
         // Jump PC to that target address
         cpu.registers.pc = jump_target;
 
-        return 16;
+        16
     } else {
-        return 12;
+        12
     }
 }
 
@@ -811,7 +811,7 @@ pub fn jump_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     // Set PC to whatever the 16-bit register is
     cpu.registers.pc = cpu.registers.read16(r16);
 
-    return 4;
+    4
 }
 
 /// Jump to a different relative address by adding the 8-bit operand to the current PC register.
@@ -830,7 +830,7 @@ pub fn jump_relative_d8(cpu: &mut CPU) -> u8 {
     // Jump PC to that target address
     cpu.registers.pc = cpu.registers.pc.wrapping_add(jump_offset as u16);
 
-    return 16;
+    16
 }
 
 /// Jump to a different relative address by adding the 8-bit operand to the current PC register if
@@ -852,9 +852,9 @@ pub fn jump_relative_conditional_d8(cpu: &mut CPU, opcode: u8) -> u8 {
         // Jump PC to that target address
         cpu.registers.pc = cpu.registers.pc.wrapping_add(jump_offset as u16);
 
-        return 12;
+        12
     } else {
-        return 8;
+        8
     }
 }
 
@@ -886,7 +886,7 @@ fn pop_stack_d8(cpu: &mut CPU) -> u8 {
     // Increment stack pointer
     cpu.registers.sp = cpu.registers.sp.wrapping_add(1);
 
-    return value;
+    value
 }
 
 /// Pop a 16-bit value off the stack.
@@ -894,11 +894,11 @@ fn pop_stack_d8(cpu: &mut CPU) -> u8 {
 fn pop_stack_d16(cpu: &mut CPU) -> u16 {
     let mut value: u16;
     // Pop low byte
-    value = pop_stack_d8(cpu) as u16;
+    value = u16::from(pop_stack_d8(cpu));
     // Pop high byte
-    value |= (pop_stack_d8(cpu) as u16) << 8;
+    value |= (u16::from(pop_stack_d8(cpu))) << 8;
 
-    return value;
+    value
 }
 
 /// Push a 16-bit register to the stack.
@@ -914,7 +914,7 @@ pub fn push_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     let value = cpu.registers.read16(r16);
     push_stack_d16(cpu, value);
 
-    return 16;
+    16
 }
 
 /// Pop the contents of the stack into a 16-bit register.
@@ -930,7 +930,7 @@ pub fn pop_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     let value = pop_stack_d16(cpu);
     cpu.registers.write16(r16, value);
 
-    return 12;
+    12
 }
 
 /// Jump to a different address using 16-bit data as an address after first pushing the current PC
@@ -954,7 +954,7 @@ pub fn call_d16(cpu: &mut CPU) -> u8 {
     // Jump PC to the target address
     cpu.registers.pc = jump_target;
 
-    return 24;
+    24
 }
 
 /// Jump to a different address using 16-bit data as an address after first pushing the current PC
@@ -979,9 +979,9 @@ pub fn call_conditional_d16(cpu: &mut CPU, opcode: u8) -> u8 {
         // Jump PC to the target address
         cpu.registers.pc = jump_target;
 
-        return 24;
+        24
     } else {
-        return 12;
+        12
     }
 }
 
@@ -1001,7 +1001,7 @@ pub fn ret(cpu: &mut CPU) -> u8 {
     // Jump PC to the target address
     cpu.registers.pc = jump_target;
 
-    return 16;
+    16
 }
 
 /// Called internally by the CPU to jump to a different address using 16-bit interrupt handler
@@ -1019,7 +1019,7 @@ pub fn call_interrupt(cpu: &mut CPU, addr: u16) -> u8 {
     // Jump to handler
     cpu.registers.pc = addr;
 
-    return 12;
+    12
 }
 
 /// Return to an address that was pushed to the stack.
@@ -1035,7 +1035,7 @@ pub fn call_interrupt(cpu: &mut CPU, addr: u16) -> u8 {
 pub fn ret_interrupt(cpu: &mut CPU) -> u8 {
     cpu.ime = true;
 
-    return ret(cpu);
+    ret(cpu)
 }
 
 /// Return to an address that was pushed to the stack if a given flag status condition matches.
@@ -1051,9 +1051,9 @@ pub fn ret_conditional(cpu: &mut CPU, opcode: u8) -> u8 {
     if test_jump_condition(cpu, opcode) {
         ret(cpu);
 
-        return 20;
+        20
     } else {
-        return 8;
+        8
     }
 }
 
@@ -1072,12 +1072,12 @@ pub fn reset(cpu: &mut CPU, opcode: u8) -> u8 {
     push_stack_d16(cpu, current_pc);
 
     // Derive target address from opcode bits
-    let jump_target = opcode & 0b00111000;
+    let jump_target = opcode & 0b0011_1000;
 
     // Jump PC to the target address
-    cpu.registers.pc = jump_target as u16;
+    cpu.registers.pc = u16::from(jump_target);
 
-    return 16;
+    16
 }
 
 /// ADD 16-bit register with register HL, storing the result in HL.
@@ -1105,10 +1105,10 @@ pub fn add_hl_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     );
     cpu.registers.f.set(
         RegisterFlags::CARRY,
-        ((original_hl as u32) + (value as u32)) > 0xFFFF,
+        (u32::from(original_hl) + u32::from(value)) > 0xFFFF,
     );
 
-    return 8;
+    8
 }
 
 /// ADD 8-bit value with register SP, storing the result in HL.
@@ -1122,7 +1122,7 @@ pub fn add_hl_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```
 pub fn add_sp_d8(cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = cpu.fetch8() as u16;
+    let value = u16::from(cpu.fetch8());
 
     let original_sp = cpu.registers.sp;
 
@@ -1136,10 +1136,10 @@ pub fn add_sp_d8(cpu: &mut CPU) -> u8 {
     );
     cpu.registers.f.set(
         RegisterFlags::CARRY,
-        ((original_sp as u32) + (value as u32)) > 0xFFFF,
+        (u32::from(original_sp) + u32::from(value)) > 0xFFFF,
     );
 
-    return 16;
+    16
 }
 
 /// Add 8-bit value with register A, storing the result in A.
@@ -1183,7 +1183,7 @@ fn alu_add_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) -> () {
     );
     cpu.registers.f.set(
         RegisterFlags::CARRY,
-        ((original_a as u16) + (d8 as u16) + (cy as u16)) > 0xFF,
+        (u16::from(original_a) + u16::from(d8) + u16::from(cy)) > 0xFF,
     );
 }
 
@@ -1201,7 +1201,7 @@ pub fn add_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     alu_add_8bit(cpu, value, false);
 
-    return 4;
+    4
 }
 
 /// ADD 8-bit value with register A, storing the result in A.
@@ -1219,7 +1219,7 @@ pub fn add_d8(cpu: &mut CPU) -> u8 {
 
     alu_add_8bit(cpu, value, false);
 
-    return 8;
+    8
 }
 
 /// ADD memory addressed indirectly by a 16-bit register with register A, storing the result in A.
@@ -1236,7 +1236,7 @@ pub fn add_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     alu_add_8bit(cpu, value, false);
 
-    return 8;
+    8
 }
 
 /// ADD 8-bit register plus the carry flag with register A, storing the result in A.
@@ -1253,7 +1253,7 @@ pub fn adc_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     alu_add_8bit(cpu, value, true);
 
-    return 4;
+    4
 }
 
 /// ADD 8-bit register plus the carry flag with register A, storing the result in A.
@@ -1271,7 +1271,7 @@ pub fn adc_d8(cpu: &mut CPU) -> u8 {
 
     alu_add_8bit(cpu, value, true);
 
-    return 8;
+    8
 }
 
 /// ADD memory addressed indirectly by a 16-bit register plus the carry flag with register A,
@@ -1289,7 +1289,7 @@ pub fn adc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     alu_add_8bit(cpu, value, true);
 
-    return 8;
+    8
 }
 
 /// Subtract 8-bit value from register A, storing the result in A.
@@ -1336,7 +1336,7 @@ fn alu_sub_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) -> () {
     );
     cpu.registers.f.set(
         RegisterFlags::CARRY,
-        (original_a as u16) < (d8 as u16) + (cy as u16),
+        u16::from(original_a) < u16::from(d8) + u16::from(cy),
     );
 }
 
@@ -1354,7 +1354,7 @@ pub fn sub_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     alu_sub_8bit(cpu, value, false);
 
-    return 4;
+    4
 }
 
 /// Subtract 8-bit value from register A, storing the result in A.
@@ -1372,7 +1372,7 @@ pub fn sub_d8(cpu: &mut CPU) -> u8 {
 
     alu_sub_8bit(cpu, value, false);
 
-    return 8;
+    8
 }
 
 /// Subtract memory addressed indirectly by a 16-bit register from register A, storing the result
@@ -1390,7 +1390,7 @@ pub fn sub_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     alu_sub_8bit(cpu, value, false);
 
-    return 8;
+    8
 }
 
 /// Subtract 8-bit register plus the carry flag from register A, storing the result in A.
@@ -1407,7 +1407,7 @@ pub fn sbc_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     alu_sub_8bit(cpu, value, true);
 
-    return 4;
+    4
 }
 
 /// Subtract 8-bit value plus the carry flag from register A, storing the result in A.
@@ -1425,7 +1425,7 @@ pub fn sbc_d8(cpu: &mut CPU) -> u8 {
 
     alu_sub_8bit(cpu, value, true);
 
-    return 8;
+    8
 }
 
 /// Subtract memory addressed indirectly by a 16-bit register plus the carry flag from register A,
@@ -1443,7 +1443,7 @@ pub fn sbc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     alu_sub_8bit(cpu, value, true);
 
-    return 8;
+    8
 }
 
 /// Logically AND 8-bit value from register A, storing the result in A.
@@ -1467,7 +1467,7 @@ pub fn sbc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// Always reset
 ///
 fn alu_and_8bit(cpu: &mut CPU, d8: u8) -> () {
-    cpu.registers.a = cpu.registers.a & d8;
+    cpu.registers.a &= & d8;
 
     cpu.registers
         .f
@@ -1491,7 +1491,7 @@ pub fn and_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     alu_and_8bit(cpu, value);
 
-    return 4;
+    4
 }
 
 /// AND 8-bit value with register A, storing the result in A.
@@ -1509,7 +1509,7 @@ pub fn and_d8(cpu: &mut CPU) -> u8 {
 
     alu_and_8bit(cpu, value);
 
-    return 8;
+    8
 }
 
 /// AND memory addressed indirectly by a 16-bit register with register A, storing the result in A.
@@ -1527,7 +1527,7 @@ pub fn and_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     alu_and_8bit(cpu, value);
 
-    return 8;
+    8
 }
 
 /// Logically XOR 8-bit value from register A, storing the result in A.
@@ -1551,7 +1551,7 @@ pub fn and_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// Always reset
 ///
 fn alu_xor_8bit(cpu: &mut CPU, d8: u8) -> () {
-    cpu.registers.a = cpu.registers.a ^ d8;
+    cpu.registers.a ^= d8;
 
     cpu.registers
         .f
@@ -1575,7 +1575,7 @@ pub fn xor_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     alu_xor_8bit(cpu, value);
 
-    return 4;
+    4
 }
 
 /// XOR 8-bit value with register A, storing the result in A.
@@ -1593,7 +1593,7 @@ pub fn xor_d8(cpu: &mut CPU) -> u8 {
 
     alu_xor_8bit(cpu, value);
 
-    return 8;
+    8
 }
 
 /// XOR memory addressed indirectly by a 16-bit register with register A, storing the result in A.
@@ -1611,7 +1611,7 @@ pub fn xor_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     alu_xor_8bit(cpu, value);
 
-    return 8;
+    8
 }
 
 /// Logically OR 8-bit value from register A, storing the result in A.
@@ -1635,7 +1635,7 @@ pub fn xor_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// Always reset
 ///
 fn alu_or_8bit(cpu: &mut CPU, d8: u8) -> () {
-    cpu.registers.a = cpu.registers.a | d8;
+    cpu.registers.a |= d8;
 
     cpu.registers
         .f
@@ -1659,7 +1659,7 @@ pub fn or_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     alu_or_8bit(cpu, value);
 
-    return 4;
+    4
 }
 
 /// OR 8-bit value with register A, storing the result in A.
@@ -1677,7 +1677,7 @@ pub fn or_d8(cpu: &mut CPU) -> u8 {
 
     alu_or_8bit(cpu, value);
 
-    return 8;
+    8
 }
 
 /// OR memory addressed indirectly by a 16-bit register with register A, storing the result in A.
@@ -1695,7 +1695,7 @@ pub fn or_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     alu_or_8bit(cpu, value);
 
-    return 8;
+    8
 }
 
 /// Compare an 8-bit value with register A by subtracting the two but not storing the result, only
@@ -1749,7 +1749,7 @@ pub fn cp_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     alu_cp_8bit(cpu, value);
 
-    return 4;
+    4
 }
 
 /// Subtract 8-bit value from register A, but don't store the result. Zero flag will be set if
@@ -1768,7 +1768,7 @@ pub fn cp_d8(cpu: &mut CPU) -> u8 {
 
     alu_cp_8bit(cpu, value);
 
-    return 8;
+    8
 }
 
 /// Subtract memory addressed indirectly by a 16-bit register from register A, but don't store the
@@ -1787,7 +1787,7 @@ pub fn cp_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     alu_cp_8bit(cpu, value);
 
-    return 8;
+    8
 }
 
 /// Rotate an 8-bit register to the left.
@@ -1816,7 +1816,7 @@ fn alu_rotate_left(cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: bool)
     cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
     cpu.registers.f.set(RegisterFlags::CARRY, high_bit != 0);
 
-    return rotated_value;
+    rotated_value
 }
 
 /// Rotate an 8-bit register to the left.
@@ -1849,7 +1849,7 @@ pub fn rotate_left_r8(cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero:
 
     cpu.registers.write8(r8, rotated_value);
 
-    return if reset_zero { 4 } else { 8 };
+    if reset_zero { 4 } else { 8 }
 }
 
 /// Rotate an indirect value, taken from memory using a 16-bit register as an address to the left.
@@ -1878,7 +1878,7 @@ pub fn rotate_left_indirect_hl(cpu: &mut CPU, through_carry: bool, reset_zero: b
 
     cpu.mmu.write8(a16_addr, rotated_value);
 
-    return 16;
+    16
 }
 
 /// Rotate an 8-bit value to the right.
@@ -1908,7 +1908,7 @@ fn alu_rotate_right(cpu: &mut CPU, d8: u8, through_carry: bool, reset_zero: bool
     cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
     cpu.registers.f.set(RegisterFlags::CARRY, low_bit != 0);
 
-    return rotated_value;
+    rotated_value
 }
 
 /// Rotate an 8-bit register to the right.
@@ -1941,7 +1941,7 @@ pub fn rotate_right_r8(cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero
 
     cpu.registers.write8(r8, rotated_value);
 
-    return if reset_zero { 4 } else { 8 };
+    if reset_zero { 4 } else { 8 }
 }
 
 /// Rotate an indirect value, taken from memory using a 16-bit register as an address to the right.
@@ -1970,7 +1970,7 @@ pub fn rotate_right_indirect_hl(cpu: &mut CPU, through_carry: bool, reset_zero: 
 
     cpu.mmu.write8(a16_addr, rotated_value);
 
-    return 16;
+    16
 }
 
 /// Shift an 8-bit value to the left.
@@ -1984,7 +1984,7 @@ fn alu_shift_left(cpu: &mut CPU, d8: u8) -> u8 {
     cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
     cpu.registers.f.set(RegisterFlags::CARRY, high_bit != 0);
 
-    return shifted_value;
+    shifted_value
 }
 
 /// Shift an 8-bit register to the left.
@@ -2003,7 +2003,7 @@ pub fn shift_left_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     cpu.registers.write8(r8, shifted_value);
 
-    return 8;
+    8
 }
 
 /// Shift an indirect value, taken from memory using a 16-bit register as an address to the left.
@@ -2023,7 +2023,7 @@ pub fn shift_left_indirect_hl(cpu: &mut CPU) -> u8 {
 
     cpu.mmu.write8(a16_addr, shifted_value);
 
-    return 16;
+    16
 }
 
 /// Shift an 8-bit value to the right.
@@ -2038,7 +2038,7 @@ fn alu_shift_right(cpu: &mut CPU, d8: u8, reset_high_bit: bool) -> u8 {
     cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
     cpu.registers.f.set(RegisterFlags::CARRY, low_bit != 0);
 
-    return shifted_value;
+    shifted_value
 }
 
 /// Shift an 8-bit register to the right.
@@ -2061,7 +2061,7 @@ pub fn shift_right_r8(cpu: &mut CPU, r8: &Reg8, reset_high_bit: bool) -> u8 {
 
     cpu.registers.write8(r8, shifted_value);
 
-    return 8;
+    8
 }
 
 /// Shift an indirect value, taken from memory using a 16-bit register as an address to the right.
@@ -2085,7 +2085,7 @@ pub fn shift_right_indirect_hl(cpu: &mut CPU, reset_high_bit: bool) -> u8 {
 
     cpu.mmu.write8(a16_addr, shifted_value);
 
-    return 16;
+    16
 }
 
 /// Swap high and low bits of an 8-bit value.
@@ -2098,7 +2098,7 @@ fn alu_swap(cpu: &mut CPU, d8: u8) -> u8 {
     cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
     cpu.registers.f.set(RegisterFlags::CARRY, false);
 
-    return swapped_value;
+    swapped_value
 }
 
 /// Swap high and low bits of an 8-bit register.
@@ -2117,7 +2117,7 @@ pub fn swap_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 
     cpu.registers.write8(r8, swapped_value);
 
-    return 8;
+    8
 }
 
 /// Swap high and low bits of an indirect value, taken from memory using a 16-bit register as an
@@ -2138,7 +2138,7 @@ pub fn swap_indirect_hl(cpu: &mut CPU) -> u8 {
 
     cpu.mmu.write8(a16_addr, swapped_value);
 
-    return 16;
+    16
 }
 
 /// Put the complement of an 8-bit values single bit into the RegisterFlags::ZERO flag.
@@ -2151,8 +2151,8 @@ pub fn swap_indirect_hl(cpu: &mut CPU) -> u8 {
 /// BIT 4, B  ; Flag::RegisterFlags::ZERO = (B & 0x01 << 4)
 /// ```
 pub fn bit_test(cpu: &mut CPU, opcode: u8) -> u8 {
-    let register = opcode & 0b00000111;
-    let bit_index = (opcode & 0b00111000) >> 3;
+    let register = opcode & 0b0000_0111;
+    let bit_index = (opcode & 0b0011_1000) >> 3;
 
     let (value, duration) = match register {
         0b111 => (cpu.registers.read8(&Reg8::A), 8),
@@ -2173,7 +2173,7 @@ pub fn bit_test(cpu: &mut CPU, opcode: u8) -> u8 {
     cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
     cpu.registers.f.set(RegisterFlags::CARRY, false);
 
-    return duration;
+    duration
 }
 
 /// Set, or reset, an individual bit in an 8-bit value.
@@ -2187,8 +2187,8 @@ pub fn bit_test(cpu: &mut CPU, opcode: u8) -> u8 {
 /// RES 4, B  ; B = (B & 0x01 << 4)
 /// ```
 pub fn bit_assign(cpu: &mut CPU, opcode: u8, set_bit: bool) -> u8 {
-    let register = opcode & 0b00000111;
-    let bit_index = (opcode & 0b00111000) >> 3;
+    let register = opcode & 0b0000_0111;
+    let bit_index = (opcode & 0b0011_1000) >> 3;
 
     let (mut value, duration) = match register {
         0b111 => (cpu.registers.read8(&Reg8::A), 8),
@@ -2203,9 +2203,9 @@ pub fn bit_assign(cpu: &mut CPU, opcode: u8, set_bit: bool) -> u8 {
     };
 
     if set_bit {
-        value = value | (0x01 << bit_index);
+        value |= 0x01 << bit_index;
     } else {
-        value = value & !(0x01 << bit_index);
+        value &= !(0x01 << bit_index);
     }
 
     match register {
@@ -2220,5 +2220,5 @@ pub fn bit_assign(cpu: &mut CPU, opcode: u8, set_bit: bool) -> u8 {
         _ => panic!("Unhandled register bit pattern: 0b{:08b}", register),
     };
 
-    return duration;
+    duration
 }

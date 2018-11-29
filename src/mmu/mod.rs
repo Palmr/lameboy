@@ -129,8 +129,7 @@ impl<'m> MMU<'m> {
             0x0000...0x7FFF | 0xA000...0xBFFF => self.cart.write8(addr, data),
             0x8000...0x9FFF => {
                 // Ignore update if PPU is accessing VRAM
-                if self.ppu.is_vram_accessible() || true {
-                    // TODO - disabled temporarily
+                if self.ppu.is_vram_accessible() {
                     self.ppu.write8(addr, data)
                 }
             }
@@ -138,8 +137,7 @@ impl<'m> MMU<'m> {
             0xD000...0xDFFF | 0xF000...0xFDFF => self.wram1[(addr as usize) & 0x0FFF] = data,
             0xFE00...0xFE9F => {
                 // Ignore update if PPU is accessing VRAM or OAM
-                if self.ppu.is_oam_accessible() || true {
-                    // TODO - disabled temporarily
+                if self.ppu.is_oam_accessible() {
                     self.ppu.write8(addr, data)
                 }
             }
@@ -149,13 +147,13 @@ impl<'m> MMU<'m> {
                     0xFF00 => self.joypad.write8(addr, data),
                     0xFF46 => {
                         // DMA
-                        let source_addr = (data as u16) << 8;
+                        let source_addr = (u16::from(data)) << 8;
                         for i in 0..160 {
                             let val = self.read8(source_addr + i);
                             self.write8(0xFE00 + i, val);
                         }
                     }
-                    0xFF40...0xFF4B => self.ppu.write8(addr, data),
+                    0xFF40...0xFF45 | 0xFF47...0xFF4B => self.ppu.write8(addr, data),
                     0xFF01...0xFF3F | 0xFF4C...0xFF7F => self.io[(addr as usize) & 0x00FF] = data,
                     _ => panic!(
                         "Attempted to access [WR] memory from an invalid address: {:#X}",
@@ -176,7 +174,7 @@ impl<'m> MMU<'m> {
         let low = self.read8(addr);
         let high = self.read8(addr.wrapping_add(1));
 
-        ((high as u16) << 8) | (low as u16)
+        ((u16::from(high)) << 8) | (u16::from(low))
     }
 }
 

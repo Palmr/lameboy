@@ -49,7 +49,7 @@ impl<'c> CPU<'c> {
         // Move PC on
         self.registers.pc = self.registers.pc.wrapping_add(1);
 
-        return value;
+        value
     }
 
     /// Read a 16-bit value using the PC register as the address, then move the PC register forward
@@ -59,7 +59,7 @@ impl<'c> CPU<'c> {
         let low = self.fetch8();
         let high = self.fetch8();
 
-        return ((high as u16) << 8) | (low as u16);
+        u16::from(high) << 8 | u16::from(low)
     }
 
     fn halt(&mut self) {
@@ -107,7 +107,7 @@ impl<'c> CPU<'c> {
             return duration;
         }
 
-        return 0;
+        0
     }
 
     /// Run a fetch, decode, and execute cycle on the CPU
@@ -402,7 +402,7 @@ impl<'c> CPU<'c> {
 
         duration += self.handle_interrupt();
 
-        return duration;
+        duration
     }
 
     fn decode_cb_prefixed(&mut self) -> u8 {
@@ -487,7 +487,7 @@ impl<'c> CPU<'c> {
             _ => panic!("Unhandled CB Op: {:02X}", op),
         };
 
-        return duration + 4;
+        duration + 4
     }
 }
 

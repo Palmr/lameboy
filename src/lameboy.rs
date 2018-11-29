@@ -44,7 +44,7 @@ impl<'l> Lameboy<'l> {
             self.get_mmu().memory_breakpoints = self.memory_breakpoints.clone();
 
             // Step the emulator through a single opcode
-            t_clk += self.step() as u32;
+            t_clk += u32::from(self.step());
         }
     }
 
@@ -58,7 +58,7 @@ impl<'l> Lameboy<'l> {
         let ppu_int_flags = self.get_ppu().cycle(cpu_duration);
         self.get_mmu().write8(0xFF0F, int_flags | ppu_int_flags);
 
-        return cpu_duration;
+        cpu_duration
     }
 
     pub fn reset(&mut self) {
@@ -95,7 +95,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         // TODO - This should be in the memory debug impl but it doesn't have a ref to CPU currently
         if imgui_debug.dump_memory_pc_lock {
-            imgui_debug.dump_memory_addr = self.get_cpu().registers.pc as i32;
+            imgui_debug.dump_memory_addr = i32::from(self.get_cpu().registers.pc);
         }
 
         ui.window(im_str!("Emulator"))
@@ -147,7 +147,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 let mut removal_index: Option<usize> = None;
                 ui.text(im_str!("Breakpoints:"));
                 ui.separator();
-                if self.breakpoints.len() == 0 {
+                if self.breakpoints.is_empty() {
                     ui.text(im_str!("None yet"));
                 } else {
                     for index in 0..self.breakpoints.len() {
@@ -161,11 +161,8 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                         }
                     }
                 }
-                match removal_index {
-                    Some(index) => {
-                        self.breakpoints.remove(index);
-                    }
-                    None => (),
+                if let Some(index) = removal_index {
+                    self.breakpoints.remove(index);
                 }
             });
         ui.window(im_str!("Memory Breakpoints"))
@@ -190,7 +187,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 let mut removal_index: Option<usize> = None;
                 ui.text(im_str!("Breakpoints:"));
                 ui.separator();
-                if self.memory_breakpoints.len() == 0 {
+                if self.memory_breakpoints.is_empty() {
                     ui.text(im_str!("None yet"));
                 } else {
                     for index in 0..self.memory_breakpoints.len() {
@@ -204,11 +201,8 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                         }
                     }
                 }
-                match removal_index {
-                    Some(index) => {
-                        self.memory_breakpoints.remove(index);
-                    }
-                    None => (),
+                if let Some(index) = removal_index {
+                    self.memory_breakpoints.remove(index);
                 }
             });
         ui.window(im_str!("Joypad"))

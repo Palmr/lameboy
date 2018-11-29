@@ -58,7 +58,8 @@ impl Joypad {
             }
             _ => {}
         }
-        return 0x0F & mask;
+
+        0x0F & mask
     }
 }
 

@@ -46,14 +46,12 @@ pub struct PPU {
     mode: Mode,
     registers: Registers,
     gpu: GPU,
-    screen_buffer: Box<Vec<u8>>,
+    screen_buffer: Box<[u8; SCREEN_WIDTH * SCREEN_HEIGHT]>,
 }
 
 impl PPU {
     pub fn new<F: Facade>(display: &F) -> PPU {
         let gpu = GPU::new(display);
-
-        let screen_buffer = Box::new(vec![0 as u8; SCREEN_WIDTH * SCREEN_HEIGHT]);
 
         PPU {
             vram: Box::new([0; 0x2000]),
@@ -62,7 +60,7 @@ impl PPU {
             mode: Mode::HBlank,
             registers: Registers::new(),
             gpu,
-            screen_buffer,
+            screen_buffer: Box::new([0; SCREEN_WIDTH * SCREEN_HEIGHT]),
         }
     }
 
@@ -171,7 +169,7 @@ impl PPU {
                                 // Set interrupt bit
                                 int_flag |= INT_LCD_STAT;
                             }
-                            self.gpu.load_texture(&self.screen_buffer);
+                            self.gpu.load_texture(self.screen_buffer.as_ref());
                         } else {
                             self.mode = Mode::ReadOam;
                             if status_int_flags.contains(StatusInterruptFlags::INT_ENABLE_OAM) {
@@ -198,7 +196,7 @@ impl PPU {
             }
         }
 
-        return int_flag;
+        int_flag
     }
 
     fn renderscan(&mut self) {
@@ -217,10 +215,10 @@ impl PPU {
 
             // Which line of tiles to use in the map
             bg_map_offset +=
-                (self.registers.ly.wrapping_add(self.registers.scroll_y) as u16 >> 3) * 32;
+                (u16::from(self.registers.ly.wrapping_add(self.registers.scroll_y)) >> 3) * 32;
 
             // Which tile to start with in the map line
-            let mut x_tile_offset: u16 = self.registers.scroll_x as u16 >> 3;
+            let mut x_tile_offset: u16 = u16::from(self.registers.scroll_x) >> 3;
 
             // Which line of pixels to use in the tiles
             let tile_y_offset = self.registers.ly.wrapping_add(self.registers.scroll_y) % 8;
@@ -240,7 +238,7 @@ impl PPU {
                 .control
                 .contains(ControlFlags::BG_WIN_TILE_SET)
             {
-                tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize;
+                tile_index = (128 + (i16::from(tile_index as i8) + 128)) as usize;
             };
 
             for i in 0..160 {
@@ -265,7 +263,7 @@ impl PPU {
                         .control
                         .contains(ControlFlags::BG_WIN_TILE_SET)
                     {
-                        tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize;
+                        tile_index = (128 + (i16::from(tile_index as i8) + 128)) as usize;
                     };
                 }
             }
@@ -281,9 +279,9 @@ impl PPU {
             for sprite_index in 0..40 {
                 let sprite = Sprite::new(self, sprite_index);
 
-                let sprite_y_i16: i16 = sprite.y as i16 - 16;
-                let sprite_x_i16: i16 = sprite.x as i16 - 8;
-                let line_i16 = self.registers.ly as i16;
+                let sprite_y_i16: i16 = i16::from(sprite.y) - 16;
+                let sprite_x_i16: i16 = i16::from(sprite.x) - 8;
+                let line_i16 = i16::from(self.registers.ly);
 
                 // Skip sprites out of screen bounds
                 if sprite_y_i16 <= -16
@@ -309,7 +307,7 @@ impl PPU {
                     };
 
                     for x in 0..8 {
-                        let line_x: i16 = (sprite.x + x) as i16 - 8;
+                        let line_x: i16 = i16::from(sprite.x + x) - 8;
                         if line_x >= 0
                             && line_x < 160
                             && tile_row[x as usize] != 0
@@ -332,7 +330,7 @@ impl PPU {
     }
 
     pub fn draw<S: Surface>(&mut self, target: &mut S) {
-        self.gpu.load_texture(&self.screen_buffer);
+        self.gpu.load_texture(self.screen_buffer.as_ref());
 
         self.gpu.draw(target);
     }
@@ -341,9 +339,9 @@ impl PPU {
         for y in 0..144 {
             for x in 0..160 {
                 self.screen_buffer[y * SCREEN_WIDTH + x] = match pattern {
-                    &TestPattern::BLANK => 0u8,
-                    &TestPattern::DIAGONAL => (((x + y) / mod_value) % 4) as u8,
-                    &TestPattern::XOR => ((x / mod_value ^ y / mod_value) % 4) as u8,
+                    TestPattern::BLANK => 0u8,
+                    TestPattern::DIAGONAL => (((x + y) / mod_value) % 4) as u8,
+                    TestPattern::XOR => (((x / mod_value) ^ (y / mod_value)) % 4) as u8,
                 }
             }
         }

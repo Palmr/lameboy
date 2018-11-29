@@ -139,7 +139,7 @@ impl GPU {
     pub fn draw<S: Surface>(&self, target: &mut S) {
         let palette: &[[f32; 4]; 4] = self.palette.as_ref();
         let uniforms = uniform! {
-            palette: palette.clone(),
+            palette: *palette,
             tex: self.texture.sampled()
                 .minify_filter(MinifySamplerFilter::Nearest)
                 .magnify_filter(MagnifySamplerFilter::Nearest),
@@ -156,7 +156,7 @@ impl GPU {
     }
 
     /// Fill the texture with data
-    pub fn load_texture(&mut self, image: &Vec<u8>) {
+    pub fn load_texture(&mut self, image: &[u8]) {
         // Load image pixels into pixel buffer
         self.pixel_buffer.write(&image);
         // Load texture with data from pixel buffer

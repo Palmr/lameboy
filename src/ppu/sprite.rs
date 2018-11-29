@@ -32,7 +32,7 @@ pub struct Sprite {
 
 impl Sprite {
     pub fn new(ppu: &PPU, sprite_number: u8) -> Sprite {
-        let sprite_address = 0xFE00 | ((sprite_number as u16) << 2);
+        let sprite_address = 0xFE00 | (u16::from(sprite_number) << 2);
 
         let sprite_y = ppu.read8(sprite_address);
         let sprite_x = ppu.read8(sprite_address + 1);

@@ -7,7 +7,7 @@ pub struct Tile {
 
 impl Tile {
     pub fn new(ppu: &PPU, tile_index: u8) -> Tile {
-        let tile_address = 0x8000 | (tile_index as u16) << 4;
+        let tile_address = 0x8000 | u16::from(tile_index) << 4;
         let mut rows = [[0u8; 8]; 8];
 
         for y in 0..8 {
