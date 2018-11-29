@@ -1467,7 +1467,7 @@ pub fn sbc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// Always reset
 ///
 fn alu_and_8bit(cpu: &mut CPU, d8: u8) -> () {
-    cpu.registers.a &= & d8;
+    cpu.registers.a &= &d8;
 
     cpu.registers
         .f
@@ -1849,7 +1849,11 @@ pub fn rotate_left_r8(cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero:
 
     cpu.registers.write8(r8, rotated_value);
 
-    if reset_zero { 4 } else { 8 }
+    if reset_zero {
+        4
+    } else {
+        8
+    }
 }
 
 /// Rotate an indirect value, taken from memory using a 16-bit register as an address to the left.
@@ -1941,7 +1945,11 @@ pub fn rotate_right_r8(cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero
 
     cpu.registers.write8(r8, rotated_value);
 
-    if reset_zero { 4 } else { 8 }
+    if reset_zero {
+        4
+    } else {
+        8
+    }
 }
 
 /// Rotate an indirect value, taken from memory using a 16-bit register as an address to the right.
