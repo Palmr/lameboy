@@ -14,6 +14,10 @@ extern crate imgui_sys;
 
 extern crate nalgebra;
 
+#[macro_use]
+extern crate log;
+extern crate log4rs;
+
 mod gui;
 use gui::imguidebug::ImguiDebug;
 use gui::GUI;
@@ -46,6 +50,8 @@ const PKG_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
 const CLEAR_COLOR: (f32, f32, f32, f32) = (0.8784, 0.9725, 0.8156, 1.0);
 
 fn main() {
+    log4rs::init_file("config/log4rs.yml", Default::default()).unwrap();
+
     let matches = clap::App::new(PKG_NAME)
         .version(PKG_VERSION)
         .author("Nick Palmer <nick@palmr.co.uk>")
@@ -58,12 +64,12 @@ fn main() {
 
     let rom_file = matches.value_of("file").unwrap_or("roms/tetris.gb");
     let rom_file_name = Path::new(rom_file).file_name().unwrap().to_str().unwrap();
-    println!("Filename: {}", rom_file_name);
+    info!("Filename: {}", rom_file_name);
 
     let mut data = Vec::new();
     let mut f = File::open(rom_file).expect("Unable to open ROM");
     f.read_to_end(&mut data).expect("Unable to read data");
-    println!("File length: {}", data.len());
+    info!("File length: {}", data.len());
 
     let mut gui = GUI::init((640f64, 576f64), rom_file_name);
 

@@ -748,7 +748,7 @@ fn test_jump_condition(cpu: &CPU, opcode: u8) -> bool {
         0b10 => !cpu.registers.f.contains(RegisterFlags::CARRY),
         0b11 => cpu.registers.f.contains(RegisterFlags::CARRY),
         _ => {
-            println!("Unhandled condition: {}", cc);
+            warn!("Unhandled condition: {}", cc);
             false
         }
     }

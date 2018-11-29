@@ -30,13 +30,13 @@ impl<'l> Lameboy<'l> {
             // Stop emulator running if the current PC is a breakpoint
             let current_pc = self.get_cpu().registers.pc;
             if self.breakpoints.contains(&current_pc) {
-                println!("Breakpoint hit: 0x{:04X}", current_pc);
+                debug!("Breakpoint hit: 0x{:04X}", current_pc);
                 self.running = false;
                 return;
             }
             let breakpoint_hit = self.get_mmu().breakpoint_hit;
             if breakpoint_hit != 0x0000 {
-                println!("Memory Breakpoint hit: 0x{:04X}", breakpoint_hit);
+                debug!("Memory Breakpoint hit: 0x{:04X}", breakpoint_hit);
                 self.running = false;
                 self.get_mmu().breakpoint_hit = 0x0000;
                 return;
@@ -117,11 +117,11 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 ui.same_line(0.0);
                 ui.checkbox(im_str!("running"), &mut self.running);
                 if ui.button(im_str!("Dump PC history"), ImVec2::new(0.0, 0.0)) {
-                    println!("Dumping PC history");
+                    info!("Dumping PC history");
                     for i in 0..self.get_cpu().pc_history.len() {
                         let hp = self.get_cpu().pc_history_pointer.wrapping_add(i)
                             % self.get_cpu().pc_history.len();
-                        println!("[{}] - PC = 0x{:04X}", i, self.get_cpu().pc_history[hp]);
+                        info!("[{}] - PC = 0x{:04X}", i, self.get_cpu().pc_history[hp]);
                     }
                 }
             });

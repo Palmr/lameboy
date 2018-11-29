@@ -17,3 +17,5 @@ imgui-glium-renderer = { version = "0.0.20" }
 imgui-sys = { version = "0.0.20", features = ["glium"] }
 glium = { version = "0.22", default-features = true }
 glutin = "*"
+log = "0.4"
+log4rs = "0.8"

@@ -81,7 +81,7 @@ impl MmuObject for Cart {
 
     fn write8(&mut self, addr: u16, data: u8) {
         // TODO - implement MBC variants
-        println!("Write to cart [0x{:04X}] = 0x{:02X}", addr, data);
+        debug!("Write to cart [0x{:04X}] = 0x{:02X}", addr, data);
     }
 }
 
