@@ -1,6 +1,5 @@
-
-use ppu::PPU;
 use mmu::mmuobject::MmuObject;
+use ppu::PPU;
 
 pub struct Tile {
     pub rows: [[u8; 8]; 8],
@@ -15,12 +14,11 @@ impl Tile {
             let low = ppu.read8(tile_address + y * 2);
             let high = ppu.read8(tile_address + 1 + y * 2);
             for x in 0..8 {
-                rows[y as usize][x as usize] = ((low >> (7 - x)) & 0x01) | (((high >> (7 - x)) & 0x01) << 1);
+                rows[y as usize][x as usize] =
+                    ((low >> (7 - x)) & 0x01) | (((high >> (7 - x)) & 0x01) << 1);
             }
         }
 
-        Tile {
-            rows: rows
-        }
+        Tile { rows: rows }
     }
 }

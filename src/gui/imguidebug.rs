@@ -1,9 +1,9 @@
-use imgui::{Ui, ImGuiCond, ImVec2};
+use imgui::{ImGuiCond, ImVec2, Ui};
 
 use lameboy::Lameboy;
 use ppu::TestPattern;
 
-use {PKG_NAME, PKG_VERSION, PKG_DESCRIPTION, PKG_AUTHORS};
+use {PKG_AUTHORS, PKG_DESCRIPTION, PKG_NAME, PKG_VERSION};
 
 pub trait ImguiDebuggable {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug);
@@ -31,7 +31,7 @@ pub struct ImguiDebug {
 }
 
 impl ImguiDebug {
-     pub fn new() -> ImguiDebug {
+    pub fn new() -> ImguiDebug {
         ImguiDebug {
             active: true,
             show_imgui_metrics: false,
@@ -57,55 +57,49 @@ impl ImguiDebug {
     pub fn draw<'a>(&mut self, ui: &Ui<'a>, lameboy: &mut Lameboy) {
         if self.show_menu {
             ui.main_menu_bar(|| {
-                ui.menu(im_str!("File"))
-                    .build(|| {
-                        ui.menu_item(im_str!("Open ROM"))
-                            .selected(&mut self.show_memory)
-                            .build();
-                        ui.menu_item(im_str!("Reload ROM"))
-                            .selected(&mut self.show_memory)
-                            .build();
-                        ui.menu_item(im_str!("Reset"))
-                            .selected(&mut self.show_memory)
-                            .build();
-                        ui.separator();
-                        ui.menu_item(im_str!("Exit"))
-                            .selected(&mut self.active)
-                            .build();
-                    });
-                ui.menu(im_str!("Options"))
-                    .build(|| {
-                        ui.menu_item(im_str!("TODO"))
-                            .enabled(false)
-                            .build();
-                    });
-                ui.menu(im_str!("Debug"))
-                    .build(|| {
-                        ui.menu_item(im_str!("Emulator"))
-                            .selected(&mut self.show_emulator)
-                            .build();
-                        ui.menu_item(im_str!("Cart"))
-                            .selected(&mut self.show_cart)
-                            .build();
-                        ui.menu_item(im_str!("Memory"))
-                            .selected(&mut self.show_memory)
-                            .build();
-                        ui.menu_item(im_str!("CPU"))
-                            .selected(&mut self.show_cpu)
-                            .build();
-                        ui.menu_item(im_str!("PPU"))
-                            .selected(&mut self.show_ppu)
-                            .build();
-                    });
-                ui.menu(im_str!("Help"))
-                    .build(|| {
-                        ui.menu_item(im_str!("About"))
-                            .selected(&mut self.show_about)
-                            .build();
-                        ui.menu_item(im_str!("ImGUI Metrics"))
-                            .selected(&mut self.show_imgui_metrics)
-                            .build();
-                    });
+                ui.menu(im_str!("File")).build(|| {
+                    ui.menu_item(im_str!("Open ROM"))
+                        .selected(&mut self.show_memory)
+                        .build();
+                    ui.menu_item(im_str!("Reload ROM"))
+                        .selected(&mut self.show_memory)
+                        .build();
+                    ui.menu_item(im_str!("Reset"))
+                        .selected(&mut self.show_memory)
+                        .build();
+                    ui.separator();
+                    ui.menu_item(im_str!("Exit"))
+                        .selected(&mut self.active)
+                        .build();
+                });
+                ui.menu(im_str!("Options")).build(|| {
+                    ui.menu_item(im_str!("TODO")).enabled(false).build();
+                });
+                ui.menu(im_str!("Debug")).build(|| {
+                    ui.menu_item(im_str!("Emulator"))
+                        .selected(&mut self.show_emulator)
+                        .build();
+                    ui.menu_item(im_str!("Cart"))
+                        .selected(&mut self.show_cart)
+                        .build();
+                    ui.menu_item(im_str!("Memory"))
+                        .selected(&mut self.show_memory)
+                        .build();
+                    ui.menu_item(im_str!("CPU"))
+                        .selected(&mut self.show_cpu)
+                        .build();
+                    ui.menu_item(im_str!("PPU"))
+                        .selected(&mut self.show_ppu)
+                        .build();
+                });
+                ui.menu(im_str!("Help")).build(|| {
+                    ui.menu_item(im_str!("About"))
+                        .selected(&mut self.show_about)
+                        .build();
+                    ui.menu_item(im_str!("ImGUI Metrics"))
+                        .selected(&mut self.show_imgui_metrics)
+                        .build();
+                });
             });
         }
 
@@ -129,7 +123,9 @@ impl ImguiDebug {
             lameboy.get_ppu().imgui_display(ui, self);
         }
         if self.apply_test_pattern {
-            lameboy.get_ppu().apply_test_pattern(&self.test_pattern_type, self.ppu_mod as usize);
+            lameboy
+                .get_ppu()
+                .apply_test_pattern(&self.test_pattern_type, self.ppu_mod as usize);
         }
 
         if self.show_emulator {

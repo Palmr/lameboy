@@ -15,7 +15,7 @@ pub enum Reg8 {
     D,
     E,
     H,
-    L
+    L,
 }
 
 #[derive(Debug)]
@@ -24,7 +24,7 @@ pub enum Reg16 {
     BC,
     DE,
     HL,
-    SP
+    SP,
 }
 
 /// Registers for the CPU core
@@ -53,7 +53,7 @@ impl Registers {
             h: 0,
             l: 0,
             pc: 0,
-            sp: 0
+            sp: 0,
         }
     }
 
@@ -126,7 +126,7 @@ impl Registers {
                 self.h = (value >> 8) as u8;
                 self.l = value as u8
             }
-            &SP => self.sp = value
+            &SP => self.sp = value,
         }
     }
 }

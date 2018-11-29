@@ -1,7 +1,7 @@
-use glium::{Display, Surface};
 use glium::glutin;
 use glium::glutin::EventsLoop;
-use imgui::{ImGui, Ui, ImGuiKey, ImString, FrameSize};
+use glium::{Display, Surface};
+use imgui::{FrameSize, ImGui, ImGuiKey, ImString, Ui};
 use imgui_glium_renderer::Renderer;
 use std::time::Instant;
 
@@ -63,7 +63,6 @@ impl GUI {
         imgui.set_imgui_key(ImGuiKey::Y, 17);
         imgui.set_imgui_key(ImGuiKey::Z, 18);
 
-
         let mouse_state = MouseState::default();
 
         GUI {
@@ -84,20 +83,23 @@ impl GUI {
             self.mouse_state.pos.0 as f32 / scale.0,
             self.mouse_state.pos.1 as f32 / scale.1,
         );
-        self.imgui.set_mouse_down(
-            [
-                self.mouse_state.pressed.0,
-                self.mouse_state.pressed.1,
-                self.mouse_state.pressed.2,
-                false,
-                false,
-            ],
-        );
+        self.imgui.set_mouse_down([
+            self.mouse_state.pressed.0,
+            self.mouse_state.pressed.1,
+            self.mouse_state.pressed.2,
+            false,
+            false,
+        ]);
         self.imgui.set_mouse_wheel(self.mouse_state.wheel / scale.1);
         self.mouse_state.wheel = 0.0;
     }
 
-    pub fn render<F: FnMut(&Ui, &mut Lameboy)>(&mut self, clear_color: (f32, f32, f32, f32), mut lameboy: &mut Lameboy, mut run_ui: F) {
+    pub fn render<F: FnMut(&Ui, &mut Lameboy)>(
+        &mut self,
+        clear_color: (f32, f32, f32, f32),
+        mut lameboy: &mut Lameboy,
+        mut run_ui: F,
+    ) {
         let now = Instant::now();
         let delta = now - self.last_frame;
         let delta_s = delta.as_secs() as f32 + delta.subsec_nanos() as f32 / 1_000_000_000.0;
@@ -127,7 +129,9 @@ impl GUI {
 
             run_ui(&ui, &mut lameboy);
 
-            self.renderer.render(&mut target, ui).expect("Rendering failed");
+            self.renderer
+                .render(&mut target, ui)
+                .expect("Rendering failed");
         }
 
         target.finish().unwrap();
@@ -183,20 +187,17 @@ impl GUI {
                                 im.set_key(13, pressed);
                                 lameboy.get_joypad().a = pressed
                             }
-                            Some(Key::S) => { lameboy.get_joypad().b = pressed }
+                            Some(Key::S) => lameboy.get_joypad().b = pressed,
                             Some(Key::C) => im.set_key(14, pressed),
                             Some(Key::V) => im.set_key(15, pressed),
                             Some(Key::X) => im.set_key(16, pressed),
                             Some(Key::Y) => im.set_key(17, pressed),
                             Some(Key::Z) => im.set_key(18, pressed),
-                            Some(Key::LControl) | Some(Key::RControl) => {
-                                im.set_key_ctrl(pressed)
-                            },
-                            Some(Key::LShift) |
-                            Some(Key::RShift) => {
+                            Some(Key::LControl) | Some(Key::RControl) => im.set_key_ctrl(pressed),
+                            Some(Key::LShift) | Some(Key::RShift) => {
                                 im.set_key_shift(pressed);
                                 lameboy.get_joypad().select = pressed
-                            },
+                            }
                             Some(Key::LAlt) | Some(Key::RAlt) => im.set_key_alt(pressed),
                             Some(Key::LWin) | Some(Key::RWin) => im.set_key_super(pressed),
                             _ => {}
@@ -209,7 +210,7 @@ impl GUI {
                             .to_physical(hidpi_factor.clone())
                             .to_logical(hidpi_factor.round())
                             .into();
-                    },
+                    }
                     CursorEntered { .. } => gui_state.show_menu = true,
                     CursorLeft { .. } => gui_state.show_menu = false,
                     MouseInput { state, button, .. } => match button {

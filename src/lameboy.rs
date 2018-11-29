@@ -1,11 +1,11 @@
 use cart::Cart;
-use mmu::MMU;
 use cpu::CPU;
-use ppu::PPU;
 use joypad::Joypad;
+use mmu::MMU;
+use ppu::PPU;
 
 pub struct Lameboy<'l> {
-    cpu:  CPU<'l>,
+    cpu: CPU<'l>,
     running: bool,
     breakpoints: Vec<u16>,
     memory_breakpoints: Vec<u16>,
@@ -88,9 +88,9 @@ impl<'l> Lameboy<'l> {
     }
 }
 
-use mmu::mmuobject::MmuObject;
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiCond, Ui, ImGuiSelectableFlags, ImVec2};
+use imgui::{ImGuiCond, ImGuiSelectableFlags, ImVec2, Ui};
+use mmu::mmuobject::MmuObject;
 impl<'c> ImguiDebuggable for Lameboy<'c> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         // TODO - This should be in the memory debug impl but it doesn't have a ref to CPU currently
@@ -119,7 +119,8 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 if ui.button(im_str!("Dump PC history"), ImVec2::new(0.0, 0.0)) {
                     println!("Dumping PC history");
                     for i in 0..self.get_cpu().pc_history.len() {
-                        let hp = self.get_cpu().pc_history_pointer.wrapping_add(i) % self.get_cpu().pc_history.len();
+                        let hp = self.get_cpu().pc_history_pointer.wrapping_add(i)
+                            % self.get_cpu().pc_history.len();
                         println!("[{}] - PC = 0x{:04X}", i, self.get_cpu().pc_history[hp]);
                     }
                 }
@@ -146,18 +147,24 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 let mut removal_index: Option<usize> = None;
                 ui.text(im_str!("Breakpoints:"));
                 ui.separator();
-                if self.breakpoints.len() == 0{
+                if self.breakpoints.len() == 0 {
                     ui.text(im_str!("None yet"));
-                }
-                else {
+                } else {
                     for index in 0..self.breakpoints.len() {
-                        if ui.selectable(im_str!("0x{:04X}", self.breakpoints[index]), false, ImGuiSelectableFlags::empty(), ImVec2::new(0.0, 0.0)) {
+                        if ui.selectable(
+                            im_str!("0x{:04X}", self.breakpoints[index]),
+                            false,
+                            ImGuiSelectableFlags::empty(),
+                            ImVec2::new(0.0, 0.0),
+                        ) {
                             removal_index = Some(index);
                         }
                     }
                 }
                 match removal_index {
-                    Some(index) => {self.breakpoints.remove(index);},
+                    Some(index) => {
+                        self.breakpoints.remove(index);
+                    }
                     None => (),
                 }
             });
@@ -183,18 +190,24 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 let mut removal_index: Option<usize> = None;
                 ui.text(im_str!("Breakpoints:"));
                 ui.separator();
-                if self.memory_breakpoints.len() == 0{
+                if self.memory_breakpoints.len() == 0 {
                     ui.text(im_str!("None yet"));
-                }
-                else {
+                } else {
                     for index in 0..self.memory_breakpoints.len() {
-                        if ui.selectable(im_str!("0x{:04X}", self.memory_breakpoints[index]), false, ImGuiSelectableFlags::empty(), ImVec2::new(0.0, 0.0)) {
+                        if ui.selectable(
+                            im_str!("0x{:04X}", self.memory_breakpoints[index]),
+                            false,
+                            ImGuiSelectableFlags::empty(),
+                            ImVec2::new(0.0, 0.0),
+                        ) {
                             removal_index = Some(index);
                         }
                     }
                 }
                 match removal_index {
-                    Some(index) => {self.memory_breakpoints.remove(index);},
+                    Some(index) => {
+                        self.memory_breakpoints.remove(index);
+                    }
                     None => (),
                 }
             });

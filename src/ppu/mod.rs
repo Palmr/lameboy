@@ -5,9 +5,9 @@ pub mod gpu;
 use ppu::gpu::*;
 
 pub mod registers;
+use ppu::registers::ControlFlags;
 use ppu::registers::Registers;
-use ppu::registers::ControlFlags as ControlFlags;
-use ppu::registers::StatusInterruptFlags as StatusInterruptFlags;
+use ppu::registers::StatusInterruptFlags;
 
 pub mod palette;
 use ppu::palette::*;
@@ -18,7 +18,7 @@ use ppu::sprite::{Sprite, SpritePriority};
 pub mod tile;
 use ppu::tile::Tile;
 
-use cpu::interrupts::{INT_VBLANK, INT_LCD_STAT};
+use cpu::interrupts::{INT_LCD_STAT, INT_VBLANK};
 
 pub const SCREEN_WIDTH: usize = 160;
 pub const SCREEN_HEIGHT: usize = 144;
@@ -40,8 +40,8 @@ enum Mode {
 pub struct PPU {
     /// Video RAM [0x8000 - 0x9FFF] (Bank 0-1 in CGB Mode)
     vram: Box<[u8; 0x2000]>,
-	/// Sprite Attribute Table [0xFE00 - 0xFE9F]
-	oam: Box<[u8; 0x00A0]>,
+    /// Sprite Attribute Table [0xFE00 - 0xFE9F]
+    oam: Box<[u8; 0x00A0]>,
     mode_clock: usize,
     mode: Mode,
     registers: Registers,
@@ -101,8 +101,7 @@ impl PPU {
 
     pub fn is_oam_accessible(&self) -> bool {
         match self.mode {
-            Mode::ReadVram |
-            Mode::ReadOam => false,
+            Mode::ReadVram | Mode::ReadOam => false,
             _ => true,
         }
     }
@@ -112,18 +111,25 @@ impl PPU {
     pub fn cycle(&mut self, cpu_duration: u8) -> u8 {
         let mut int_flag = 0x00;
 
-        if self.registers.control.contains(ControlFlags::DISPLAY_ENABLE) {
+        if self
+            .registers
+            .control
+            .contains(ControlFlags::DISPLAY_ENABLE)
+        {
             self.mode_clock += cpu_duration as usize;
 
-            let status_int_flags: StatusInterruptFlags = StatusInterruptFlags::from_bits_truncate(self.read8(0xFF41));
+            let status_int_flags: StatusInterruptFlags =
+                StatusInterruptFlags::from_bits_truncate(self.read8(0xFF41));
 
             // If the interrupt for LY Coincidence is set, and it's a coincidence, set interrupt bit
-            if status_int_flags.contains(StatusInterruptFlags::INT_ENABLE_LYC) && self.registers.ly == self.registers.lyc {
+            if status_int_flags.contains(StatusInterruptFlags::INT_ENABLE_LYC)
+                && self.registers.ly == self.registers.lyc
+            {
                 // Set interrupt bit
                 int_flag |= INT_LCD_STAT;
             }
 
-            match self.mode	{
+            match self.mode {
                 // OAM read mode, scanline active
                 Mode::ReadOam => {
                     if self.mode_clock >= 80 {
@@ -131,7 +137,7 @@ impl PPU {
                         self.mode_clock = 0;
                         self.mode = Mode::ReadVram;
                     }
-                },
+                }
                 // VRAM read mode, scanline active
                 // Treat end of Mode::ReadVram as end of scanline
                 Mode::ReadVram => {
@@ -147,7 +153,7 @@ impl PPU {
                         // Write a scanline to the framebuffer
                         self.renderscan();
                     }
-                },
+                }
 
                 // Hblank
                 // After the last hblank, push the screen data to canvas
@@ -166,8 +172,7 @@ impl PPU {
                                 int_flag |= INT_LCD_STAT;
                             }
                             self.gpu.load_texture(&self.screen_buffer);
-                        }
-                        else {
+                        } else {
                             self.mode = Mode::ReadOam;
                             if status_int_flags.contains(StatusInterruptFlags::INT_ENABLE_OAM) {
                                 // Set interrupt bit
@@ -175,7 +180,7 @@ impl PPU {
                             }
                         }
                     }
-                },
+                }
 
                 // Vblank (10 lines)
                 Mode::VBlank => {
@@ -203,10 +208,16 @@ impl PPU {
 
         if self.registers.control.contains(ControlFlags::BG_DISPLAY) {
             // VRAM offset for the tile map
-            let mut bg_map_offset: u16 = if self.registers.control.contains(ControlFlags::BG_TILE_MAP) { 0x1C00 } else { 0x1800 };
+            let mut bg_map_offset: u16 =
+                if self.registers.control.contains(ControlFlags::BG_TILE_MAP) {
+                    0x1C00
+                } else {
+                    0x1800
+                };
 
             // Which line of tiles to use in the map
-            bg_map_offset += (self.registers.ly.wrapping_add(self.registers.scroll_y) as u16 >> 3) * 32;
+            bg_map_offset +=
+                (self.registers.ly.wrapping_add(self.registers.scroll_y) as u16 >> 3) * 32;
 
             // Which tile to start with in the map line
             let mut x_tile_offset: u16 = self.registers.scroll_x as u16 >> 3;
@@ -219,18 +230,26 @@ impl PPU {
 
             // Read tile index from the background map
             //var colour;
-            let mut tile_index: usize = self.vram[(bg_map_offset + x_tile_offset) as usize] as usize;
+            let mut tile_index: usize =
+                self.vram[(bg_map_offset + x_tile_offset) as usize] as usize;
 
             // If the tile data set in use is #1, the
             // indices are signed; calculate a real tile offset
-            if !self.registers.control.contains(ControlFlags::BG_WIN_TILE_SET) { tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize; };
+            if !self
+                .registers
+                .control
+                .contains(ControlFlags::BG_WIN_TILE_SET)
+            {
+                tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize;
+            };
 
             for i in 0..160 {
                 let tile_addr = (tile_index << 4) + (tile_y_offset as usize * 2);
                 let low = self.vram[tile_addr];
                 let high = self.vram[tile_addr + 1usize];
 
-                let colour = ((low >> (7 - tile_x_offset)) & 0x01) | (((high >> ((7 - tile_x_offset))) & 0x01) << 1);
+                let colour = ((low >> (7 - tile_x_offset)) & 0x01)
+                    | (((high >> (7 - tile_x_offset)) & 0x01) << 1);
 
                 // Plot the pixel to canvas
                 line_buffer[i] = bg_palette[(colour & 0x03) as usize];
@@ -241,15 +260,25 @@ impl PPU {
                     tile_x_offset = 0;
                     x_tile_offset = (x_tile_offset + 1) & 31;
                     tile_index = self.vram[(bg_map_offset + x_tile_offset) as usize] as usize;
-                    if !self.registers.control.contains(ControlFlags::BG_WIN_TILE_SET) { tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize; };
+                    if !self
+                        .registers
+                        .control
+                        .contains(ControlFlags::BG_WIN_TILE_SET)
+                    {
+                        tile_index = (128 + ((tile_index as i8 as i16) + 128)) as usize;
+                    };
                 }
             }
         }
 
         if self.registers.control.contains(ControlFlags::OBJ_DISPLAY) {
-            let sprite_height = if self.registers.control.contains(ControlFlags::OBJ_SIZE) { 16 } else { 8 };
+            let sprite_height = if self.registers.control.contains(ControlFlags::OBJ_SIZE) {
+                16
+            } else {
+                8
+            };
 
-            for sprite_index in  0..40 {
+            for sprite_index in 0..40 {
                 let sprite = Sprite::new(self, sprite_index);
 
                 let sprite_y_i16: i16 = sprite.y as i16 - 16;
@@ -257,8 +286,11 @@ impl PPU {
                 let line_i16 = self.registers.ly as i16;
 
                 // Skip sprites out of screen bounds
-                if sprite_y_i16 <= -16 || sprite_x_i16 <= -8 ||
-                    sprite_y_i16 > SCREEN_HEIGHT as i16 || sprite_x_i16 > SCREEN_WIDTH as i16 {
+                if sprite_y_i16 <= -16
+                    || sprite_x_i16 <= -8
+                    || sprite_y_i16 > SCREEN_HEIGHT as i16
+                    || sprite_x_i16 > SCREEN_WIDTH as i16
+                {
                     continue;
                 }
 
@@ -268,23 +300,24 @@ impl PPU {
                     let sprite_palette = unpack_palette(match sprite.palette {
                         ObjectPalette::Palette0 => self.registers.obj0_palette,
                         ObjectPalette::Palette1 => self.registers.obj0_palette,
-                    } );
+                    });
 
                     let tile_row = if sprite.flip_y {
                         tile.rows[(7 - line_i16 - sprite_y_i16) as usize]
-                    }
-                    else {
+                    } else {
                         tile.rows[(line_i16 - sprite_y_i16) as usize]
                     };
 
                     for x in 0..8 {
                         let line_x: i16 = (sprite.x + x) as i16 - 8;
-                        if line_x >= 0 &&
-                            line_x < 160 &&
-                            tile_row[x as usize] != 0 &&
-                            (sprite.priority == SpritePriority::AboveBackground || line_buffer[line_x as usize] != bg_palette[0])
-                            {
-                            line_buffer[line_x as usize] = sprite_palette[tile_row[x as usize] as usize];
+                        if line_x >= 0
+                            && line_x < 160
+                            && tile_row[x as usize] != 0
+                            && (sprite.priority == SpritePriority::AboveBackground
+                                || line_buffer[line_x as usize] != bg_palette[0])
+                        {
+                            line_buffer[line_x as usize] =
+                                sprite_palette[tile_row[x as usize] as usize];
                         }
                     }
                 }
@@ -307,13 +340,11 @@ impl PPU {
     pub fn apply_test_pattern(&mut self, pattern: &TestPattern, mod_value: usize) {
         for y in 0..144 {
             for x in 0..160 {
-                self.screen_buffer[y * SCREEN_WIDTH + x] =
-                    match pattern {
-                        &TestPattern::BLANK => 0u8,
-                        &TestPattern::DIAGONAL => (((x+y) / mod_value) % 4) as u8,
-                        &TestPattern::XOR => ((x/mod_value ^ y/mod_value) % 4) as u8,
-                    }
-
+                self.screen_buffer[y * SCREEN_WIDTH + x] = match pattern {
+                    &TestPattern::BLANK => 0u8,
+                    &TestPattern::DIAGONAL => (((x + y) / mod_value) % 4) as u8,
+                    &TestPattern::XOR => ((x / mod_value ^ y / mod_value) % 4) as u8,
+                }
             }
         }
     }
@@ -338,7 +369,10 @@ impl MmuObject for PPU {
             0xFF49 => self.registers.obj1_palette,
             0xFF4A => self.registers.window_y,
             0xFF4B => self.registers.window_x,
-            _ => panic!("Attempted to access [RD] PPU memory from an invalid address: {:#X}", addr)
+            _ => panic!(
+                "Attempted to access [RD] PPU memory from an invalid address: {:#X}",
+                addr
+            ),
         }
     }
 
@@ -359,7 +393,10 @@ impl MmuObject for PPU {
             0xFF49 => self.registers.obj1_palette = data,
             0xFF4A => self.registers.window_y = data,
             0xFF4B => self.registers.window_x = data,
-            _ => panic!("Attempted to access [WR] PPU memory from an invalid address: {:#X}", addr)
+            _ => panic!(
+                "Attempted to access [WR] PPU memory from an invalid address: {:#X}",
+                addr
+            ),
         }
     }
 }
@@ -369,34 +406,39 @@ use imgui::{ImGuiCond, Ui};
 impl ImguiDebuggable for PPU {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("PPU"))
-                .size((180.0, 115.0), ImGuiCond::FirstUseEver)
-                .resizable(true)
-                .build(|| {
-                    ui.checkbox(im_str!("Apply test"), &mut imgui_debug.apply_test_pattern);
-                    ui.slider_int(im_str!("Mod"), &mut imgui_debug.ppu_mod, 1, 20).build();
-                    if ui.small_button(im_str!("Blank")) {
-                        imgui_debug.test_pattern_type = TestPattern::BLANK;
-                    }
-                    ui.same_line(0.0);
-                    if ui.small_button(im_str!("Diagonal")) {
-                        imgui_debug.test_pattern_type = TestPattern::DIAGONAL;
-                    }
-                    ui.same_line(0.0);
-                    if ui.small_button(im_str!("XOR")) {
-                        imgui_debug.test_pattern_type = TestPattern::XOR;
-                    }
+            .size((180.0, 115.0), ImGuiCond::FirstUseEver)
+            .resizable(true)
+            .build(|| {
+                ui.checkbox(im_str!("Apply test"), &mut imgui_debug.apply_test_pattern);
+                ui.slider_int(im_str!("Mod"), &mut imgui_debug.ppu_mod, 1, 20)
+                    .build();
+                if ui.small_button(im_str!("Blank")) {
+                    imgui_debug.test_pattern_type = TestPattern::BLANK;
+                }
+                ui.same_line(0.0);
+                if ui.small_button(im_str!("Diagonal")) {
+                    imgui_debug.test_pattern_type = TestPattern::DIAGONAL;
+                }
+                ui.same_line(0.0);
+                if ui.small_button(im_str!("XOR")) {
+                    imgui_debug.test_pattern_type = TestPattern::XOR;
+                }
 
-                    ui.separator();
+                ui.separator();
 
-                    ui.text(im_str!("Mode: {:?}", self.mode));
-                });
+                ui.text(im_str!("Mode: {:?}", self.mode));
+            });
 
         ui.window(im_str!("PPU-registers"))
             .size((224.0, 230.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.text(im_str!("Control: {:?}", self.registers.control));
-                ui.text(im_str!("Status: {:?} - {:?}", self.combine_status_mode(), StatusInterruptFlags::from_bits_truncate(self.combine_status_mode())));
+                ui.text(im_str!(
+                    "Status: {:?} - {:?}",
+                    self.combine_status_mode(),
+                    StatusInterruptFlags::from_bits_truncate(self.combine_status_mode())
+                ));
                 ui.text(im_str!("Scroll Y: {:?}", self.registers.scroll_y));
                 ui.text(im_str!("Scroll X: {:?}", self.registers.scroll_x));
                 ui.text(im_str!("LY: {:?}", self.registers.ly));
@@ -413,10 +455,15 @@ impl ImguiDebuggable for PPU {
             .size((224.0, 230.0), ImGuiCond::FirstUseEver)
             .resizable(true)
             .build(|| {
-                ui.input_int(im_str!("Sprite Index"), &mut imgui_debug.ppu_sprite_index).build();
+                ui.input_int(im_str!("Sprite Index"), &mut imgui_debug.ppu_sprite_index)
+                    .build();
                 // Limit index
-                if imgui_debug.ppu_sprite_index < 0 { imgui_debug.ppu_sprite_index = 0 };
-                if imgui_debug.ppu_sprite_index > 39 { imgui_debug.ppu_sprite_index = 39 };
+                if imgui_debug.ppu_sprite_index < 0 {
+                    imgui_debug.ppu_sprite_index = 0
+                };
+                if imgui_debug.ppu_sprite_index > 39 {
+                    imgui_debug.ppu_sprite_index = 39
+                };
 
                 let sprite = Sprite::new(self, imgui_debug.ppu_sprite_index as u8);
                 ui.text(im_str!("Position: {:?}, {:?}", sprite.x, sprite.y));

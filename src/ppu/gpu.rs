@@ -1,13 +1,13 @@
 use glium;
-use glium::{IndexBuffer, Program, VertexBuffer, Surface};
 use glium::backend::Facade;
 use glium::index::PrimitiveType;
 use glium::texture::pixel_buffer::PixelBuffer;
 use glium::texture::texture2d::Texture2d;
 use glium::uniforms::*;
+use glium::{IndexBuffer, Program, Surface, VertexBuffer};
 use nalgebra::Matrix4;
 
-use ppu::{SCREEN_WIDTH, SCREEN_HEIGHT};
+use ppu::{SCREEN_HEIGHT, SCREEN_WIDTH};
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -60,22 +60,40 @@ pub struct GPU {
 impl GPU {
     pub fn new<F: Facade>(display: &F) -> GPU {
         let vertexes = [
-            Vertex { position: [-1.0, -1.0], tex_coords: [0.0, 1.0] },
-            Vertex { position: [-1.0, 1.0], tex_coords: [0.0, 0.0] },
-            Vertex { position: [1.0, 1.0], tex_coords: [1.0, 0.0] },
-            Vertex { position: [1.0, -1.0], tex_coords: [1.0, 1.0] }
+            Vertex {
+                position: [-1.0, -1.0],
+                tex_coords: [0.0, 1.0],
+            },
+            Vertex {
+                position: [-1.0, 1.0],
+                tex_coords: [0.0, 0.0],
+            },
+            Vertex {
+                position: [1.0, 1.0],
+                tex_coords: [1.0, 0.0],
+            },
+            Vertex {
+                position: [1.0, -1.0],
+                tex_coords: [1.0, 1.0],
+            },
         ];
 
         let vertex_buffer = match VertexBuffer::immutable(display, &vertexes) {
-            Ok(vb)  => vb,
+            Ok(vb) => vb,
             Err(e) => panic!("Failed to create OpenGL Vertex Buffer {}", e),
         };
-        let index_buffer = match IndexBuffer::immutable(display, PrimitiveType::TriangleStrip, &[1u16, 2, 0, 3]) {
-            Ok(ib)  => ib,
-            Err(e) => panic!("Failed to create OpenGL Index Buffer {}", e),
-        };
+        let index_buffer =
+            match IndexBuffer::immutable(display, PrimitiveType::TriangleStrip, &[1u16, 2, 0, 3]) {
+                Ok(ib) => ib,
+                Err(e) => panic!("Failed to create OpenGL Index Buffer {}", e),
+            };
 
-        let program = match glium::Program::from_source(display, VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC, None) {
+        let program = match glium::Program::from_source(
+            display,
+            VERTEX_SHADER_SRC,
+            FRAGMENT_SHADER_SRC,
+            None,
+        ) {
             Ok(p) => p,
             Err(e) => panic!("Failed to create OpenGL Program {}", e),
         };
@@ -84,22 +102,29 @@ impl GPU {
         let empty_pixel_buffer = &vec![0 as u8; pixel_buffer.get_size()];
         pixel_buffer.write(empty_pixel_buffer);
 
-        let texture = match glium::Texture2d::empty_with_format(display,
-                                               glium::texture::UncompressedFloatFormat::U8,
-                                               glium::texture::MipmapsOption::NoMipmap,
-                                               160, 144) {
+        let texture = match glium::Texture2d::empty_with_format(
+            display,
+            glium::texture::UncompressedFloatFormat::U8,
+            glium::texture::MipmapsOption::NoMipmap,
+            160,
+            144,
+        ) {
             Ok(t) => t,
             Err(e) => panic!("Failed to create OpenGL Texture {}", e),
         };
 
         // Initialise texture with empty buffer
-        texture.main_level()
-				.raw_upload_from_pixel_buffer(pixel_buffer.as_slice(), 0..160, 0..144, 0..1);
+        texture.main_level().raw_upload_from_pixel_buffer(
+            pixel_buffer.as_slice(),
+            0..160,
+            0..144,
+            0..1,
+        );
 
-        let palette = Matrix4::new( 224.0, 136.0, 52.0, 8.0,
-                                    248.0, 192.0, 104.0, 24.0,
-                                    208.0, 112.0, 86.0, 32.0,
-                                    1.0, 1.0, 1.0, 1.0) / 255.0;
+        let palette = Matrix4::new(
+            224.0, 136.0, 52.0, 8.0, 248.0, 192.0, 104.0, 24.0, 208.0, 112.0, 86.0, 32.0, 1.0, 1.0,
+            1.0, 1.0,
+        ) / 255.0;
 
         GPU {
             vertex_buffer: vertex_buffer,
@@ -120,7 +145,14 @@ impl GPU {
                 .magnify_filter(MagnifySamplerFilter::Nearest),
         };
 
-        target.draw(&self.vertex_buffer, &self.index_buffer, &self.program, &uniforms, &Default::default()).unwrap();
+        target
+            .draw(
+                &self.vertex_buffer,
+                &self.index_buffer,
+                &self.program,
+                &uniforms,
+                &Default::default(),
+            ).unwrap();
     }
 
     /// Fill the texture with data
@@ -128,7 +160,11 @@ impl GPU {
         // Load image pixels into pixel buffer
         self.pixel_buffer.write(&image);
         // Load texture with data from pixel buffer
-        self.texture.main_level()
-				.raw_upload_from_pixel_buffer(self.pixel_buffer.as_slice(), 0..160, 0..144, 0..1);
+        self.texture.main_level().raw_upload_from_pixel_buffer(
+            self.pixel_buffer.as_slice(),
+            0..160,
+            0..144,
+            0..1,
+        );
     }
 }

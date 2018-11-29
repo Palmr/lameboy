@@ -9,19 +9,19 @@ extern crate glium;
 #[macro_use]
 extern crate imgui;
 
-extern crate imgui_sys;
 extern crate imgui_glium_renderer;
+extern crate imgui_sys;
 
 extern crate nalgebra;
 
 mod gui;
-use gui::GUI;
 use gui::imguidebug::ImguiDebug;
+use gui::GUI;
 
 extern crate clap;
 
-use std::io::prelude::*;
 use std::fs::File;
+use std::io::prelude::*;
 use std::path::Path;
 
 mod lameboy;
@@ -50,10 +50,11 @@ fn main() {
         .version(PKG_VERSION)
         .author("Nick Palmer <nick@palmr.co.uk>")
         .about(PKG_DESCRIPTION)
-        .arg(clap::Arg::with_name("file")
-            .help("ROM file to load")
-            .required(false))
-        .get_matches();
+        .arg(
+            clap::Arg::with_name("file")
+                .help("ROM file to load")
+                .required(false),
+        ).get_matches();
 
     let rom_file = matches.value_of("file").unwrap_or("roms/tetris.gb");
     let rom_file_name = Path::new(rom_file).file_name().unwrap().to_str().unwrap();
@@ -89,11 +90,8 @@ fn main() {
             break;
         }
 
-        gui.render(CLEAR_COLOR,
-           &mut lameboy,
-           |ui, emulator| {
-               imgui_debug.draw(ui, emulator);
-           }
-        );
+        gui.render(CLEAR_COLOR, &mut lameboy, |ui, emulator| {
+            imgui_debug.draw(ui, emulator);
+        });
     }
 }

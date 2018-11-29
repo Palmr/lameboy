@@ -1,6 +1,5 @@
-
-use ppu::PPU;
 use mmu::mmuobject::MmuObject;
+use ppu::PPU;
 
 use ppu::palette::ObjectPalette;
 
@@ -15,7 +14,7 @@ bitflags! {
 }
 
 /// Should a sprite be displayed above background pixels or below them (except colour 0)
-#[derive(PartialEq,Debug)]
+#[derive(PartialEq, Debug)]
 pub enum SpritePriority {
     AboveBackground,
     BelowBackground,
@@ -44,10 +43,18 @@ impl Sprite {
             y: sprite_y,
             x: sprite_x,
             tile_index: tile,
-            priority: if flags.contains(SpriteFlags::BACKGROUND_PRIORITY) { SpritePriority::BelowBackground } else { SpritePriority::AboveBackground },
+            priority: if flags.contains(SpriteFlags::BACKGROUND_PRIORITY) {
+                SpritePriority::BelowBackground
+            } else {
+                SpritePriority::AboveBackground
+            },
             flip_y: flags.contains(SpriteFlags::Y_FLIP),
             flip_x: flags.contains(SpriteFlags::X_FLIP),
-            palette: if flags.contains(SpriteFlags::PALETTE) { ObjectPalette::Palette1 } else { ObjectPalette::Palette0 },
+            palette: if flags.contains(SpriteFlags::PALETTE) {
+                ObjectPalette::Palette1
+            } else {
+                ObjectPalette::Palette0
+            },
         }
     }
 }

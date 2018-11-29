@@ -1,4 +1,3 @@
-
 pub struct Joypad {
     selected_column: u8,
     pub a: bool,
@@ -30,18 +29,34 @@ impl Joypad {
         let mut mask = 0x0F;
         match self.selected_column {
             0x10 => {
-                if self.start   { mask &= 0b0111 }
-                if self.select  { mask &= 0b1011 }
-                if self.b       { mask &= 0b1101 }
-                if self.a       { mask &= 0b1110 }
-            },
+                if self.start {
+                    mask &= 0b0111
+                }
+                if self.select {
+                    mask &= 0b1011
+                }
+                if self.b {
+                    mask &= 0b1101
+                }
+                if self.a {
+                    mask &= 0b1110
+                }
+            }
             0x20 => {
-                if self.down    { mask &= 0b0111 }
-                if self.up      { mask &= 0b1011 }
-                if self.left    { mask &= 0b1101 }
-                if self.right   { mask &= 0b1110 }
-            },
-            _ => {},
+                if self.down {
+                    mask &= 0b0111
+                }
+                if self.up {
+                    mask &= 0b1011
+                }
+                if self.left {
+                    mask &= 0b1101
+                }
+                if self.right {
+                    mask &= 0b1110
+                }
+            }
+            _ => {}
         }
         return 0x0F & mask;
     }
@@ -52,7 +67,10 @@ impl MmuObject for Joypad {
     fn read8(&self, addr: u16) -> u8 {
         match addr {
             0xFF00 => self.joypad_to_byte(),
-            _ => panic!("Attempted to access [RD] Joypad from an invalid address: {:#X}", addr)
+            _ => panic!(
+                "Attempted to access [RD] Joypad from an invalid address: {:#X}",
+                addr
+            ),
         }
     }
 
@@ -60,8 +78,11 @@ impl MmuObject for Joypad {
         match addr {
             0xFF00 => {
                 self.selected_column = data & 0x30;
-            },
-            _ => panic!("Attempted to access [WR] Joypad from an invalid address: {:#X}", addr)
+            }
+            _ => panic!(
+                "Attempted to access [WR] Joypad from an invalid address: {:#X}",
+                addr
+            ),
         }
     }
 }

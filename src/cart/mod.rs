@@ -1,5 +1,5 @@
 pub struct Cart {
-    data: Vec<u8>
+    data: Vec<u8>,
 }
 
 const LOGO_OFFSET: usize = 0x0104;
@@ -31,9 +31,7 @@ const GLOBAL_CHECKSUM_LENGTH: usize = 0x02;
 
 impl Cart {
     pub fn new(data: Vec<u8>) -> Self {
-        Cart {
-            data: data
-        }
+        Cart { data: data }
     }
 
     pub fn get_size(&self) -> usize {
@@ -41,7 +39,9 @@ impl Cart {
     }
 
     pub fn get_title(&self) -> String {
-        String::from_utf8_lossy(&self.data[TITLE_OFFSET..TITLE_OFFSET+TITLE_LENGTH_DMG]).trim_matches(char::from(0)).to_string()
+        String::from_utf8_lossy(&self.data[TITLE_OFFSET..TITLE_OFFSET + TITLE_LENGTH_DMG])
+            .trim_matches(char::from(0))
+            .to_string()
     }
 
     pub fn get_cart_type(&self) -> u8 {
@@ -72,7 +72,10 @@ impl MmuObject for Cart {
             // TODO - implement MBC variants
             0x0000...0x7FFF => self.data[addr as usize],
             0xA000...0xC000 => 0xFF,
-            _ => panic!("Attempted to access [RD] Cart memory from an invalid address: {:#X}", addr)
+            _ => panic!(
+                "Attempted to access [RD] Cart memory from an invalid address: {:#X}",
+                addr
+            ),
         }
     }
 
@@ -95,11 +98,17 @@ impl ImguiDebuggable for Cart {
                 ui.text(im_str!("Type: {}", self.get_cart_type()));
                 ui.text(im_str!("ROM Size: {}", self.get_rom_size()));
                 ui.text(im_str!("RAM Size: {}", self.get_ram_size()));
-                ui.text(im_str!("Checksum: {}", if self.validate_checksum() { "VALID" } else { "INVALID" }));
+                ui.text(im_str!(
+                    "Checksum: {}",
+                    if self.validate_checksum() {
+                        "VALID"
+                    } else {
+                        "INVALID"
+                    }
+                ));
             });
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -161,15 +170,13 @@ mod tests {
         assert_eq!(false, invalid_cart.validate_checksum());
 
         let mut valid_data = vec![0x00 as u8; 0xFFFF];
-        valid_data.splice(TITLE_OFFSET..HEADER_CHECKSUM_OFFSET, vec![
-            0x43, 0x41, 0x52, 0x54,
-            0x20, 0x74, 0x69, 0x74,
-            0x6c, 0x65, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x01,
-            0x00
-        ]);
+        valid_data.splice(
+            TITLE_OFFSET..HEADER_CHECKSUM_OFFSET,
+            vec![
+                0x43, 0x41, 0x52, 0x54, 0x20, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
+            ],
+        );
         valid_data[HEADER_CHECKSUM_OFFSET] = 0x7A;
         let valid_cart = Cart::new(valid_data);
         assert_eq!(true, valid_cart.validate_checksum());
