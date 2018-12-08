@@ -60,7 +60,8 @@ fn main() {
             clap::Arg::with_name("file")
                 .help("ROM file to load")
                 .required(false),
-        ).get_matches();
+        )
+        .get_matches();
 
     let rom_file = matches.value_of("file").unwrap_or("roms/tetris.gb");
     let rom_file_name = Path::new(rom_file).file_name().unwrap().to_str().unwrap();

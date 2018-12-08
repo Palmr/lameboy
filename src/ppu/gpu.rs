@@ -152,7 +152,8 @@ impl GPU {
                 &self.program,
                 &uniforms,
                 &Default::default(),
-            ).unwrap();
+            )
+            .unwrap();
     }
 
     /// Fill the texture with data
