@@ -218,6 +218,7 @@ pub fn inc_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// DEC A
 /// DEC B
 /// ```
+#[allow(clippy::verbose_bit_mask)]
 pub fn dec_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let mut value = cpu.registers.read8(r8);
 
@@ -860,7 +861,7 @@ pub fn jump_relative_conditional_d8(cpu: &mut CPU, opcode: u8) -> u8 {
 
 /// Push an 8-bit value to the stack.
 /// Decrements the stack pointer and then writes the 8-bit value using the new stack pointer value.
-fn push_stack_d8(cpu: &mut CPU, d8: u8) -> () {
+fn push_stack_d8(cpu: &mut CPU, d8: u8) {
     // Decrement stack pointer
     cpu.registers.sp = cpu.registers.sp.wrapping_sub(1);
 
@@ -870,7 +871,7 @@ fn push_stack_d8(cpu: &mut CPU, d8: u8) -> () {
 
 /// Push a 16-bit value to the stack.
 /// Pushing the high byte of the value first, then the low byte.
-fn push_stack_d16(cpu: &mut CPU, d16: u16) -> () {
+fn push_stack_d16(cpu: &mut CPU, d16: u16) {
     // Write high byte
     push_stack_d8(cpu, ((d16 >> 8) & 0xFF) as u8);
     // Write low byte
@@ -1164,7 +1165,7 @@ pub fn add_sp_d8(cpu: &mut CPU) -> u8 {
 ///
 /// Set if the value added to A would have been too large to fit in a u8
 ///
-fn alu_add_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) -> () {
+fn alu_add_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) {
     let original_a = cpu.registers.a;
 
     let cy = if use_carry && cpu.registers.f.contains(RegisterFlags::CARRY) {
@@ -1315,7 +1316,7 @@ pub fn adc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 ///
 /// Set if the value subtracted from A would have required a borrow, otherwise reset
 ///
-fn alu_sub_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) -> () {
+fn alu_sub_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) {
     let original_a = cpu.registers.a;
 
     let cy = if use_carry && cpu.registers.f.contains(RegisterFlags::CARRY) {
@@ -1466,7 +1467,7 @@ pub fn sbc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 ///
 /// Always reset
 ///
-fn alu_and_8bit(cpu: &mut CPU, d8: u8) -> () {
+fn alu_and_8bit(cpu: &mut CPU, d8: u8) {
     cpu.registers.a &= &d8;
 
     cpu.registers
@@ -1550,7 +1551,7 @@ pub fn and_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 ///
 /// Always reset
 ///
-fn alu_xor_8bit(cpu: &mut CPU, d8: u8) -> () {
+fn alu_xor_8bit(cpu: &mut CPU, d8: u8) {
     cpu.registers.a ^= d8;
 
     cpu.registers
@@ -1634,7 +1635,7 @@ pub fn xor_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 ///
 /// Always reset
 ///
-fn alu_or_8bit(cpu: &mut CPU, d8: u8) -> () {
+fn alu_or_8bit(cpu: &mut CPU, d8: u8) {
     cpu.registers.a |= d8;
 
     cpu.registers
@@ -1720,7 +1721,7 @@ pub fn or_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 ///
 /// Set if the value subtracted from A would have required a borrow, otherwise reset
 ///
-fn alu_cp_8bit(cpu: &mut CPU, d8: u8) -> () {
+fn alu_cp_8bit(cpu: &mut CPU, d8: u8) {
     cpu.registers
         .f
         .set(RegisterFlags::ZERO, cpu.registers.a.wrapping_sub(d8) == 0);

@@ -83,10 +83,10 @@ impl PPU {
 
         // Set mode flag
         match self.mode {
-            Mode::HBlank => stat | 0x00,
-            Mode::VBlank => stat | 0x01,
-            Mode::ReadOam => stat | 0x02,
-            Mode::ReadVram => stat | 0x03,
+            Mode::HBlank => stat & 0b1111_1100,
+            Mode::VBlank => stat | 0b0000_0001,
+            Mode::ReadOam => stat | 0b0000_0010,
+            Mode::ReadVram => stat | 0b0000_0011,
         }
     }
 
@@ -218,7 +218,7 @@ impl PPU {
                 (u16::from(self.registers.ly.wrapping_add(self.registers.scroll_y)) >> 3) * 32;
 
             // Which tile to start with in the map line
-            let mut x_tile_offset: u16 = u16::from(self.registers.scroll_x) >> 3;
+            let mut x_tile_offset = u16::from(self.registers.scroll_x) >> 3;
 
             // Which line of pixels to use in the tiles
             let tile_y_offset = self.registers.ly.wrapping_add(self.registers.scroll_y) % 8;
@@ -241,7 +241,7 @@ impl PPU {
                 tile_index = (128 + (i16::from(tile_index as i8) + 128)) as usize;
             };
 
-            for i in 0..160 {
+            for i in 0..SCREEN_WIDTH {
                 let tile_addr = (tile_index << 4) + (tile_y_offset as usize * 2);
                 let low = self.vram[tile_addr];
                 let high = self.vram[tile_addr + 1usize];

@@ -18,9 +18,12 @@ pub enum ObjectPalette {
 pub fn unpack_palette(palette: u8) -> [u8; 4] {
     let mut unpacked_palette = [0u8; 4];
 
-    unpacked_palette.iter_mut().enumerate().for_each(|(idx, palette_entry)| {
-        *palette_entry = (palette >> (idx * 2)) & 3;
-    });
+    unpacked_palette
+        .iter_mut()
+        .enumerate()
+        .for_each(|(idx, palette_entry)| {
+            *palette_entry = (palette >> (idx * 2)) & 3;
+        });
 
     unpacked_palette
 }

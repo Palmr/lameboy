@@ -137,7 +137,7 @@ impl GUI {
         target.finish().unwrap();
     }
 
-    pub fn update_events(&mut self, gui_state: &mut ImguiDebug, lameboy: &mut Lameboy) -> () {
+    pub fn update_events(&mut self, gui_state: &mut ImguiDebug, lameboy: &mut Lameboy) {
         let im = &mut self.imgui;
         let mouse = &mut self.mouse_state;
         let hidpi_factor = &self.hidpi_factor;
