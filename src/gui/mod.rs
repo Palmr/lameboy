@@ -20,7 +20,6 @@ struct MouseState {
 
 pub struct GUI {
     pub display: Display,
-    hidpi_factor: f64,
     events_loop: EventsLoop,
     imgui: ImGui,
     renderer: Renderer,
@@ -32,12 +31,11 @@ pub struct GUI {
 impl GUI {
     pub fn init(window_size: (f64, f64), rom_file_name: &str) -> GUI {
         let events_loop = glutin::EventsLoop::new();
-        let context = glutin::ContextBuilder::new().with_vsync(true);
+        let context = glutin::ContextBuilder::new();//.with_vsync(true);
         let window = glutin::WindowBuilder::new()
             .with_title(format!("{} - Lameboy - v0.1", rom_file_name))
             .with_dimensions(glutin::dpi::LogicalSize::new(window_size.0, window_size.1));
         let display = Display::new(window, context, &events_loop).unwrap();
-        let hidpi_factor = display.gl_window().get_hidpi_factor();
 
         let mut imgui = ImGui::init();
         imgui.set_ini_filename(Some(ImString::new("lameboy.ini")));
@@ -67,7 +65,6 @@ impl GUI {
 
         GUI {
             display,
-            hidpi_factor,
             events_loop,
             imgui,
             renderer,
@@ -113,15 +110,16 @@ impl GUI {
         lameboy.get_ppu().draw(&mut target);
 
         let window = self.display.gl_window();
+        let hidpi_factor = window.get_hidpi_factor();
         let physical_size = window
             .get_inner_size()
             .unwrap()
-            .to_physical(window.get_hidpi_factor());
-        let logical_size = physical_size.to_logical(self.hidpi_factor);
+            .to_physical(hidpi_factor);
+        let logical_size = physical_size.to_logical(hidpi_factor);
 
         let frame_size = FrameSize {
             logical_size: logical_size.into(),
-            hidpi_factor: self.hidpi_factor,
+            hidpi_factor,
         };
 
         if self.show_imgui {
@@ -140,7 +138,7 @@ impl GUI {
     pub fn update_events(&mut self, gui_state: &mut ImguiDebug, lameboy: &mut Lameboy) {
         let im = &mut self.imgui;
         let mouse = &mut self.mouse_state;
-        let hidpi_factor = &self.hidpi_factor;
+        let hidpi_factor = self.display.gl_window().get_hidpi_factor();
 
         self.events_loop.poll_events(|event| {
             use glium::glutin::ElementState::Pressed;
@@ -207,8 +205,8 @@ impl GUI {
                         // Rescale position from glutin logical coordinates to our logical
                         // coordinates
                         mouse.pos = pos
-                            .to_physical(hidpi_factor.clone())
-                            .to_logical(hidpi_factor.round())
+                            .to_physical(hidpi_factor)
+//                            .to_logical(hidpi_factor.round())
                             .into();
                     }
                     CursorEntered { .. } => gui_state.show_menu = true,
@@ -233,7 +231,7 @@ impl GUI {
                         // coordinates
                         mouse.wheel = pos
                             .to_physical(hidpi_factor.clone())
-                            .to_logical(hidpi_factor.round())
+//                            .to_logical(hidpi_factor.round())
                             .y as f32;
                     }
                     ReceivedCharacter(c) => im.add_input_character(c),
