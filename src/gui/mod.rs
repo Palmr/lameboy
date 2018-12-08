@@ -31,7 +31,7 @@ pub struct GUI {
 impl GUI {
     pub fn init(window_size: (f64, f64), rom_file_name: &str) -> GUI {
         let events_loop = glutin::EventsLoop::new();
-        let context = glutin::ContextBuilder::new();//.with_vsync(true);
+        let context = glutin::ContextBuilder::new().with_vsync(true);
         let window = glutin::WindowBuilder::new()
             .with_title(format!("{} - Lameboy - v0.1", rom_file_name))
             .with_dimensions(glutin::dpi::LogicalSize::new(window_size.0, window_size.1));
@@ -111,10 +111,7 @@ impl GUI {
 
         let window = self.display.gl_window();
         let hidpi_factor = window.get_hidpi_factor();
-        let physical_size = window
-            .get_inner_size()
-            .unwrap()
-            .to_physical(hidpi_factor);
+        let physical_size = window.get_inner_size().unwrap().to_physical(hidpi_factor);
         let logical_size = physical_size.to_logical(hidpi_factor);
 
         let frame_size = FrameSize {
@@ -206,7 +203,7 @@ impl GUI {
                         // coordinates
                         mouse.pos = pos
                             .to_physical(hidpi_factor)
-//                            .to_logical(hidpi_factor.round())
+                            //.to_logical(hidpi_factor.round())
                             .into();
                     }
                     CursorEntered { .. } => gui_state.show_menu = true,
@@ -231,7 +228,7 @@ impl GUI {
                         // coordinates
                         mouse.wheel = pos
                             .to_physical(hidpi_factor.clone())
-//                            .to_logical(hidpi_factor.round())
+                            //.to_logical(hidpi_factor.round())
                             .y as f32;
                     }
                     ReceivedCharacter(c) => im.add_input_character(c),
