@@ -396,8 +396,6 @@ impl<'c> CPU<'c> {
             0xFD => undefined(self, op),
             0xFE => cp_d8(self),
             0xFF => reset(self, op),
-
-            _ => panic!("Unhandled Op: {:02X}", op),
         };
 
         duration += self.handle_interrupt();
@@ -483,8 +481,6 @@ impl<'c> CPU<'c> {
 
             0x80...0xBF => bit_assign(self, op, false),
             0xC0...0xFF => bit_assign(self, op, true),
-
-            _ => panic!("Unhandled CB Op: {:02X}", op),
         };
 
         duration + 4

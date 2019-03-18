@@ -113,10 +113,6 @@ impl<'m> MMU<'m> {
             },
             0xFF80...0xFFFE => self.hram[((addr as usize) & 0x00FF) - 0x0080],
             0xFFFF => self.ier,
-            _ => panic!(
-                "Attempted to access [RD] memory from an invalid address: {:#X}",
-                addr
-            ),
         }
     }
 
@@ -163,10 +159,6 @@ impl<'m> MMU<'m> {
             }
             0xFF80...0xFFFE => self.hram[((addr as usize) & 0x00FF) - 0x0080] = data,
             0xFFFF => self.ier = data,
-            _ => panic!(
-                "Attempted to access [WR] memory from an invalid address: {:#X}",
-                addr
-            ),
         }
     }
 
