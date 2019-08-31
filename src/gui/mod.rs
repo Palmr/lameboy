@@ -1,8 +1,8 @@
 use std::time::Instant;
 
-use glium::{Display, Surface};
 use glium::backend::glutin::glutin::{ElementState, VirtualKeyCode};
 use glium::glutin::{self, Event, WindowEvent};
+use glium::{Display, Surface};
 use imgui::{Context, FontConfig, FontSource, ImString, Ui};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};

@@ -1,8 +1,8 @@
 use imgui::{Condition, Ui};
 
-use {PKG_AUTHORS, PKG_DESCRIPTION, PKG_NAME, PKG_VERSION};
 use lameboy::Lameboy;
 use ppu::TestPattern;
+use {PKG_AUTHORS, PKG_DESCRIPTION, PKG_NAME, PKG_VERSION};
 
 pub trait ImguiDebuggable {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug);

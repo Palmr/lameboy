@@ -20,8 +20,8 @@ use std::path::Path;
 
 use cart::Cart;
 use cpu::CPU;
-use gui::GUI;
 use gui::imguidebug::ImguiDebug;
+use gui::GUI;
 use joypad::Joypad;
 use lameboy::Lameboy;
 use mmu::MMU;

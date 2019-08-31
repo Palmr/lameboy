@@ -4,8 +4,8 @@ use cart::Cart;
 use cpu::CPU;
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
 use joypad::Joypad;
-use mmu::MMU;
 use mmu::mmuobject::MmuObject;
+use mmu::MMU;
 use ppu::PPU;
 
 pub struct Lameboy<'l> {
