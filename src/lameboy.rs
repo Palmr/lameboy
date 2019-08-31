@@ -12,6 +12,7 @@ pub struct Lameboy<'l> {
     running: bool,
     breakpoints: Vec<u16>,
     memory_breakpoints: Vec<u16>,
+    trace_count: i32,
 }
 impl<'l> Lameboy<'l> {
     pub fn new(cpu: CPU<'l>) -> Lameboy<'l> {
@@ -20,6 +21,7 @@ impl<'l> Lameboy<'l> {
             running: false,
             breakpoints: Vec::new(),
             memory_breakpoints: Vec::new(),
+            trace_count: 0,
         }
     }
 
@@ -53,6 +55,23 @@ impl<'l> Lameboy<'l> {
 
     // Let the CPU fetch, decode, and execute an opcode and update the PPU
     pub fn step(&mut self) -> u8 {
+        if self.trace_count > 0 {
+            self.trace_count -= 1;
+            trace!(
+                "A: {:02X} F: {:02X} B: {:02X} C: {:02X} D: {:02X} E: {:02X} H: {:02X} L: {:02X} SP: {:04X} PC: 00:{:04X}",
+                self.cpu.registers.a,
+                self.cpu.registers.f.bits(),
+                self.cpu.registers.b,
+                self.cpu.registers.c,
+                self.cpu.registers.d,
+                self.cpu.registers.e,
+                self.cpu.registers.h,
+                self.cpu.registers.l,
+                self.cpu.registers.sp,
+                self.cpu.registers.pc,
+            );
+        }
+
         // Run the CPU for one opcode and get its cycle duration for the PPU
         let cpu_duration = self.cpu.cycle();
 
@@ -116,6 +135,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 }
                 ui.same_line(0.0);
                 ui.checkbox(im_str!("running"), &mut self.running);
+
                 if ui.button(im_str!("Dump PC history"), [0.0, 0.0]) {
                     info!("Dumping PC history");
                     for i in 0..self.get_cpu().pc_history.len() {
@@ -124,6 +144,10 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                         info!("[{}] - PC = 0x{:04X}", i, self.get_cpu().pc_history[hp]);
                     }
                 }
+
+                ui.input_int(im_str!("Trace Count"), &mut self.trace_count)
+                    .chars_decimal(true)
+                    .build();
             });
         ui.window(im_str!("Breakpoints"))
             .size([225.0, 150.0], Condition::FirstUseEver)
