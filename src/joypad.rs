@@ -3,6 +3,11 @@ use imgui::{Condition, Ui};
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
 use mmu::mmuobject::MmuObject;
 
+const LOW_NIBBLE_MASK: u8 = 0x0F;
+const COLUMN_MASK: u8 = 0b0011_0000;
+const COLUMN_BUTTON_KEYS: u8 = 0b0001_0000;
+const COLUMN_DIRECTION_KEYS: u8 = 0b0010_0000;
+
 pub struct Joypad {
     selected_column: u8,
     pub a: bool,
@@ -32,14 +37,14 @@ impl Joypad {
 
     fn joypad_to_byte(&self) -> u8 {
         match self.selected_column {
-            0x10 => self.action_byte(),
-            0x20 => self.direction_byte(),
-            _ => 0x0F,
+            COLUMN_BUTTON_KEYS => self.button_byte(),
+            COLUMN_DIRECTION_KEYS => self.direction_byte(),
+            _ => LOW_NIBBLE_MASK,
         }
     }
 
     fn direction_byte(&self) -> u8 {
-        let mut joyp = 0x0F;
+        let mut joyp = LOW_NIBBLE_MASK;
 
         if self.down {
             joyp &= 0b0111
@@ -57,8 +62,8 @@ impl Joypad {
         joyp
     }
 
-    fn action_byte(&self) -> u8 {
-        let mut joyp = 0x0F;
+    fn button_byte(&self) -> u8 {
+        let mut joyp = LOW_NIBBLE_MASK;
 
         if self.start {
             joyp &= 0b0111
@@ -91,7 +96,7 @@ impl MmuObject for Joypad {
     fn write8(&mut self, addr: u16, data: u8) {
         match addr {
             0xFF00 => {
-                self.selected_column = data & 0x30;
+                self.selected_column = data & COLUMN_MASK;
             }
             _ => panic!(
                 "Attempted to access [WR] Joypad from an invalid address: {:#X}",
@@ -111,14 +116,14 @@ impl<'c> ImguiDebuggable for Joypad {
                 ui.text(im_str!("B = {}", self.b));
                 ui.text(im_str!("Select = {}", self.select));
                 ui.text(im_str!("Start = {}", self.start));
-                ui.text(im_str!("JOYP = 0B{:04b}", self.action_byte()));
+                ui.text(im_str!("JOYP = 0B{:04b}", self.button_byte()));
 
                 ui.separator();
 
+                ui.text(im_str!("Right = {}", self.right));
+                ui.text(im_str!("Left = {}", self.left));
                 ui.text(im_str!("Up = {}", self.up));
                 ui.text(im_str!("Down = {}", self.down));
-                ui.text(im_str!("Left = {}", self.left));
-                ui.text(im_str!("Right = {}", self.right));
                 ui.text(im_str!("JOYP = 0B{:04b}", self.direction_byte()));
             });
     }
