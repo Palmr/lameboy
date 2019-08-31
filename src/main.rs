@@ -66,7 +66,8 @@ fn main() {
     f.read_to_end(&mut data).expect("Unable to read data");
     info!("File length: {}", data.len());
 
-    let mut gui = GUI::init((640f64, 576f64), rom_file_name);
+    let window_title = format!("{} - Lameboy - v{}", rom_file_name, PKG_VERSION);
+    let mut gui = GUI::init((640f64, 576f64), window_title);
 
     // Create all our hardware instances
     let mut joypad = Joypad::new();

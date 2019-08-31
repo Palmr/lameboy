@@ -23,11 +23,11 @@ pub struct GUI {
 }
 
 impl GUI {
-    pub fn init(window_size: (f64, f64), rom_file_name: &str) -> GUI {
+    pub fn init(window_size: (f64, f64), window_title: String) -> GUI {
         let events_loop = glutin::EventsLoop::new();
         let context = glutin::ContextBuilder::new().with_vsync(true);
         let builder = glutin::WindowBuilder::new()
-            .with_title(format!("{} - Lameboy - v0.1", rom_file_name))
+            .with_title(window_title)
             .with_dimensions(glutin::dpi::LogicalSize::new(window_size.0, window_size.1));
         let display =
             Display::new(builder, context, &events_loop).expect("Failed to initialize display");

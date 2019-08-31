@@ -57,15 +57,9 @@ impl ImguiDebug {
         if self.show_menu {
             ui.main_menu_bar(|| {
                 ui.menu(im_str!("File")).build(|| {
-                    ui.menu_item(im_str!("Open ROM"))
-                        .selected(&mut self.show_memory)
-                        .build();
-                    ui.menu_item(im_str!("Reload ROM"))
-                        .selected(&mut self.show_memory)
-                        .build();
-                    ui.menu_item(im_str!("Reset"))
-                        .selected(&mut self.show_memory)
-                        .build();
+                    ui.menu_item(im_str!("Open ROM")).enabled(false).build();
+                    ui.menu_item(im_str!("Reload ROM")).enabled(false).build();
+                    ui.menu_item(im_str!("Reset")).enabled(false).build();
                     ui.separator();
                     ui.menu_item(im_str!("Exit"))
                         .selected(&mut self.active)
@@ -136,7 +130,6 @@ impl ImguiDebug {
                 .size([250.0, 100.0], Condition::Always)
                 .collapsible(false)
                 .resizable(false)
-                .movable(false)
                 .build(|| {
                     ui.text(im_str!("{}", PKG_DESCRIPTION));
                     ui.text(im_str!("{}", PKG_AUTHORS));
