@@ -4,7 +4,6 @@ use cart::Cart;
 use cpu::CPU;
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
 use joypad::Joypad;
-use mmu::mmuobject::MmuObject;
 use mmu::MMU;
 use ppu::PPU;
 

@@ -20,7 +20,6 @@ pub struct GUI {
     renderer: Renderer,
     font_size: f32,
     last_frame: Instant,
-    show_imgui: bool,
 }
 
 impl GUI {
@@ -64,7 +63,6 @@ impl GUI {
             renderer,
             font_size,
             last_frame: Instant::now(),
-            show_imgui: true,
         }
     }
 
@@ -83,20 +81,18 @@ impl GUI {
             .expect("Failed to start frame");
         self.last_frame = io.update_delta_time(self.last_frame);
 
-        let mut ui = self.imgui.frame();
+        let ui = self.imgui.frame();
         let mut target = self.display.draw();
         target.clear_color_srgb(clear_color.0, clear_color.1, clear_color.2, clear_color.3);
 
         lameboy.get_ppu().draw(&mut target);
 
-        if self.show_imgui {
-            run_ui(&ui, &mut lameboy);
+        run_ui(&ui, &mut lameboy);
 
-            let draw_data = ui.render();
-            self.renderer
-                .render(&mut target, draw_data)
-                .expect("Rendering failed");
-        }
+        let draw_data = ui.render();
+        self.renderer
+            .render(&mut target, draw_data)
+            .expect("Rendering failed");
 
         target.finish().expect("Failed to swap buffers");
     }
@@ -105,7 +101,6 @@ impl GUI {
         let gl_window = self.display.gl_window();
         let window = gl_window.window();
         let im = &mut self.imgui;
-        let mut show_imgui = self.show_imgui;
         let platform = &mut self.platform;
 
         self.events_loop.poll_events(|event| {
