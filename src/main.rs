@@ -29,12 +29,12 @@ use ppu::PPU;
 
 mod gui;
 
-mod lameboy;
 mod cart;
-mod mmu;
 mod cpu;
-mod ppu;
 mod joypad;
+mod lameboy;
+mod mmu;
+mod ppu;
 
 const PKG_NAME: &str = env!("CARGO_PKG_NAME");
 const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");

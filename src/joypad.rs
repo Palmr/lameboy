@@ -32,13 +32,9 @@ impl Joypad {
 
     fn joypad_to_byte(&self) -> u8 {
         match self.selected_column {
-            0x10 => {
-                self.action_byte()
-            }
-            0x20 => {
-                self.direction_byte()
-            }
-            _ => 0x0F
+            0x10 => self.action_byte(),
+            0x20 => self.direction_byte(),
+            _ => 0x0F,
         }
     }
 
@@ -105,9 +101,8 @@ impl MmuObject for Joypad {
     }
 }
 
-
-impl<'c> ImguiDebuggable for Joypad<> {
-    fn imgui_display<'a>(&mut self, ui: &Ui<>, imgui_debug: &mut ImguiDebug) {
+impl<'c> ImguiDebuggable for Joypad {
+    fn imgui_display<'a>(&mut self, ui: &Ui, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("Joypad"))
             .size([150.0, 115.0], Condition::FirstUseEver)
             .resizable(true)
@@ -128,4 +123,3 @@ impl<'c> ImguiDebuggable for Joypad<> {
             });
     }
 }
-
