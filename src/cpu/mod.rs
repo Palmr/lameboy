@@ -1,4 +1,4 @@
-use imgui::{ImGuiCond, Ui};
+use imgui::{Condition, Ui};
 
 use cpu::instructions::*;
 use cpu::interrupts::*;
@@ -491,7 +491,7 @@ impl<'c> CPU<'c> {
 impl<'c> ImguiDebuggable for CPU<'c> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebug) {
         ui.window(im_str!("CPU"))
-            .size((260.0, 140.0), ImGuiCond::FirstUseEver)
+            .size([260.0, 140.0], Condition::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.text(im_str!(
@@ -522,7 +522,7 @@ impl<'c> ImguiDebuggable for CPU<'c> {
                 ui.text(im_str!("Flags: {:?}", self.registers.f));
             });
         ui.window(im_str!("CPU - Stack"))
-            .size((260.0, 140.0), ImGuiCond::FirstUseEver)
+            .size([260.0, 140.0], Condition::FirstUseEver)
             .resizable(true)
             .build(|| {
                 let display_stack_entry_count = 50;
@@ -531,12 +531,12 @@ impl<'c> ImguiDebuggable for CPU<'c> {
 
                 let mut stack_addr = stack_addr_top;
                 while stack_addr > stack_addr_bottom {
-                    ui.text_colored((0.7, 0.7, 0.7, 1.0), im_str!("[0x{:04X}]", stack_addr));
+                    ui.text_colored([0.7, 0.7, 0.7, 1.0], im_str!("[0x{:04X}]", stack_addr));
                     ui.same_line(0.0);
                     ui.text(im_str!(" - "));
                     ui.same_line(0.0);
                     ui.text_colored(
-                        (1.0, 1.0, 0.0, 1.0),
+                        [1.0, 1.0, 0.0, 1.0],
                         im_str!("0x{:04X}", self.mmu.read16(stack_addr)),
                     );
 

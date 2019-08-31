@@ -1,4 +1,4 @@
-use imgui::{ImGuiCond, Ui};
+use imgui::{Condition, Ui};
 
 use cart::Cart;
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
@@ -176,7 +176,7 @@ impl<'m> MMU<'m> {
 impl<'m> ImguiDebuggable for MMU<'m> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("MMU"))
-            .size((285.0, 122.0), ImGuiCond::FirstUseEver)
+            .size([285.0, 122.0], Condition::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.input_int(im_str!("Addr"), &mut imgui_debug.input_memory_addr)
@@ -199,7 +199,7 @@ impl<'m> ImguiDebuggable for MMU<'m> {
                 }
             });
         ui.window(im_str!("MMU - dump"))
-            .size((260.0, 140.0), ImGuiCond::FirstUseEver)
+            .size([260.0, 140.0], Condition::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.input_int(im_str!("Addr"), &mut imgui_debug.dump_memory_addr)
@@ -226,15 +226,15 @@ impl<'m> ImguiDebuggable for MMU<'m> {
                 for row in 0..(context_size * 2) {
                     let row_addr = memory_addr_low + row * bytes_per_row;
 
-                    ui.text_colored((0.7, 0.7, 0.7, 1.0), im_str!("[0x{:04X}]", row_addr));
+                    ui.text_colored([0.7, 0.7, 0.7, 1.0], im_str!("[0x{:04X}]", row_addr));
 
                     for offset in 0..bytes_per_row {
                         let colour;
                         let mem_ptr = row_addr + offset;
                         if mem_ptr == dump_memory_addr {
-                            colour = (0.5, 1.0, 0.5, 1.0);
+                            colour = [0.5, 1.0, 0.5, 1.0];
                         } else {
-                            colour = (0.8, 0.8, 0.8, 1.0);
+                            colour = [0.8, 0.8, 0.8, 1.0];
                         }
 
                         ui.same_line(0.0);

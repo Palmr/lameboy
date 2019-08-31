@@ -1,9 +1,8 @@
-use imgui::{ImGuiCond, ImVec2, Ui};
-
-use lameboy::Lameboy;
-use ppu::TestPattern;
+use imgui::{Condition, Ui};
 
 use {PKG_AUTHORS, PKG_DESCRIPTION, PKG_NAME, PKG_VERSION};
+use lameboy::Lameboy;
+use ppu::TestPattern;
 
 pub trait ImguiDebuggable {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug);
@@ -133,15 +132,15 @@ impl ImguiDebug {
         }
 
         if self.show_about {
-            ui.window(im_str!("About - {} v{}", PKG_NAME, PKG_VERSION))
-                .size((250.0, 100.0), ImGuiCond::Always)
+            ui.window(&im_str!("About - {} v{}", PKG_NAME, PKG_VERSION))
+                .size([250.0, 100.0], Condition::Always)
                 .collapsible(false)
                 .resizable(false)
                 .movable(false)
                 .build(|| {
                     ui.text(im_str!("{}", PKG_DESCRIPTION));
                     ui.text(im_str!("{}", PKG_AUTHORS));
-                    if ui.button(im_str!("Close"), ImVec2::new(75.0, 30.0)) {
+                    if ui.button(im_str!("Close"), [75.0, 30.0]) {
                         self.show_about = false;
                     }
                 });

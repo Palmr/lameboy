@@ -1,7 +1,11 @@
+use imgui::{Condition, ImGuiSelectableFlags, Ui};
+
 use cart::Cart;
 use cpu::CPU;
+use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
 use joypad::Joypad;
 use mmu::MMU;
+use mmu::mmuobject::MmuObject;
 use ppu::PPU;
 
 pub struct Lameboy<'l> {
@@ -88,9 +92,6 @@ impl<'l> Lameboy<'l> {
     }
 }
 
-use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiCond, ImGuiSelectableFlags, ImVec2, Ui};
-use mmu::mmuobject::MmuObject;
 impl<'c> ImguiDebuggable for Lameboy<'c> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         // TODO - This should be in the memory debug impl but it doesn't have a ref to CPU currently
@@ -99,24 +100,24 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
         }
 
         ui.window(im_str!("Emulator"))
-            .size((255.0, 75.0), ImGuiCond::FirstUseEver)
+            .size([255.0, 75.0], Condition::FirstUseEver)
             .resizable(true)
             .build(|| {
-                if ui.button(im_str!("Reset"), ImVec2::new(0.0, 0.0)) {
+                if ui.button(im_str!("Reset"), [0.0, 0.0]) {
                     self.reset();
                 }
                 ui.same_line(0.0);
-                if ui.button(im_str!("Step"), ImVec2::new(0.0, 0.0)) {
+                if ui.button(im_str!("Step"), [0.0, 0.0]) {
                     self.step();
                 }
                 ui.same_line(0.0);
-                if ui.button(im_str!("Continue"), ImVec2::new(0.0, 0.0)) {
+                if ui.button(im_str!("Continue"), [0.0, 0.0]) {
                     self.step();
                     self.running = true;
                 }
                 ui.same_line(0.0);
                 ui.checkbox(im_str!("running"), &mut self.running);
-                if ui.button(im_str!("Dump PC history"), ImVec2::new(0.0, 0.0)) {
+                if ui.button(im_str!("Dump PC history"), [0.0, 0.0]) {
                     info!("Dumping PC history");
                     for i in 0..self.get_cpu().pc_history.len() {
                         let hp = self.get_cpu().pc_history_pointer.wrapping_add(i)
@@ -126,10 +127,10 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 }
             });
         ui.window(im_str!("Breakpoints"))
-            .size((225.0, 150.0), ImGuiCond::FirstUseEver)
+            .size([225.0, 150.0], Condition::FirstUseEver)
             .resizable(true)
             .build(|| {
-                if ui.button(im_str!("Set"), ImVec2::new(0.0, 0.0)) {
+                if ui.button(im_str!("Set"), [0.0, 0.0]) {
                     let breakpoint_addr = imgui_debug.input_breakpoint_addr as u16;
                     if !self.breakpoints.contains(&breakpoint_addr) {
                         self.breakpoints.push(breakpoint_addr);
@@ -140,7 +141,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                     .chars_hexadecimal(true)
                     .build();
 
-                if ui.button(im_str!("Clear All"), ImVec2::new(0.0, 0.0)) {
+                if ui.button(im_str!("Clear All"), [0.0, 0.0]) {
                     self.breakpoints.clear();
                 }
 
@@ -152,10 +153,10 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 } else {
                     for index in 0..self.breakpoints.len() {
                         if ui.selectable(
-                            im_str!("0x{:04X}", self.breakpoints[index]),
+                            &im_str!("0x{:04X}", self.breakpoints[index]),
                             false,
                             ImGuiSelectableFlags::empty(),
-                            ImVec2::new(0.0, 0.0),
+                            [0.0, 0.0],
                         ) {
                             removal_index = Some(index);
                         }
@@ -166,10 +167,10 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 }
             });
         ui.window(im_str!("Memory Breakpoints"))
-            .size((225.0, 150.0), ImGuiCond::FirstUseEver)
+            .size([225.0, 150.0], Condition::FirstUseEver)
             .resizable(true)
             .build(|| {
-                if ui.button(im_str!("Set"), ImVec2::new(0.0, 0.0)) {
+                if ui.button(im_str!("Set"), [0.0, 0.0]) {
                     let breakpoint_addr = imgui_debug.input_breakpoint_addr as u16;
                     if !self.memory_breakpoints.contains(&breakpoint_addr) {
                         self.memory_breakpoints.push(breakpoint_addr);
@@ -180,7 +181,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                     .chars_hexadecimal(true)
                     .build();
 
-                if ui.button(im_str!("Clear All"), ImVec2::new(0.0, 0.0)) {
+                if ui.button(im_str!("Clear All"), [0.0, 0.0]) {
                     self.memory_breakpoints.clear();
                 }
 
@@ -192,10 +193,10 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                 } else {
                     for index in 0..self.memory_breakpoints.len() {
                         if ui.selectable(
-                            im_str!("0x{:04X}", self.memory_breakpoints[index]),
+                            &im_str!("0x{:04X}", self.memory_breakpoints[index]),
                             false,
                             ImGuiSelectableFlags::empty(),
-                            ImVec2::new(0.0, 0.0),
+                            [0.0, 0.0],
                         ) {
                             removal_index = Some(index);
                         }
@@ -205,25 +206,7 @@ impl<'c> ImguiDebuggable for Lameboy<'c> {
                     self.memory_breakpoints.remove(index);
                 }
             });
-        ui.window(im_str!("Joypad"))
-            .size((150.0, 115.0), ImGuiCond::FirstUseEver)
-            .resizable(true)
-            .build(|| {
-                ui.text(im_str!("A = {}", self.get_joypad().a));
-                ui.text(im_str!("B = {}", self.get_joypad().b));
-                ui.text(im_str!("Select = {}", self.get_joypad().select));
-                ui.text(im_str!("Start = {}", self.get_joypad().start));
-                self.get_joypad().write8(0xFF00, 0x10);
-                ui.text(im_str!("JOYP = 0B{:04b}", self.get_joypad().read8(0xFF00)));
 
-                ui.separator();
-
-                ui.text(im_str!("Up = {}", self.get_joypad().up));
-                ui.text(im_str!("Down = {}", self.get_joypad().down));
-                ui.text(im_str!("Left = {}", self.get_joypad().left));
-                ui.text(im_str!("Right = {}", self.get_joypad().right));
-                self.get_joypad().write8(0xFF00, 0x20);
-                ui.text(im_str!("JOYP = 0B{:04b}", self.get_joypad().read8(0xFF00)));
-            });
+        self.get_joypad().imgui_display(ui, imgui_debug);
     }
 }

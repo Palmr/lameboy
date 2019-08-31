@@ -1,6 +1,6 @@
 use glium::backend::Facade;
 use glium::Surface;
-use imgui::{ImGuiCond, Ui};
+use imgui::{Condition, Ui};
 
 use cpu::interrupts::{INT_LCD_STAT, INT_VBLANK};
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
@@ -400,7 +400,7 @@ impl MmuObject for PPU {
 impl ImguiDebuggable for PPU {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("PPU"))
-            .size((180.0, 115.0), ImGuiCond::FirstUseEver)
+            .size([180.0, 115.0], Condition::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.checkbox(im_str!("Apply test"), &mut imgui_debug.apply_test_pattern);
@@ -424,7 +424,7 @@ impl ImguiDebuggable for PPU {
             });
 
         ui.window(im_str!("PPU-registers"))
-            .size((224.0, 230.0), ImGuiCond::FirstUseEver)
+            .size([224.0, 230.0], Condition::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.text(im_str!("Control: {:?}", self.registers.control));
@@ -446,7 +446,7 @@ impl ImguiDebuggable for PPU {
             });
 
         ui.window(im_str!("PPU-OAM"))
-            .size((224.0, 230.0), ImGuiCond::FirstUseEver)
+            .size([224.0, 230.0], Condition::FirstUseEver)
             .resizable(true)
             .build(|| {
                 ui.input_int(im_str!("Sprite Index"), &mut imgui_debug.ppu_sprite_index)

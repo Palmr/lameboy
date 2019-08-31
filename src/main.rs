@@ -2,45 +2,39 @@
 
 #[macro_use]
 extern crate bitflags;
-
+extern crate clap;
 #[macro_use]
 extern crate glium;
-
 #[macro_use]
 extern crate imgui;
-
 extern crate imgui_glium_renderer;
-extern crate imgui_sys;
-
-extern crate nalgebra;
-
+extern crate imgui_winit_support;
 #[macro_use]
 extern crate log;
 extern crate log4rs;
-
-mod gui;
-use gui::imguidebug::ImguiDebug;
-use gui::GUI;
-
-extern crate clap;
+extern crate nalgebra;
 
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-mod lameboy;
-use lameboy::Lameboy;
-
-mod cart;
 use cart::Cart;
-mod mmu;
-use mmu::MMU;
-mod cpu;
 use cpu::CPU;
-mod ppu;
-use ppu::PPU;
-mod joypad;
+use gui::GUI;
+use gui::imguidebug::ImguiDebug;
 use joypad::Joypad;
+use lameboy::Lameboy;
+use mmu::MMU;
+use ppu::PPU;
+
+mod gui;
+
+mod lameboy;
+mod cart;
+mod mmu;
+mod cpu;
+mod ppu;
+mod joypad;
 
 const PKG_NAME: &str = env!("CARGO_PKG_NAME");
 const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
