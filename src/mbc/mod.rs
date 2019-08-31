@@ -17,7 +17,7 @@ pub trait MBC {
 //    try!(check_checksum(&data));
 //    match data[0x147] {
 //        0x00 => nombc::NoMbc::new(data).map(|v| Box::new(v) as Box<MBC>),
-//        0x01 ... 0x03 => mbc1::MBC1::new(data, file).map(|v| Box::new(v) as Box<MBC>),
+//        0x01 ..= 0x03 => mbc1::MBC1::new(data, file).map(|v| Box::new(v) as Box<MBC>),
 //        _ => { Err("Unsupported MBC type") },
 //    }
 //}

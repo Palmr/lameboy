@@ -1,13 +1,14 @@
-pub mod registers;
+use imgui::{ImGuiCond, Ui};
+
+use cpu::instructions::*;
+use cpu::interrupts::*;
 use cpu::registers::*;
+use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
+use mmu::MMU;
 
 pub mod instructions;
-use cpu::instructions::*;
-
 pub mod interrupts;
-use cpu::interrupts::*;
-
-use mmu::MMU;
+pub mod registers;
 
 pub struct CPU<'c> {
     pub registers: Registers,
@@ -477,18 +478,16 @@ impl<'c> CPU<'c> {
             0x3E => shift_right_indirect_hl(self, true),
             0x3F => shift_right_r8(self, &Reg8::A, true),
 
-            0x40...0x7F => bit_test(self, op),
+            0x40..=0x7F => bit_test(self, op),
 
-            0x80...0xBF => bit_assign(self, op, false),
-            0xC0...0xFF => bit_assign(self, op, true),
+            0x80..=0xBF => bit_assign(self, op, false),
+            0xC0..=0xFF => bit_assign(self, op, true),
         };
 
         duration + 4
     }
 }
 
-use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiCond, Ui};
 impl<'c> ImguiDebuggable for CPU<'c> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebug) {
         ui.window(im_str!("CPU"))

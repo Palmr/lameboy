@@ -1,9 +1,12 @@
+use imgui::{ImGuiCond, Ui};
+
 use cart::Cart;
+use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
 use joypad::Joypad;
+use mmu::mmuobject::MmuObject;
 use ppu::PPU;
 
 pub mod mmuobject;
-use mmu::mmuobject::MmuObject;
 
 pub struct MMU<'m> {
     pub cart: &'m mut Cart,
@@ -82,8 +85,8 @@ impl<'m> MMU<'m> {
         }
 
         match addr {
-            0x0000...0x7FFF | 0xA000...0xBFFF => self.cart.read8(addr),
-            0x8000...0x9FFF => {
+            0x0000..=0x7FFF | 0xA000..=0xBFFF => self.cart.read8(addr),
+            0x8000..=0x9FFF => {
                 // Return undefined data if accessing VRAM
                 if self.ppu.is_vram_accessible() {
                     self.ppu.read8(addr)
@@ -91,9 +94,9 @@ impl<'m> MMU<'m> {
                     0xFF
                 }
             }
-            0xC000...0xCFFF | 0xE000...0xEFFF => self.wram0[(addr as usize) & 0x0FFF],
-            0xD000...0xDFFF | 0xF000...0xFDFF => self.wram1[(addr as usize) & 0x0FFF],
-            0xFE00...0xFE9F => {
+            0xC000..=0xCFFF | 0xE000..=0xEFFF => self.wram0[(addr as usize) & 0x0FFF],
+            0xD000..=0xDFFF | 0xF000..=0xFDFF => self.wram1[(addr as usize) & 0x0FFF],
+            0xFE00..=0xFE9F => {
                 // Return undefined data if accessing VRAM or OAM
                 if self.ppu.is_oam_accessible() {
                     self.ppu.read8(addr)
@@ -101,17 +104,17 @@ impl<'m> MMU<'m> {
                     0xFF
                 }
             }
-            0xFEA0...0xFEFF => self.unusable,
-            0xFF00...0xFF7F => match addr {
+            0xFEA0..=0xFEFF => self.unusable,
+            0xFF00..=0xFF7F => match addr {
                 0xFF00 => self.joypad.read8(addr),
-                0xFF40...0xFF4B => self.ppu.read8(addr),
-                0xFF01...0xFF3F | 0xFF4C...0xFF7F => self.io[(addr as usize) & 0x00FF],
+                0xFF40..=0xFF4B => self.ppu.read8(addr),
+                0xFF01..=0xFF3F | 0xFF4C..=0xFF7F => self.io[(addr as usize) & 0x00FF],
                 _ => panic!(
                     "Attempted to access [RD] memory from an invalid address: {:#X}",
                     addr
                 ),
             },
-            0xFF80...0xFFFE => self.hram[((addr as usize) & 0x00FF) - 0x0080],
+            0xFF80..=0xFFFE => self.hram[((addr as usize) & 0x00FF) - 0x0080],
             0xFFFF => self.ier,
         }
     }
@@ -122,23 +125,23 @@ impl<'m> MMU<'m> {
         }
 
         match addr {
-            0x0000...0x7FFF | 0xA000...0xBFFF => self.cart.write8(addr, data),
-            0x8000...0x9FFF => {
+            0x0000..=0x7FFF | 0xA000..=0xBFFF => self.cart.write8(addr, data),
+            0x8000..=0x9FFF => {
                 // Ignore update if PPU is accessing VRAM
                 if self.ppu.is_vram_accessible() {
                     self.ppu.write8(addr, data)
                 }
             }
-            0xC000...0xCFFF | 0xE000...0xEFFF => self.wram0[(addr as usize) & 0x0FFF] = data,
-            0xD000...0xDFFF | 0xF000...0xFDFF => self.wram1[(addr as usize) & 0x0FFF] = data,
-            0xFE00...0xFE9F => {
+            0xC000..=0xCFFF | 0xE000..=0xEFFF => self.wram0[(addr as usize) & 0x0FFF] = data,
+            0xD000..=0xDFFF | 0xF000..=0xFDFF => self.wram1[(addr as usize) & 0x0FFF] = data,
+            0xFE00..=0xFE9F => {
                 // Ignore update if PPU is accessing VRAM or OAM
                 if self.ppu.is_oam_accessible() {
                     self.ppu.write8(addr, data)
                 }
             }
-            0xFEA0...0xFEFF => (),
-            0xFF00...0xFF7F => {
+            0xFEA0..=0xFEFF => (),
+            0xFF00..=0xFF7F => {
                 match addr {
                     0xFF00 => self.joypad.write8(addr, data),
                     0xFF46 => {
@@ -149,15 +152,15 @@ impl<'m> MMU<'m> {
                             self.write8(0xFE00 + i, val);
                         }
                     }
-                    0xFF40...0xFF45 | 0xFF47...0xFF4B => self.ppu.write8(addr, data),
-                    0xFF01...0xFF3F | 0xFF4C...0xFF7F => self.io[(addr as usize) & 0x00FF] = data,
+                    0xFF40..=0xFF45 | 0xFF47..=0xFF4B => self.ppu.write8(addr, data),
+                    0xFF01..=0xFF3F | 0xFF4C..=0xFF7F => self.io[(addr as usize) & 0x00FF] = data,
                     _ => panic!(
                         "Attempted to access [WR] memory from an invalid address: {:#X}",
                         addr
                     ),
                 }
             }
-            0xFF80...0xFFFE => self.hram[((addr as usize) & 0x00FF) - 0x0080] = data,
+            0xFF80..=0xFFFE => self.hram[((addr as usize) & 0x00FF) - 0x0080] = data,
             0xFFFF => self.ier = data,
         }
     }
@@ -170,8 +173,6 @@ impl<'m> MMU<'m> {
     }
 }
 
-use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiCond, Ui};
 impl<'m> ImguiDebuggable for MMU<'m> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("MMU"))

@@ -1,3 +1,8 @@
+use imgui::{ImGuiCond, Ui};
+
+use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
+use mmu::mmuobject::MmuObject;
+
 pub struct Cart {
     data: Vec<u8>,
 }
@@ -65,13 +70,12 @@ impl Cart {
     }
 }
 
-use mmu::mmuobject::MmuObject;
 impl MmuObject for Cart {
     fn read8(&self, addr: u16) -> u8 {
         match addr {
             // TODO - implement MBC variants
-            0x0000...0x7FFF => self.data[addr as usize],
-            0xA000...0xC000 => 0xFF,
+            0x0000..=0x7FFF => self.data[addr as usize],
+            0xA000..=0xC000 => 0xFF,
             _ => panic!(
                 "Attempted to access [RD] Cart memory from an invalid address: {:#X}",
                 addr
@@ -85,8 +89,6 @@ impl MmuObject for Cart {
     }
 }
 
-use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiCond, Ui};
 impl ImguiDebuggable for Cart {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebug) {
         ui.window(im_str!("Cart"))

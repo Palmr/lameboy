@@ -1,15 +1,15 @@
-use glium::glutin;
-use glium::glutin::EventsLoop;
-use glium::{Display, Surface};
-use imgui::{FrameSize, ImGui, ImGuiKey, ImString, Ui};
-use imgui_glium_renderer::Renderer;
 use std::time::Instant;
 
+use glium::{Display, Surface};
+use glium::glutin;
+use glium::glutin::EventsLoop;
+use imgui::{FrameSize, ImGui, ImGuiKey, ImString, Ui};
+use imgui_glium_renderer::Renderer;
+
+use gui::imguidebug::ImguiDebug;
 use lameboy::Lameboy;
 
 pub mod imguidebug;
-
-use gui::imguidebug::ImguiDebug;
 
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
 struct MouseState {
@@ -227,7 +227,7 @@ impl GUI {
                         // Rescale pixel delta from glutin logical coordinates to our logical
                         // coordinates
                         mouse.wheel = pos
-                            .to_physical(hidpi_factor.clone())
+                            .to_physical(hidpi_factor)
                             //.to_logical(hidpi_factor.round())
                             .y as f32;
                     }

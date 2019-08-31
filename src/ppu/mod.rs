@@ -1,24 +1,23 @@
 use glium::backend::Facade;
 use glium::Surface;
+use imgui::{ImGuiCond, Ui};
 
-pub mod gpu;
+use cpu::interrupts::{INT_LCD_STAT, INT_VBLANK};
+use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
+use mmu::mmuobject::MmuObject;
 use ppu::gpu::*;
-
-pub mod registers;
+use ppu::palette::*;
 use ppu::registers::ControlFlags;
 use ppu::registers::Registers;
 use ppu::registers::StatusInterruptFlags;
-
-pub mod palette;
-use ppu::palette::*;
-
-pub mod sprite;
 use ppu::sprite::{Sprite, SpritePriority};
-
-pub mod tile;
 use ppu::tile::Tile;
 
-use cpu::interrupts::{INT_LCD_STAT, INT_VBLANK};
+pub mod gpu;
+pub mod palette;
+pub mod registers;
+pub mod sprite;
+pub mod tile;
 
 pub const SCREEN_WIDTH: usize = 160;
 pub const SCREEN_HEIGHT: usize = 144;
@@ -241,7 +240,7 @@ impl PPU {
                 tile_index = (128 + (i16::from(tile_index as i8) + 128)) as usize;
             };
 
-            for i in 0..SCREEN_WIDTH {
+            for pixel in line_buffer.iter_mut().take(SCREEN_WIDTH) {
                 let tile_addr = (tile_index << 4) + (tile_y_offset as usize * 2);
                 let low = self.vram[tile_addr];
                 let high = self.vram[tile_addr + 1usize];
@@ -250,7 +249,7 @@ impl PPU {
                     | (((high >> (7 - tile_x_offset)) & 0x01) << 1);
 
                 // Plot the pixel to canvas
-                line_buffer[i] = bg_palette[(colour & 0x03) as usize];
+                *pixel = bg_palette[(colour & 0x03) as usize];
 
                 // When this tile ends, read another
                 tile_x_offset += 1;
@@ -348,13 +347,12 @@ impl PPU {
     }
 }
 
-use mmu::mmuobject::MmuObject;
 impl MmuObject for PPU {
     /// Handle memory reads from the PPU data registers only, otherwise panic
     fn read8(&self, addr: u16) -> u8 {
         match addr {
-            0x8000...0x9FFF => self.vram[(addr as usize) & 0x1FFF],
-            0xFE00...0xFE9F => self.oam[(addr as usize) & 0x00FF],
+            0x8000..=0x9FFF => self.vram[(addr as usize) & 0x1FFF],
+            0xFE00..=0xFE9F => self.oam[(addr as usize) & 0x00FF],
             0xFF40 => self.registers.control.bits(),
             0xFF41 => self.combine_status_mode(),
             0xFF42 => self.registers.scroll_y,
@@ -377,8 +375,8 @@ impl MmuObject for PPU {
     /// Handle memory writes to the PPU data registers only, otherwise panic
     fn write8(&mut self, addr: u16, data: u8) {
         match addr {
-            0x8000...0x9FFF => self.vram[(addr as usize) & 0x1FFF] = data,
-            0xFE00...0xFE9F => self.oam[(addr as usize) & 0x00FF] = data,
+            0x8000..=0x9FFF => self.vram[(addr as usize) & 0x1FFF] = data,
+            0xFE00..=0xFE9F => self.oam[(addr as usize) & 0x00FF] = data,
             0xFF40 => self.registers.control = ControlFlags::from_bits_truncate(data),
             0xFF41 => self.registers.status = data,
             0xFF42 => self.registers.scroll_y = data,
@@ -399,8 +397,6 @@ impl MmuObject for PPU {
     }
 }
 
-use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use imgui::{ImGuiCond, Ui};
 impl ImguiDebuggable for PPU {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("PPU"))
