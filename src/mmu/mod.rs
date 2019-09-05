@@ -1,4 +1,4 @@
-use imgui::{Condition, Ui};
+use imgui::{Condition, Ui, StyleColor};
 
 use cart::Cart;
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
@@ -226,7 +226,10 @@ impl<'m> ImguiDebuggable for MMU<'m> {
                 for row in 0..(context_size * 2) {
                     let row_addr = memory_addr_low + row * bytes_per_row;
 
-                    ui.text_colored([0.7, 0.7, 0.7, 1.0], im_str!("[0x{:04X}]", row_addr));
+                    {
+                        let _color = ui.push_style_color(StyleColor::Text, [0.7, 0.7, 0.7, 1.0]);
+                        ui.text(im_str!("[0x{:04X}]", row_addr));
+                    }
 
                     for offset in 0..bytes_per_row {
                         let colour;
@@ -238,7 +241,10 @@ impl<'m> ImguiDebuggable for MMU<'m> {
                         }
 
                         ui.same_line(0.0);
-                        ui.text_colored(colour, im_str!("{:02X}", self.read8(mem_ptr)));
+                        {
+                            let _color = ui.push_style_color(StyleColor::Text, colour);
+                            ui.text(im_str!("{:02X}", self.read8(mem_ptr)));
+                        }
                     }
                 }
             });

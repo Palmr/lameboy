@@ -1,4 +1,4 @@
-use imgui::{Condition, Ui};
+use imgui::{Condition, Ui, StyleColor};
 
 use cpu::instructions::*;
 use cpu::interrupts::*;
@@ -531,14 +531,17 @@ impl<'c> ImguiDebuggable for CPU<'c> {
 
                 let mut stack_addr = stack_addr_top;
                 while stack_addr > stack_addr_bottom {
-                    ui.text_colored([0.7, 0.7, 0.7, 1.0], im_str!("[0x{:04X}]", stack_addr));
+                    {
+                        let _color = ui.push_style_color(StyleColor::Text, [0.7, 0.7, 0.7, 1.0]);
+                        ui.text(im_str!("[0x{:04X}]", stack_addr));
+                    }
                     ui.same_line(0.0);
                     ui.text(im_str!(" - "));
                     ui.same_line(0.0);
-                    ui.text_colored(
-                        [1.0, 1.0, 0.0, 1.0],
-                        im_str!("0x{:04X}", self.mmu.read16(stack_addr)),
-                    );
+                    {
+                        let _color = ui.push_style_color(StyleColor::Text, [1.0, 1.0, 0.0, 1.0]);
+                        ui.text(im_str!("0x{:04X}", self.mmu.read16(stack_addr)));
+                    }
 
                     stack_addr = stack_addr.wrapping_sub(2);
                 }
