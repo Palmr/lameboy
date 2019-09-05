@@ -1,4 +1,4 @@
-use imgui::{Condition, Ui, StyleColor};
+use imgui::{Condition, StyleColor, Ui};
 
 use cart::Cart;
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};

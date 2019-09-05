@@ -1,4 +1,4 @@
-use imgui::{Condition, Ui, StyleColor};
+use imgui::{Condition, StyleColor, Ui};
 
 use cpu::instructions::*;
 use cpu::interrupts::*;
