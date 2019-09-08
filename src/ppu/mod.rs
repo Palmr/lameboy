@@ -323,8 +323,8 @@ impl PPU {
 
         // Update the screen buffer with the line buffer
         let screen_line_offset = SCREEN_WIDTH * self.registers.ly as usize;
-        for i in 0..SCREEN_WIDTH {
-            self.screen_buffer[screen_line_offset + i] = line_buffer[i];
+        for (idx, &pixel) in line_buffer.iter().enumerate().take(SCREEN_WIDTH) {
+            self.screen_buffer[screen_line_offset + idx] = pixel;
         }
     }
 

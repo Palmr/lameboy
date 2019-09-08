@@ -106,8 +106,8 @@ impl MmuObject for Joypad {
     }
 }
 
-impl<'c> ImguiDebuggable for Joypad {
-    fn imgui_display<'a>(&mut self, ui: &Ui, _imgui_debug: &mut ImguiDebug) {
+impl ImguiDebuggable for Joypad {
+    fn imgui_display(&mut self, ui: &Ui, _imgui_debug: &mut ImguiDebug) {
         ui.window(im_str!("Joypad"))
             .size([150.0, 115.0], Condition::FirstUseEver)
             .resizable(true)
