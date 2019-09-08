@@ -1,6 +1,6 @@
 **/lameboy.ini
 
-roms/*.gb
+roms/*
 output.log
 
 ### Rust template
