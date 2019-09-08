@@ -7,7 +7,6 @@ use imgui::{Context, FontConfig, FontSource, ImString, Ui};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
 
-use gui::imguidebug::ImguiDebug;
 use lameboy::Lameboy;
 
 pub mod imguidebug;
@@ -97,7 +96,7 @@ impl GUI {
         target.finish().expect("Failed to swap buffers");
     }
 
-    pub fn update_events(&mut self, gui_state: &mut ImguiDebug, lameboy: &mut Lameboy) {
+    pub fn update_events(&mut self, lameboy: &mut Lameboy) {
         let gl_window = self.display.gl_window();
         let window = gl_window.window();
         let im = &mut self.imgui;
@@ -108,7 +107,7 @@ impl GUI {
 
             if let Event::WindowEvent { event, .. } = event {
                 match event {
-                    WindowEvent::CloseRequested => gui_state.active = false,
+                    WindowEvent::CloseRequested => lameboy.active = false,
                     WindowEvent::KeyboardInput { input, .. } => {
                         let pressed = input.state == ElementState::Pressed;
                         match input.virtual_keycode {
@@ -126,8 +125,8 @@ impl GUI {
                             _ => {}
                         }
                     }
-                    WindowEvent::CursorEntered { .. } => gui_state.show_menu = true,
-                    WindowEvent::CursorLeft { .. } => gui_state.show_menu = false,
+                    WindowEvent::CursorEntered { .. } => lameboy.debug.show_menu = true,
+                    WindowEvent::CursorLeft { .. } => lameboy.debug.show_menu = false,
                     _ => (),
                 }
             }

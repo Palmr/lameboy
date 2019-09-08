@@ -1,15 +1,13 @@
-use imgui::{Condition, Ui};
+use imgui::Ui;
 
-use lameboy::Lameboy;
 use ppu::TestPattern;
-use {PKG_AUTHORS, PKG_DESCRIPTION, PKG_NAME, PKG_VERSION};
 
 pub trait ImguiDebuggable {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug);
 }
 
 pub struct ImguiDebug {
-    pub active: bool,
+    pub program_counter: u16,
     pub show_imgui_metrics: bool,
     pub show_menu: bool,
     pub show_emulator: bool,
@@ -27,12 +25,17 @@ pub struct ImguiDebug {
     pub input_memory_value: i32,
     pub dump_memory_addr: i32,
     pub dump_memory_pc_lock: bool,
+    pub disassemble_memory_addr: i32,
+    pub disassemble_memory_pc_lock: bool,
+    pub disassemble_read_args: bool,
+    pub breakpoints: Vec<u16>,
+    pub memory_breakpoints: Vec<u16>,
 }
 
 impl ImguiDebug {
     pub fn new() -> ImguiDebug {
         ImguiDebug {
-            active: true,
+            program_counter: 0,
             show_imgui_metrics: false,
             show_menu: false,
             show_emulator: true,
@@ -49,94 +52,12 @@ impl ImguiDebug {
             input_memory_addr: 0,
             input_memory_value: 0,
             dump_memory_addr: 0,
-            dump_memory_pc_lock: false,
-        }
-    }
-
-    pub fn draw<'a>(&mut self, ui: &Ui<'a>, lameboy: &mut Lameboy) {
-        if self.show_menu {
-            ui.main_menu_bar(|| {
-                ui.menu(im_str!("File")).build(|| {
-                    ui.menu_item(im_str!("Open ROM")).enabled(false).build();
-                    ui.menu_item(im_str!("Reload ROM")).enabled(false).build();
-                    ui.menu_item(im_str!("Reset")).enabled(false).build();
-                    ui.separator();
-                    ui.menu_item(im_str!("Exit"))
-                        .selected(&mut self.active)
-                        .build();
-                });
-                ui.menu(im_str!("Options")).build(|| {
-                    ui.menu_item(im_str!("TODO")).enabled(false).build();
-                });
-                ui.menu(im_str!("Debug")).build(|| {
-                    ui.menu_item(im_str!("Emulator"))
-                        .selected(&mut self.show_emulator)
-                        .build();
-                    ui.menu_item(im_str!("Cart"))
-                        .selected(&mut self.show_cart)
-                        .build();
-                    ui.menu_item(im_str!("Memory"))
-                        .selected(&mut self.show_memory)
-                        .build();
-                    ui.menu_item(im_str!("CPU"))
-                        .selected(&mut self.show_cpu)
-                        .build();
-                    ui.menu_item(im_str!("PPU"))
-                        .selected(&mut self.show_ppu)
-                        .build();
-                });
-                ui.menu(im_str!("Help")).build(|| {
-                    ui.menu_item(im_str!("About"))
-                        .selected(&mut self.show_about)
-                        .build();
-                    ui.menu_item(im_str!("ImGUI Metrics"))
-                        .selected(&mut self.show_imgui_metrics)
-                        .build();
-                });
-            });
-        }
-
-        if self.show_imgui_metrics {
-            ui.show_metrics_window(&mut self.show_imgui_metrics);
-        }
-
-        if self.show_cart {
-            lameboy.get_cart().imgui_display(ui, self);
-        }
-
-        if self.show_memory {
-            lameboy.get_mmu().imgui_display(ui, self);
-        }
-
-        if self.show_cpu {
-            lameboy.get_cpu().imgui_display(ui, self);
-        }
-
-        if self.show_ppu {
-            lameboy.get_ppu().imgui_display(ui, self);
-        }
-        if self.apply_test_pattern {
-            lameboy
-                .get_ppu()
-                .apply_test_pattern(&self.test_pattern_type, self.ppu_mod as usize);
-        }
-
-        if self.show_emulator {
-            lameboy.imgui_display(ui, self);
-        }
-
-        if self.show_about {
-            ui.window(&im_str!("About - {} v{}", PKG_NAME, PKG_VERSION))
-                .size([250.0, 100.0], Condition::Always)
-                .collapsible(false)
-                .resizable(false)
-                .build(|| {
-                    ui.text(im_str!("{}", PKG_DESCRIPTION));
-                    ui.text(im_str!("{}", PKG_AUTHORS));
-                    if ui.button(im_str!("Close"), [75.0, 30.0]) {
-                        self.show_about = false;
-                    }
-                });
+            dump_memory_pc_lock: true,
+            disassemble_memory_addr: 0,
+            disassemble_memory_pc_lock: true,
+            disassemble_read_args: false,
+            breakpoints: Vec::new(),
+            memory_breakpoints: Vec::new(),
         }
     }
 }

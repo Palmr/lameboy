@@ -20,13 +20,13 @@ use std::path::Path;
 
 use cart::Cart;
 use cpu::CPU;
-use gui::imguidebug::ImguiDebug;
 use gui::GUI;
 use joypad::Joypad;
 use lameboy::Lameboy;
 use mmu::MMU;
 use ppu::PPU;
 
+mod dis;
 mod gui;
 
 mod cart;
@@ -79,21 +79,19 @@ fn main() {
     let mut lameboy = Lameboy::new(cpu);
     lameboy.reset();
 
-    let mut imgui_debug = ImguiDebug::new();
-
     loop {
         if lameboy.is_running() {
             lameboy.run_frame();
         }
 
-        gui.update_events(&mut imgui_debug, &mut lameboy);
+        gui.update_events(&mut lameboy);
 
-        if !imgui_debug.active {
+        if !lameboy.active {
             break;
         }
 
         gui.render(CLEAR_COLOR, &mut lameboy, |ui, emulator| {
-            imgui_debug.draw(ui, emulator);
+            emulator.draw(ui);
         });
     }
 }
