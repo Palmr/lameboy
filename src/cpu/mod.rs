@@ -10,9 +10,17 @@ pub mod instructions;
 pub mod interrupts;
 pub mod registers;
 
+enum InterruptFlagDelayStatus {
+    Waiting,
+    ChangeScheduled,
+    FinishedDelay,
+}
+
 pub struct CPU<'c> {
     pub registers: Registers,
     pub mmu: &'c mut MMU<'c>,
+    ie_delay_state: InterruptFlagDelayStatus,
+    de_delay_state: InterruptFlagDelayStatus,
     ime: bool,
     halt: bool,
     pub pc_history: Vec<u16>,
@@ -26,6 +34,8 @@ impl<'c> CPU<'c> {
         CPU {
             registers: Registers::new(),
             mmu,
+            ie_delay_state: InterruptFlagDelayStatus::Waiting,
+            de_delay_state: InterruptFlagDelayStatus::Waiting,
             ime: true,
             halt: false,
             pc_history,
@@ -61,6 +71,43 @@ impl<'c> CPU<'c> {
         let high = self.fetch8();
 
         u16::from(high) << 8 | u16::from(low)
+    }
+
+    /// Run a fetch, decode, and execute cycle on the CPU
+    pub fn cycle(&mut self) -> u8 {
+        self.pc_history[self.pc_history_pointer as usize] = self.registers.pc;
+        self.pc_history_pointer = self.pc_history_pointer.wrapping_add(1) % self.pc_history.len();
+
+        self.handle_ime_delay();
+
+        let mut duration = self.handle_instruction();
+        duration += self.handle_interrupt();
+
+        duration
+    }
+
+    /// EI/DI toggles IME the cycle after
+    fn handle_ime_delay(&mut self) {
+        match self.ie_delay_state {
+            InterruptFlagDelayStatus::Waiting => {}
+            InterruptFlagDelayStatus::ChangeScheduled => {
+                self.ie_delay_state = InterruptFlagDelayStatus::FinishedDelay
+            }
+            InterruptFlagDelayStatus::FinishedDelay => {
+                self.ime = true;
+                self.ie_delay_state = InterruptFlagDelayStatus::Waiting;
+            }
+        }
+        match self.de_delay_state {
+            InterruptFlagDelayStatus::Waiting => {}
+            InterruptFlagDelayStatus::ChangeScheduled => {
+                self.de_delay_state = InterruptFlagDelayStatus::FinishedDelay
+            }
+            InterruptFlagDelayStatus::FinishedDelay => {
+                self.ime = false;
+                self.de_delay_state = InterruptFlagDelayStatus::Waiting;
+            }
+        }
     }
 
     fn halt(&mut self) {
@@ -111,16 +158,12 @@ impl<'c> CPU<'c> {
         0
     }
 
-    /// Run a fetch, decode, and execute cycle on the CPU
-    pub fn cycle(&mut self) -> u8 {
-        self.pc_history[self.pc_history_pointer as usize] = self.registers.pc;
-        self.pc_history_pointer = self.pc_history_pointer.wrapping_add(1) % self.pc_history.len();
-
+    fn handle_instruction(&mut self) -> u8 {
         // Fetch
         let op = self.fetch8();
 
         // Decode & Execute
-        let mut duration = match op {
+        match op {
             0x00 => nop(self),
             0x01 => load_r16_d16(self, &Reg16::BC),
             0x02 => load_indirect_r16_r8(self, &Reg16::BC, &Reg8::A),
@@ -397,11 +440,7 @@ impl<'c> CPU<'c> {
             0xFD => undefined(self, op),
             0xFE => cp_d8(self),
             0xFF => reset(self, op),
-        };
-
-        duration += self.handle_interrupt();
-
-        duration
+        }
     }
 
     fn decode_cb_prefixed(&mut self) -> u8 {

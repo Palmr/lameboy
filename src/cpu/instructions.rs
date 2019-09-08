@@ -1,6 +1,6 @@
 use cpu::registers::Flags as RegisterFlags;
 use cpu::registers::{Reg16, Reg8};
-use cpu::CPU;
+use cpu::{InterruptFlagDelayStatus, CPU};
 
 /// Panic if anything tries to run an undefined opcode, likely means the emulator has a bug.
 pub fn undefined(cpu: &CPU, opcode: u8) -> u8 {
@@ -79,7 +79,11 @@ pub fn halt(cpu: &mut CPU) -> u8 {
 /// EI
 /// ```
 pub fn interrupts(cpu: &mut CPU, enabled: bool) -> u8 {
-    cpu.ime = enabled;
+    if enabled {
+        cpu.ie_delay_state = InterruptFlagDelayStatus::ChangeScheduled;
+    } else {
+        cpu.de_delay_state = InterruptFlagDelayStatus::ChangeScheduled;
+    }
 
     4
 }
