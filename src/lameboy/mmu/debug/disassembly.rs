@@ -123,7 +123,7 @@ fn get_instruction_debug_string(
                 InstructionArg::Data8 => {
                     let formatted_arg = format!("0x{:02X}", mmu.read8_safe(instruction_addr + 1));
                     let formatted_addr_arg =
-                        format!("0XFF00 + 0x{:02X}", mmu.read8_safe(instruction_addr + 1));
+                        format!("0xFF00 + 0x{:02X}", mmu.read8_safe(instruction_addr + 1));
                     String::from(instruction.name)
                         .replace("d8", formatted_arg.as_str())
                         .replace("r8", formatted_arg.as_str())
