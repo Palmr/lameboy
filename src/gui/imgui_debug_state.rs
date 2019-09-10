@@ -19,6 +19,7 @@ pub struct ImguiDebugState {
     pub disassemble_memory_addr: i32,
     pub disassemble_memory_pc_lock: bool,
     pub disassemble_read_args: bool,
+    pub disassemble_show_raw: bool,
     pub breakpoints: Vec<u16>,
     pub memory_breakpoints: Vec<u16>,
 }
@@ -45,7 +46,8 @@ impl ImguiDebugState {
             dump_memory_pc_lock: true,
             disassemble_memory_addr: 0,
             disassemble_memory_pc_lock: true,
-            disassemble_read_args: false,
+            disassemble_read_args: true,
+            disassemble_show_raw: false,
             breakpoints: Vec::new(),
             memory_breakpoints: Vec::new(),
         }

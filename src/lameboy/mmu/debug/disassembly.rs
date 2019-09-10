@@ -14,8 +14,10 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
                 &mut imgui_debug.disassemble_memory_pc_lock,
             );
             ui.same_line(0.0);
-            ui.checkbox(im_str!("Read Args"), &mut imgui_debug.disassemble_read_args);
+            ui.checkbox(im_str!("Raw"), &mut imgui_debug.disassemble_show_raw);
             ui.same_line(0.0);
+            ui.checkbox(im_str!("Read Args"), &mut imgui_debug.disassemble_read_args);
+
             ui.input_int(im_str!("Addr"), &mut imgui_debug.disassemble_memory_addr)
                 .chars_hexadecimal(true)
                 .build();
@@ -33,12 +35,16 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
                 let opcode = mmu.read8_safe(instruction_addr);
                 let instruction = dis::decode_instruction(opcode);
 
-                let instruction_debug_str = get_instruction_debug_string(
-                    &instruction,
-                    imgui_debug.disassemble_read_args,
-                    mmu,
-                    instruction_addr,
-                );
+                let instruction_debug_str = if imgui_debug.disassemble_show_raw {
+                    get_raw_instruction_debug_string(&instruction, mmu, instruction_addr)
+                } else {
+                    get_instruction_debug_string(
+                        &instruction,
+                        imgui_debug.disassemble_read_args,
+                        mmu,
+                        instruction_addr,
+                    )
+                };
 
                 let addr_string = im_str!("[0x{:04X}] ", instruction_addr);
                 let disassembly_string = im_str!("{}", instruction_debug_str);
@@ -48,7 +54,10 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
                 } else {
                     ui.push_style_color(StyleColor::Text, [0.7, 0.7, 0.7, 1.0])
                 };
-                if Selectable::new(&addr_string).selected(instruction_addr == imgui_debug.program_counter).build(ui) {
+                if Selectable::new(&addr_string)
+                    .selected(instruction_addr == imgui_debug.program_counter)
+                    .build(ui)
+                {
                     match imgui_debug
                         .breakpoints
                         .iter()
@@ -77,6 +86,28 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
                     instruction_addr.wrapping_add(u16::from(instruction.get_length()));
             }
         });
+}
+
+fn get_raw_instruction_debug_string(
+    instruction: &Instruction,
+    mmu: &MMU,
+    instruction_addr: u16,
+) -> String {
+    format!(
+        "0x{:02X}{}",
+        mmu.read8_safe(instruction_addr),
+        match &instruction.arg {
+            None => String::new(),
+            Some(arg) => match arg {
+                InstructionArg::Data8 => format!(" 0x{:02X}", mmu.read8_safe(instruction_addr + 1)),
+                InstructionArg::Data16 => format!(
+                    " 0x{:02X} 0x{:02X}",
+                    mmu.read8_safe(instruction_addr + 1),
+                    mmu.read8_safe(instruction_addr + 2)
+                ),
+            },
+        }
+    )
 }
 
 fn get_instruction_debug_string(
