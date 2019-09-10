@@ -1,19 +1,16 @@
-use imgui::{Condition, Selectable, StyleColor, Ui, Window};
-
 use cart::Cart;
-use dis;
-use dis::InstructionArg;
-use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use joypad::Joypad;
+use lameboy::joypad::Joypad;
 use mmu::mmuobject::MmuObject;
 use ppu::PPU;
 
 pub mod mmuobject;
 
-pub struct MMU<'m> {
-    pub cart: &'m mut Cart,
-    pub ppu: &'m mut PPU,
-    pub joypad: &'m mut Joypad,
+mod debug;
+
+pub struct MMU {
+    pub cart: Cart,
+    pub ppu: PPU,
+    pub joypad: Joypad,
     /// Work RAM 0 [0xC000 - 0xCFFF]
     wram0: Box<[u8; 0x1000]>,
     /// Work RAM 1 [0xD000 - 0xDFFF] (Bank 1-7 in CGB Mode)
@@ -30,8 +27,8 @@ pub struct MMU<'m> {
     pub breakpoint_hit: u16,
 }
 
-impl<'m> MMU<'m> {
-    pub fn new(cart: &'m mut Cart, ppu: &'m mut PPU, joypad: &'m mut Joypad) -> MMU<'m> {
+impl MMU {
+    pub fn new(cart: Cart, ppu: PPU, joypad: Joypad) -> MMU {
         MMU {
             cart,
             ppu,
@@ -177,193 +174,11 @@ impl<'m> MMU<'m> {
 
         ((u16::from(high)) << 8) | (u16::from(low))
     }
-}
 
-impl<'m> ImguiDebuggable for MMU<'m> {
-    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
-        Window::new(im_str!("MMU"))
-            .size([285.0, 122.0], Condition::FirstUseEver)
-            .resizable(true)
-            .build(ui, || {
-                ui.input_int(im_str!("Addr"), &mut imgui_debug.input_memory_addr)
-                    .chars_hexadecimal(true)
-                    .build();
-                ui.text(im_str!(
-                    "[0x{:04X}] = 0x{:02x}",
-                    imgui_debug.input_memory_addr,
-                    self.read8(imgui_debug.input_memory_addr as u16)
-                ));
-                ui.separator();
-                ui.input_int(im_str!("Value"), &mut imgui_debug.input_memory_value)
-                    .chars_hexadecimal(true)
-                    .build();
-                if ui.small_button(im_str!("Write")) {
-                    self.write8(
-                        imgui_debug.input_memory_addr as u16,
-                        imgui_debug.input_memory_value as u8,
-                    );
-                }
-            });
+    pub fn read16_safe(&self, addr: u16) -> u16 {
+        let low = self.read8_safe(addr);
+        let high = self.read8_safe(addr.wrapping_add(1));
 
-        Window::new(im_str!("MMU - dump"))
-            .size([260.0, 140.0], Condition::FirstUseEver)
-            .resizable(true)
-            .build(ui, || {
-                ui.checkbox(im_str!("Lock to PC"), &mut imgui_debug.dump_memory_pc_lock);
-                ui.same_line(0.0);
-                ui.input_int(im_str!("Addr"), &mut imgui_debug.dump_memory_addr)
-                    .chars_hexadecimal(true)
-                    .build();
-                ui.separator();
-
-                let bytes_per_row = 16;
-                let context_size = 5;
-
-                let dump_memory_addr: u16 = if imgui_debug.dump_memory_pc_lock {
-                    imgui_debug.program_counter
-                } else {
-                    imgui_debug.dump_memory_addr as u16
-                };
-
-                let memory_addr_row = dump_memory_addr - (dump_memory_addr % bytes_per_row);
-
-                let mut memory_addr_low =
-                    memory_addr_row.wrapping_sub(context_size * bytes_per_row);
-                let memory_addr_high = memory_addr_row.wrapping_add(context_size * bytes_per_row);
-
-                if memory_addr_low > memory_addr_high {
-                    memory_addr_low = 0;
-                }
-
-                let mut selected_mem_ptr = None;
-                for row in 0..(context_size * 2) + 1 {
-                    let row_addr = memory_addr_low + row * bytes_per_row;
-
-                    ui.text_colored([0.7, 0.7, 0.7, 1.0], im_str!("[0x{:04X}]", row_addr));
-
-                    for offset in 0..bytes_per_row {
-                        let mem_ptr = row_addr + offset;
-                        let colour = if mem_ptr == dump_memory_addr {
-                            [0.5, 1.0, 0.5, 1.0]
-                        } else if imgui_debug.memory_breakpoints.contains(&mem_ptr) {
-                            [1.0, 0.4, 0.4, 1.0]
-                        } else {
-                            [0.8, 0.8, 0.8, 1.0]
-                        };
-
-                        ui.same_line(0.0);
-
-                        let style = ui.push_style_color(StyleColor::Text, colour);
-                        if Selectable::new(&im_str!("{:02X}", self.read8(mem_ptr)))
-                            .size([11.0, 11.0])
-                            .build(ui)
-                        {
-                            selected_mem_ptr = Some(mem_ptr);
-                        }
-                        style.pop(ui);
-                    }
-                }
-
-                if let Some(mem_ptr) = selected_mem_ptr {
-                    match imgui_debug
-                        .memory_breakpoints
-                        .iter()
-                        .position(|&r| r == mem_ptr)
-                    {
-                        None => {
-                            imgui_debug.memory_breakpoints.push(mem_ptr);
-                        }
-                        Some(idx) => {
-                            imgui_debug.memory_breakpoints.remove(idx);
-                        }
-                    }
-                }
-            });
-
-        Window::new(im_str!("Disassembled code"))
-            .size([260.0, 140.0], Condition::FirstUseEver)
-            .resizable(true)
-            .build(ui, || {
-                ui.checkbox(
-                    im_str!("Lock to PC"),
-                    &mut imgui_debug.disassemble_memory_pc_lock,
-                );
-                ui.same_line(0.0);
-                ui.checkbox(im_str!("Read Args"), &mut imgui_debug.disassemble_read_args);
-                ui.same_line(0.0);
-                ui.input_int(im_str!("Addr"), &mut imgui_debug.disassemble_memory_addr)
-                    .chars_hexadecimal(true)
-                    .build();
-                ui.separator();
-
-                let context_size = 20;
-
-                let mut dump_memory_addr: u16 = if imgui_debug.disassemble_memory_pc_lock {
-                    imgui_debug.program_counter
-                } else {
-                    imgui_debug.disassemble_memory_addr as u16
-                };
-
-                for _ in 0..context_size {
-                    let opcode = self.read8_safe(dump_memory_addr);
-                    let instruction = dis::decode_instruction(opcode);
-
-                    let instruction_name = String::from(instruction.name);
-                    let instruction_debug_str: String = if imgui_debug.disassemble_read_args {
-                        match &instruction.arg {
-                            None => instruction_name,
-                            Some(arg) => match arg {
-                                InstructionArg::Data8 => {
-                                    let formatted_arg =
-                                        format!("0x{:02X}", self.read8_safe(dump_memory_addr + 1));
-                                    let formatted_addr_arg = format!(
-                                        "0XFF00 + 0x{:02X}",
-                                        self.read8_safe(dump_memory_addr + 1)
-                                    );
-                                    instruction_name
-                                        .replace("d8", formatted_arg.as_str())
-                                        .replace("r8", formatted_arg.as_str())
-                                        .replace("a8", formatted_addr_arg.as_str())
-                                }
-                                InstructionArg::Data16 => {
-                                    let formatted_arg =
-                                        format!("0x{:04X}", self.read16(dump_memory_addr + 1));
-                                    instruction_name
-                                        .replace("d16", formatted_arg.as_str())
-                                        .replace("a16", formatted_arg.as_str())
-                                }
-                            },
-                        }
-                    } else {
-                        instruction_name
-                    };
-
-                    let style = if imgui_debug.breakpoints.contains(&dump_memory_addr) {
-                        ui.push_style_color(StyleColor::Text, [1.0, 0.4, 0.4, 1.0])
-                    } else {
-                        ui.push_style_color(StyleColor::Text, [0.7, 0.7, 0.7, 1.0])
-                    };
-                    if Selectable::new(&im_str!("[0x{:04X}] ", dump_memory_addr)).build(ui) {
-                        match imgui_debug
-                            .breakpoints
-                            .iter()
-                            .position(|&r| r == dump_memory_addr)
-                        {
-                            None => {
-                                imgui_debug.breakpoints.push(dump_memory_addr);
-                            }
-                            Some(idx) => {
-                                imgui_debug.breakpoints.remove(idx);
-                            }
-                        }
-                    }
-                    style.pop(ui);
-
-                    ui.same_line(0.0);
-                    ui.text(im_str!("{}", instruction_debug_str));
-
-                    dump_memory_addr += instruction.get_length() as u16;
-                }
-            });
+        ((u16::from(high)) << 8) | (u16::from(low))
     }
 }

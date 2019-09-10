@@ -1,0 +1,18 @@
+use gui::imguidebug::ImguiDebug;
+use imgui::{Condition, Ui, Window};
+
+use {PKG_AUTHORS, PKG_DESCRIPTION, PKG_NAME, PKG_VERSION};
+
+pub fn about_window<'a>(ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
+    Window::new(&im_str!("About - {} v{}", PKG_NAME, PKG_VERSION))
+        .size([250.0, 100.0], Condition::Always)
+        .collapsible(false)
+        .resizable(false)
+        .build(ui, || {
+            ui.text(im_str!("{}", PKG_DESCRIPTION));
+            ui.text(im_str!("{}", PKG_AUTHORS));
+            if ui.button(im_str!("Close"), [75.0, 30.0]) {
+                imgui_debug.show_about = false;
+            }
+        });
+}

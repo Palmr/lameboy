@@ -18,20 +18,14 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-use cart::Cart;
-use cpu::CPU;
 use gui::GUI;
-use joypad::Joypad;
 use lameboy::Lameboy;
-use mmu::MMU;
-use ppu::PPU;
 
 mod dis;
 mod gui;
 
 mod cart;
 mod cpu;
-mod joypad;
 mod lameboy;
 mod mmu;
 mod ppu;
@@ -70,13 +64,7 @@ fn main() {
     let mut gui = GUI::init((640f64, 576f64), window_title);
 
     // Create all our hardware instances
-    let mut joypad = Joypad::new();
-    let mut cart = Cart::new(data);
-    let mut ppu = PPU::new(&gui.display);
-    let mut mmu = MMU::new(&mut cart, &mut ppu, &mut joypad);
-    let cpu = CPU::new(&mut mmu);
-
-    let mut lameboy = Lameboy::new(cpu);
+    let mut lameboy = Lameboy::new(data, &gui);
     lameboy.reset();
 
     loop {
@@ -90,8 +78,6 @@ fn main() {
             break;
         }
 
-        gui.render(CLEAR_COLOR, &mut lameboy, |ui, emulator| {
-            emulator.draw(ui);
-        });
+        gui.render(CLEAR_COLOR, &mut lameboy);
     }
 }

@@ -3,7 +3,7 @@ use std::time::Instant;
 use glium::backend::glutin::glutin::{ElementState, VirtualKeyCode};
 use glium::glutin::{self, Event, WindowEvent};
 use glium::{Display, Surface};
-use imgui::{Context, FontConfig, FontSource, Ui};
+use imgui::{Context, FontConfig, FontSource};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
 
@@ -65,12 +65,7 @@ impl GUI {
         }
     }
 
-    pub fn render<F: FnMut(&Ui, &mut Lameboy)>(
-        &mut self,
-        clear_color: (f32, f32, f32, f32),
-        mut lameboy: &mut Lameboy,
-        mut run_ui: F,
-    ) {
+    pub fn render(&mut self, clear_color: (f32, f32, f32, f32), lameboy: &mut Lameboy) {
         let gl_window = self.display.gl_window();
         let window = gl_window.window();
 
@@ -86,7 +81,8 @@ impl GUI {
 
         lameboy.get_ppu().draw(&mut target);
 
-        run_ui(&ui, &mut lameboy);
+        //        run_ui(&ui, &mut lameboy);
+        lameboy.imgui_display(&ui);
 
         let draw_data = ui.render();
         self.renderer

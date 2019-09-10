@@ -16,9 +16,9 @@ enum InterruptFlagDelayStatus {
     FinishedDelay,
 }
 
-pub struct CPU<'c> {
+pub struct CPU {
     pub registers: Registers,
-    pub mmu: &'c mut MMU<'c>,
+    pub mmu: MMU,
     ie_delay_state: InterruptFlagDelayStatus,
     de_delay_state: InterruptFlagDelayStatus,
     ime: bool,
@@ -27,8 +27,8 @@ pub struct CPU<'c> {
     pub pc_history_pointer: usize,
 }
 
-impl<'c> CPU<'c> {
-    pub fn new(mmu: &'c mut MMU<'c>) -> CPU<'c> {
+impl CPU {
+    pub fn new(mmu: MMU) -> CPU {
         let pc_history = vec![0x00; 200];
 
         CPU {
@@ -527,7 +527,7 @@ impl<'c> CPU<'c> {
     }
 }
 
-impl<'c> ImguiDebuggable for CPU<'c> {
+impl ImguiDebuggable for CPU {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebug) {
         Window::new(im_str!("CPU"))
             .size([260.0, 140.0], Condition::FirstUseEver)
