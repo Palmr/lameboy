@@ -373,13 +373,13 @@ pub fn load_indirect_r16_increment_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, 
     let value = cpu.registers.read8(r8);
 
     // Copy from memory using 16-bit register value as address
-    let a16_addr = cpu.registers.read16(r16_indirect_addr);
+    let indirect_addr = cpu.registers.read16(r16_indirect_addr);
 
-    cpu.mmu.write8(a16_addr, value);
+    cpu.mmu.write8(indirect_addr, value);
 
     // Increment the 16-bit indirect address register
     cpu.registers
-        .write16(r16_indirect_addr, a16_addr.wrapping_add(1));
+        .write16(r16_indirect_addr, indirect_addr.wrapping_add(1));
 
     8
 }
@@ -392,19 +392,18 @@ pub fn load_indirect_r16_increment_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, 
 /// # Examples
 ///
 /// ```asm
-/// LD A, (HL-) ; A <- memory[HL]; HL--
+/// LD A, (HL-) ; memory[HL] <- A; HL--
 /// ```
 pub fn load_indirect_r16_decrement_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
+    let indirect_addr = cpu.registers.read16(r16_indirect_addr);
 
-    // Copy from memory using 16-bit register value as address
-    let a16_addr = cpu.registers.read16(r16_indirect_addr);
+    // Write to memory using 16-bit register value as address
+    cpu.mmu.write8(indirect_addr, value);
 
-    cpu.mmu.write8(a16_addr, value);
-
-    // Increment the 16-bit indirect address register
+    // Decrement the 16-bit indirect address register
     cpu.registers
-        .write16(r16_indirect_addr, a16_addr.wrapping_sub(1));
+        .write16(r16_indirect_addr, indirect_addr.wrapping_sub(1));
 
     8
 }
@@ -421,7 +420,8 @@ pub fn load_indirect_r16_decrement_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, 
 /// ```
 pub fn load_r8_indirect_r16(cpu: &mut CPU, r8_target: &Reg8, r16_indirect_addr: &Reg16) -> u8 {
     // Copy from memory using 16-bit register value as address
-    let value = cpu.mmu.read8(cpu.registers.read16(r16_indirect_addr));
+    let indirect_addr = cpu.registers.read16(r16_indirect_addr);
+    let value = cpu.mmu.read8(indirect_addr);
     cpu.registers.write8(r8_target, value);
 
     8
@@ -443,14 +443,14 @@ pub fn load_r8_indirect_r16_increment(
     r16_indirect_addr: &Reg16,
 ) -> u8 {
     // Copy from memory using 16-bit register value as address
-    let r16_value = cpu.registers.read16(r16_indirect_addr);
+    let indirect_addr = cpu.registers.read16(r16_indirect_addr);
 
-    let value = cpu.mmu.read8(r16_value);
+    let value = cpu.mmu.read8(indirect_addr);
     cpu.registers.write8(r8_target, value);
 
     // Increment the 16-bit indirect address register
     cpu.registers
-        .write16(r16_indirect_addr, r16_value.wrapping_add(1));
+        .write16(r16_indirect_addr, indirect_addr.wrapping_add(1));
 
     8
 }
@@ -471,14 +471,14 @@ pub fn load_r8_indirect_r16_decrement(
     r16_indirect_addr: &Reg16,
 ) -> u8 {
     // Copy from memory using 16-bit register value as address
-    let r16_value = cpu.registers.read16(r16_indirect_addr);
+    let indirect_addr = cpu.registers.read16(r16_indirect_addr);
 
-    let value = cpu.mmu.read8(r16_value);
+    let value = cpu.mmu.read8(indirect_addr);
     cpu.registers.write8(r8_target, value);
 
     // Decrement the 16-bit indirect address register
     cpu.registers
-        .write16(r16_indirect_addr, r16_value.wrapping_sub(1));
+        .write16(r16_indirect_addr, indirect_addr.wrapping_sub(1));
 
     8
 }
@@ -494,9 +494,11 @@ pub fn load_r8_indirect_r16_decrement(
 /// ```
 pub fn load_indirect_r16_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, r8_source: &Reg8) -> u8 {
     // Copy from source register to memory using indirect register
+    let indirect_addr = cpu.registers.read16(r16_indirect_addr);
+    let register_val = cpu.registers.read8(r8_source);
     cpu.mmu.write8(
-        cpu.registers.read16(r16_indirect_addr),
-        cpu.registers.read8(r8_source),
+        indirect_addr,
+        register_val,
     );
 
     8
@@ -516,8 +518,8 @@ pub fn load_indirect_r16_d8(cpu: &mut CPU, r16_indirect_addr: &Reg16) -> u8 {
     let value = cpu.fetch8();
 
     // Copy from source register to memory using indirect register
-    cpu.mmu
-        .write8(cpu.registers.read16(r16_indirect_addr), value);
+    let indirect_addr = cpu.registers.read16(r16_indirect_addr);
+    cpu.mmu.write8(indirect_addr, value);
 
     12
 }
@@ -636,7 +638,7 @@ pub fn load_reg_a_high_mem_d8(cpu: &mut CPU) -> u8 {
 /// LD (C), A ; memory[0xFF00 + C] <- A
 /// ```
 pub fn load_high_mem_reg_c_reg_a(cpu: &mut CPU) -> u8 {
-    let address = 0xFF00 + u16::from(cpu.registers.c);;
+    let address = 0xFF00 + u16::from(cpu.registers.c);
 
     // Write the byte to memory
     cpu.mmu.write8(address, cpu.registers.a);
@@ -655,7 +657,7 @@ pub fn load_high_mem_reg_c_reg_a(cpu: &mut CPU) -> u8 {
 /// LDH A, (C) ; A <- memory[0xFF00 + C]
 /// ```
 pub fn load_reg_a_high_mem_reg_c(cpu: &mut CPU) -> u8 {
-    let address = 0xFF00 + u16::from(cpu.registers.c);;
+    let address = 0xFF00 + u16::from(cpu.registers.c);
 
     cpu.registers.a = cpu.mmu.read8(address);
 
@@ -723,11 +725,11 @@ pub fn load_reg_hl_reg_sp_d8(cpu: &mut CPU) -> u8 {
     cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
     cpu.registers.f.set(
         RegisterFlags::HALF_CARRY,
-        ((cpu.registers.sp & 0x0F00) + (value & 0x0F00)) > 0x0F00,
+        ((cpu.registers.sp & 0x0F) + (value & 0x0F)) > 0x0F,
     );
     cpu.registers.f.set(
         RegisterFlags::CARRY,
-        (u32::from(cpu.registers.sp) + u32::from(value)) > 0xFFFF,
+        combined < cpu.registers.sp,
     );
 
     12
@@ -1180,7 +1182,7 @@ fn alu_add_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) {
 
     cpu.registers.a = original_a.wrapping_add(d8).wrapping_add(cy);
 
-    cpu.registers.f.set(RegisterFlags::ZERO, original_a == 0);
+    cpu.registers.f.set(RegisterFlags::ZERO, cpu.registers.a == 0);
     cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
     cpu.registers.f.set(
         RegisterFlags::HALF_CARRY,
@@ -1188,7 +1190,7 @@ fn alu_add_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) {
     );
     cpu.registers.f.set(
         RegisterFlags::CARRY,
-        (u16::from(original_a) + u16::from(d8) + u16::from(cy)) > 0xFF,
+        cpu.registers.a < original_a,
     );
 }
 
@@ -1341,7 +1343,7 @@ fn alu_sub_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) {
     );
     cpu.registers.f.set(
         RegisterFlags::CARRY,
-        u16::from(original_a) < u16::from(d8) + u16::from(cy),
+        cpu.registers.a > original_a,
     );
 }
 
@@ -2181,10 +2183,10 @@ pub fn bit_test(cpu: &mut CPU, opcode: u8) -> u8 {
 
     let tested_value = value & (0x01 << bit_index);
 
-    cpu.registers.f.set(RegisterFlags::ZERO, tested_value != 0);
+    cpu.registers.f.set(RegisterFlags::ZERO, tested_value == 0);
     cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
-    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
-    cpu.registers.f.set(RegisterFlags::CARRY, false);
+    cpu.registers.f.set(RegisterFlags::HALF_CARRY, true);
+//    cpu.registers.f.set(RegisterFlags::CARRY, false);
 
     duration
 }
