@@ -32,8 +32,7 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
             };
 
             for _ in 0..context_size {
-                let opcode = mmu.read8_safe(instruction_addr);
-                let instruction = dis::decode_instruction(opcode);
+                let instruction = dis::decode_instruction(&instruction_addr, &mmu);
 
                 let instruction_debug_str = if imgui_debug.disassemble_show_raw {
                     get_raw_instruction_debug_string(&instruction, mmu, instruction_addr)

@@ -1,7 +1,10 @@
 use dis::Instruction;
 use dis::InstructionArg::{Data16, Data8};
+use lameboy::mmu::MMU;
 
-pub fn decode_instruction(opcode: u8) -> Instruction {
+pub fn decode_instruction(instruction_addr: &u16, mmu: &MMU) -> Instruction {
+    let opcode = mmu.read8_safe(*instruction_addr);
+
     match opcode {
         0x00 => Instruction::new("nop", None),
         0x01 => Instruction::new("ld bc, d16", Some(Data16)),
@@ -223,7 +226,7 @@ pub fn decode_instruction(opcode: u8) -> Instruction {
         0xC8 => Instruction::new("ret z", None),
         0xC9 => Instruction::new("ret", None),
         0xCA => Instruction::new("jp z,a16", Some(Data16)),
-        0xCB => decode_cb_prefix_instruction(opcode),
+        0xCB => decode_cb_prefix_instruction(instruction_addr, mmu),
         0xCC => Instruction::new("call z,a16", Some(Data16)),
         0xCD => Instruction::new("call a16", Some(Data16)),
         0xCE => Instruction::new("adc d8", Some(Data8)),
@@ -282,7 +285,9 @@ pub fn decode_instruction(opcode: u8) -> Instruction {
     }
 }
 
-fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
+fn decode_cb_prefix_instruction(instruction_addr: &u16, mmu: &MMU) -> Instruction {
+    let opcode = mmu.read8_safe(instruction_addr.wrapping_add(1));
+
     match opcode {
         0x00 => Instruction::new("rlc b", Some(Data8)),
         0x01 => Instruction::new("rlc c", Some(Data8)),
@@ -352,7 +357,7 @@ fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
         0x3E => Instruction::new("srl [hl]", Some(Data8)),
         0x3F => Instruction::new("srl a", Some(Data8)),
 
-        // Loads
+
         0x40 => Instruction::new("bit 0, b", Some(Data8)),
         0x41 => Instruction::new("bit 0, c", Some(Data8)),
         0x42 => Instruction::new("bit 0, d", Some(Data8)),
@@ -369,7 +374,6 @@ fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
         0x4D => Instruction::new("bit 1, l", Some(Data8)),
         0x4E => Instruction::new("bit 1, [hl]", Some(Data8)),
         0x4F => Instruction::new("bit 1, a", Some(Data8)),
-
         0x50 => Instruction::new("bit 2, b", Some(Data8)),
         0x51 => Instruction::new("bit 2, c", Some(Data8)),
         0x52 => Instruction::new("bit 2, d", Some(Data8)),
@@ -386,7 +390,6 @@ fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
         0x5D => Instruction::new("bit 3, l", Some(Data8)),
         0x5E => Instruction::new("bit 3, [hl]", Some(Data8)),
         0x5F => Instruction::new("bit 3, a", Some(Data8)),
-
         0x60 => Instruction::new("bit 4, b", Some(Data8)),
         0x61 => Instruction::new("bit 4, c", Some(Data8)),
         0x62 => Instruction::new("bit 4, d", Some(Data8)),
@@ -403,7 +406,6 @@ fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
         0x6D => Instruction::new("bit 5, l", Some(Data8)),
         0x6E => Instruction::new("bit 5, [hl]", Some(Data8)),
         0x6F => Instruction::new("bit 5, a", Some(Data8)),
-
         0x70 => Instruction::new("bit 6, b", Some(Data8)),
         0x71 => Instruction::new("bit 6, c", Some(Data8)),
         0x72 => Instruction::new("bit 6, d", Some(Data8)),
@@ -421,7 +423,6 @@ fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
         0x7E => Instruction::new("bit 7, [hl]", Some(Data8)),
         0x7F => Instruction::new("bit 7, a'", Some(Data8)),
 
-        // ADDs
         0x80 => Instruction::new("res 0, b", Some(Data8)),
         0x81 => Instruction::new("res 0, c", Some(Data8)),
         0x82 => Instruction::new("res 0, d", Some(Data8)),
@@ -438,8 +439,6 @@ fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
         0x8D => Instruction::new("res 1, l", Some(Data8)),
         0x8E => Instruction::new("res 1, [hl]", Some(Data8)),
         0x8F => Instruction::new("res 1, a", Some(Data8)),
-
-        // SUBs
         0x90 => Instruction::new("res 2, b", Some(Data8)),
         0x91 => Instruction::new("res 2, c", Some(Data8)),
         0x92 => Instruction::new("res 2, d", Some(Data8)),
@@ -456,8 +455,6 @@ fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
         0x9D => Instruction::new("res 3, l", Some(Data8)),
         0x9E => Instruction::new("res 3, [hl]", Some(Data8)),
         0x9F => Instruction::new("res 3, a", Some(Data8)),
-
-        // ANDs & XORs
         0xA0 => Instruction::new("res 4, b", Some(Data8)),
         0xA1 => Instruction::new("res 4, c", Some(Data8)),
         0xA2 => Instruction::new("res 4, d", Some(Data8)),
@@ -474,8 +471,6 @@ fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
         0xAD => Instruction::new("res 5, l", Some(Data8)),
         0xAE => Instruction::new("res 5, [hl]", Some(Data8)),
         0xAF => Instruction::new("res 5, a", Some(Data8)),
-
-        // ORs & CPs
         0xB0 => Instruction::new("res 6, b", Some(Data8)),
         0xB1 => Instruction::new("res 6, c", Some(Data8)),
         0xB2 => Instruction::new("res 6, d", Some(Data8)),
@@ -509,7 +504,6 @@ fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
         0xCD => Instruction::new("set 1, l", Some(Data8)),
         0xCE => Instruction::new("set 1, [hl]", Some(Data8)),
         0xCF => Instruction::new("set 1, a", Some(Data8)),
-
         0xD0 => Instruction::new("set 2, b", Some(Data8)),
         0xD1 => Instruction::new("set 2, c", Some(Data8)),
         0xD2 => Instruction::new("set 2, d", Some(Data8)),
@@ -526,7 +520,6 @@ fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
         0xDD => Instruction::new("set 3, l", Some(Data8)),
         0xDE => Instruction::new("set 3, [hl]", Some(Data8)),
         0xDF => Instruction::new("set 3, a", Some(Data8)),
-
         0xE0 => Instruction::new("set 4, b", Some(Data8)),
         0xE1 => Instruction::new("set 4, c", Some(Data8)),
         0xE2 => Instruction::new("set 4, d", Some(Data8)),
@@ -543,7 +536,6 @@ fn decode_cb_prefix_instruction(opcode: u8) -> Instruction {
         0xED => Instruction::new("set 5, l", Some(Data8)),
         0xEE => Instruction::new("set 5, [hl]", Some(Data8)),
         0xEF => Instruction::new("set 5, a", Some(Data8)),
-
         0xF0 => Instruction::new("set 6, b", Some(Data8)),
         0xF1 => Instruction::new("set 6, c", Some(Data8)),
         0xF2 => Instruction::new("set 6, d", Some(Data8)),
