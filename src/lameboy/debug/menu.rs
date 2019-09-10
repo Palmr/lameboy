@@ -4,23 +4,22 @@ use lameboy::Lameboy;
 pub fn build_menu<'a>(lameboy: &mut Lameboy, ui: &Ui<'a>) {
     if let Some(menu_bar) = ui.begin_main_menu_bar() {
         if let Some(menu) = ui.begin_menu(im_str!("File"), true) {
-            MenuItem::new(im_str!("Open ROM"))
-                .shortcut(im_str!("CTRL+O"))
-                .build(ui);
+            MenuItem::new(im_str!("Open ROM")).build(ui);
             MenuItem::new(im_str!("Reset")).build(ui);
             ui.separator();
-            MenuItem::new(im_str!("Exit")).build_with_ref(ui, &mut lameboy.active);
+
+            lameboy.active = !MenuItem::new(im_str!("Exit")).build(ui);
 
             menu.end(ui);
         }
 
         if let Some(menu) = ui.begin_menu(im_str!("Debug"), true) {
-            MenuItem::new(im_str!("Emulator")).build_with_ref(ui, &mut lameboy.debug.show_emulator);
-            MenuItem::new(im_str!("Memory")).build_with_ref(ui, &mut lameboy.debug.show_memory);
-            MenuItem::new(im_str!("CPU")).build_with_ref(ui, &mut lameboy.debug.show_cpu);
-            MenuItem::new(im_str!("PPU")).build_with_ref(ui, &mut lameboy.debug.show_ppu);
-            MenuItem::new(im_str!("Cart")).build_with_ref(ui, &mut lameboy.debug.show_cart);
-            MenuItem::new(im_str!("Joypad")).build_with_ref(ui, &mut lameboy.debug.show_joypad);
+            ui.checkbox(im_str!("Emulator"), &mut lameboy.debug.show_emulator);
+            ui.checkbox(im_str!("Memory"), &mut lameboy.debug.show_memory);
+            ui.checkbox(im_str!("CPU"), &mut lameboy.debug.show_cpu);
+            ui.checkbox(im_str!("PPU"), &mut lameboy.debug.show_ppu);
+            ui.checkbox(im_str!("Cart"), &mut lameboy.debug.show_cart);
+            ui.checkbox(im_str!("Joypad"), &mut lameboy.debug.show_joypad);
 
             menu.end(ui);
         }
