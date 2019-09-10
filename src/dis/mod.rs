@@ -1,8 +1,10 @@
 pub use dis::instructions::decode_instruction;
+pub use dis::memory_locations::get_memory_comment;
 use lameboy::mmu::MMU;
 use std::fmt;
 
 mod instructions;
+mod memory_locations;
 
 pub struct Instruction {
     pub name: &'static str,
