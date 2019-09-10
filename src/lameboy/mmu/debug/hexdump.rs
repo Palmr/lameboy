@@ -33,7 +33,7 @@ pub fn hexdump_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDebugSt
             }
 
             let mut selected_mem_ptr = None;
-            for row in 0..(context_size * 2) + 1 {
+            for row in 0..=(context_size * 2) {
                 let row_addr = memory_addr_low + row * bytes_per_row;
 
                 ui.text_colored([0.7, 0.7, 0.7, 1.0], im_str!("[0x{:04X}]", row_addr));

@@ -6,6 +6,7 @@ use lameboy::ppu::PPU;
 
 pub mod cart;
 pub mod cpu;
+pub mod interrupts;
 pub mod joypad;
 pub mod mmu;
 pub mod ppu;

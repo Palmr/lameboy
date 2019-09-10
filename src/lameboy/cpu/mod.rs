@@ -1,12 +1,12 @@
 use lameboy::cpu::instructions::*;
-use lameboy::cpu::interrupts::*;
 use lameboy::cpu::registers::*;
+use lameboy::interrupts::*;
 use lameboy::mmu::MMU;
 
-mod debug;
 pub mod instructions;
-pub mod interrupts;
 pub mod registers;
+
+mod debug;
 
 enum InterruptFlagDelayStatus {
     Waiting,

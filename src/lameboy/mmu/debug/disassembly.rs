@@ -87,7 +87,7 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
                 ui.same_line(0.0);
                 ui.text(im_str!("{}", instruction_debug_str));
 
-                dump_memory_addr += instruction.get_length() as u16;
+                dump_memory_addr += u16::from(instruction.get_length());
             }
         });
 }

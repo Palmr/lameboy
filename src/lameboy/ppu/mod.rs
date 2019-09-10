@@ -1,7 +1,7 @@
 use glium::backend::Facade;
 use glium::Surface;
 
-use lameboy::cpu::interrupts::{INT_LCD_STAT, INT_VBLANK};
+use lameboy::interrupts::{INT_LCD_STAT, INT_VBLANK};
 use lameboy::mmu::mmuobject::MmuObject;
 use lameboy::ppu::gpu::*;
 use lameboy::ppu::palette::*;
