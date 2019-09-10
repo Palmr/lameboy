@@ -1,7 +1,5 @@
 use imgui::Ui;
 
-use ppu::TestPattern;
-
 pub trait ImguiDebuggable {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug);
 }
@@ -16,8 +14,6 @@ pub struct ImguiDebug {
     pub show_cpu: bool,
     pub show_ppu: bool,
     pub show_joypad: bool,
-    pub apply_test_pattern: bool,
-    pub test_pattern_type: TestPattern,
     pub ppu_mod: i32,
     pub ppu_sprite_index: i32,
     pub show_about: bool,
@@ -45,8 +41,6 @@ impl ImguiDebug {
             show_cpu: false,
             show_ppu: false,
             show_joypad: false,
-            apply_test_pattern: false,
-            test_pattern_type: TestPattern::BLANK,
             ppu_mod: 4,
             ppu_sprite_index: 0,
             show_about: false,

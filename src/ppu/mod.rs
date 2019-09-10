@@ -1,9 +1,7 @@
 use glium::backend::Facade;
 use glium::Surface;
-use imgui::{Condition, Slider, Ui, Window};
 
 use cpu::interrupts::{INT_LCD_STAT, INT_VBLANK};
-use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
 use mmu::mmuobject::MmuObject;
 use ppu::gpu::*;
 use ppu::palette::*;
@@ -13,6 +11,7 @@ use ppu::registers::StatusInterruptFlags;
 use ppu::sprite::{Sprite, SpritePriority};
 use ppu::tile::Tile;
 
+mod debug;
 pub mod gpu;
 pub mod palette;
 pub mod registers;
@@ -21,12 +20,6 @@ pub mod tile;
 
 pub const SCREEN_WIDTH: usize = 160;
 pub const SCREEN_HEIGHT: usize = 144;
-
-pub enum TestPattern {
-    BLANK,
-    DIAGONAL,
-    XOR,
-}
 
 #[derive(Debug)]
 enum Mode {
@@ -333,18 +326,6 @@ impl PPU {
 
         self.gpu.draw(target);
     }
-
-    pub fn apply_test_pattern(&mut self, pattern: &TestPattern, mod_value: usize) {
-        for y in 0..144 {
-            for x in 0..160 {
-                self.screen_buffer[y * SCREEN_WIDTH + x] = match pattern {
-                    TestPattern::BLANK => 0u8,
-                    TestPattern::DIAGONAL => (((x + y) / mod_value) % 4) as u8,
-                    TestPattern::XOR => (((x / mod_value) ^ (y / mod_value)) % 4) as u8,
-                }
-            }
-        }
-    }
 }
 
 impl MmuObject for PPU {
@@ -394,76 +375,5 @@ impl MmuObject for PPU {
                 addr
             ),
         }
-    }
-}
-
-impl ImguiDebuggable for PPU {
-    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
-        Window::new(im_str!("PPU"))
-            .size([180.0, 115.0], Condition::FirstUseEver)
-            .resizable(true)
-            .build(ui, || {
-                ui.checkbox(im_str!("Apply test"), &mut imgui_debug.apply_test_pattern);
-                Slider::new(im_str!("Mod"), 1..=20).build(ui, &mut &mut imgui_debug.ppu_mod);
-                if ui.small_button(im_str!("Blank")) {
-                    imgui_debug.test_pattern_type = TestPattern::BLANK;
-                }
-                ui.same_line(0.0);
-                if ui.small_button(im_str!("Diagonal")) {
-                    imgui_debug.test_pattern_type = TestPattern::DIAGONAL;
-                }
-                ui.same_line(0.0);
-                if ui.small_button(im_str!("XOR")) {
-                    imgui_debug.test_pattern_type = TestPattern::XOR;
-                }
-
-                ui.separator();
-
-                ui.text(im_str!("Mode: {:?}", self.mode));
-            });
-
-        Window::new(im_str!("PPU-registers"))
-            .size([224.0, 230.0], Condition::FirstUseEver)
-            .resizable(true)
-            .build(ui, || {
-                ui.text(im_str!("Control: {:?}", self.registers.control));
-                ui.text(im_str!(
-                    "Status: {:?} - {:?}",
-                    self.combine_status_mode(),
-                    StatusInterruptFlags::from_bits_truncate(self.combine_status_mode())
-                ));
-                ui.text(im_str!("Scroll Y: {:?}", self.registers.scroll_y));
-                ui.text(im_str!("Scroll X: {:?}", self.registers.scroll_x));
-                ui.text(im_str!("LY: {:?}", self.registers.ly));
-                ui.text(im_str!("LYC: {:?}", self.registers.lyc));
-                ui.text(im_str!("DMA: {:?}", self.registers.dma));
-                ui.text(im_str!("BG Palette: {:?}", self.registers.bg_palette));
-                ui.text(im_str!("OBJ0 Palette: {:?}", self.registers.obj0_palette));
-                ui.text(im_str!("OBJ1 Palette: {:?}", self.registers.obj1_palette));
-                ui.text(im_str!("Window Y: {:?}", self.registers.window_y));
-                ui.text(im_str!("Window X: {:?}", self.registers.window_x));
-            });
-
-        Window::new(im_str!("PPU-OAM"))
-            .size([224.0, 230.0], Condition::FirstUseEver)
-            .resizable(true)
-            .build(ui, || {
-                ui.input_int(im_str!("Sprite Index"), &mut imgui_debug.ppu_sprite_index)
-                    .build();
-                // Limit index
-                if imgui_debug.ppu_sprite_index < 0 {
-                    imgui_debug.ppu_sprite_index = 0
-                };
-                if imgui_debug.ppu_sprite_index > 39 {
-                    imgui_debug.ppu_sprite_index = 39
-                };
-
-                let sprite = Sprite::new(self, imgui_debug.ppu_sprite_index as u8);
-                ui.text(im_str!("Position: {:?}, {:?}", sprite.x, sprite.y));
-                ui.text(im_str!("Tile: {:?}", sprite.tile_index));
-                ui.text(im_str!("Flip X: {:?}", sprite.flip_x));
-                ui.text(im_str!("Flip Y: {:?}", sprite.flip_y));
-                ui.text(im_str!("Priority: {:?}", sprite.priority));
-            });
     }
 }

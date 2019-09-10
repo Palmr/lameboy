@@ -7,8 +7,8 @@ mod debug;
 pub mod joypad;
 
 use gui::imguidebug::ImguiDebug;
-use lameboy::joypad::Joypad;
 use gui::GUI;
+use lameboy::joypad::Joypad;
 
 pub struct Lameboy {
     pub active: bool,

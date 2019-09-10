@@ -42,14 +42,6 @@ impl Lameboy {
             self.cpu.mmu.ppu.imgui_display(ui, &mut self.debug);
         }
 
-        // TODO - hmmmmmm
-        if self.debug.apply_test_pattern {
-            self.cpu
-                .mmu
-                .ppu
-                .apply_test_pattern(&self.debug.test_pattern_type, self.debug.ppu_mod as usize);
-        }
-
         if self.debug.show_emulator {
             emulator_window(self, ui);
             breakpoint_windows(ui, &mut self.debug);
