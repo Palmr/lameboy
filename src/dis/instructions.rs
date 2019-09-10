@@ -357,7 +357,6 @@ fn decode_cb_prefix_instruction(instruction_addr: &u16, mmu: &MMU) -> Instructio
         0x3E => Instruction::new("srl [hl]", Some(Data8)),
         0x3F => Instruction::new("srl a", Some(Data8)),
 
-
         0x40 => Instruction::new("bit 0, b", Some(Data8)),
         0x41 => Instruction::new("bit 0, c", Some(Data8)),
         0x42 => Instruction::new("bit 0, d", Some(Data8)),

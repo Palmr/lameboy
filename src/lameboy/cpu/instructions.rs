@@ -496,10 +496,7 @@ pub fn load_indirect_r16_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, r8_source:
     // Copy from source register to memory using indirect register
     let indirect_addr = cpu.registers.read16(r16_indirect_addr);
     let register_val = cpu.registers.read8(r8_source);
-    cpu.mmu.write8(
-        indirect_addr,
-        register_val,
-    );
+    cpu.mmu.write8(indirect_addr, register_val);
 
     8
 }
@@ -727,10 +724,9 @@ pub fn load_reg_hl_reg_sp_d8(cpu: &mut CPU) -> u8 {
         RegisterFlags::HALF_CARRY,
         ((cpu.registers.sp & 0x0F) + (value & 0x0F)) > 0x0F,
     );
-    cpu.registers.f.set(
-        RegisterFlags::CARRY,
-        combined < cpu.registers.sp,
-    );
+    cpu.registers
+        .f
+        .set(RegisterFlags::CARRY, combined < cpu.registers.sp);
 
     12
 }
@@ -1182,16 +1178,17 @@ fn alu_add_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) {
 
     cpu.registers.a = original_a.wrapping_add(d8).wrapping_add(cy);
 
-    cpu.registers.f.set(RegisterFlags::ZERO, cpu.registers.a == 0);
+    cpu.registers
+        .f
+        .set(RegisterFlags::ZERO, cpu.registers.a == 0);
     cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
     cpu.registers.f.set(
         RegisterFlags::HALF_CARRY,
         ((original_a & 0x0F) + (d8 & 0x0F) + cy) > 0x0F,
     );
-    cpu.registers.f.set(
-        RegisterFlags::CARRY,
-        cpu.registers.a < original_a,
-    );
+    cpu.registers
+        .f
+        .set(RegisterFlags::CARRY, cpu.registers.a < original_a);
 }
 
 /// ADD 8-bit register with register A, storing the result in A.
@@ -1341,10 +1338,9 @@ fn alu_sub_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) {
         RegisterFlags::HALF_CARRY,
         (original_a & 0x0F) < (d8 & 0x0F) + cy,
     );
-    cpu.registers.f.set(
-        RegisterFlags::CARRY,
-        cpu.registers.a > original_a,
-    );
+    cpu.registers
+        .f
+        .set(RegisterFlags::CARRY, cpu.registers.a > original_a);
 }
 
 /// Subtract 8-bit register from register A, storing the result in A.
@@ -2186,7 +2182,7 @@ pub fn bit_test(cpu: &mut CPU, opcode: u8) -> u8 {
     cpu.registers.f.set(RegisterFlags::ZERO, tested_value == 0);
     cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
     cpu.registers.f.set(RegisterFlags::HALF_CARRY, true);
-//    cpu.registers.f.set(RegisterFlags::CARRY, false);
+    //    cpu.registers.f.set(RegisterFlags::CARRY, false);
 
     duration
 }
