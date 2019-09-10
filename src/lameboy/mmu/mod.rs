@@ -1,7 +1,7 @@
-use cart::Cart;
+use lameboy::cart::Cart;
 use lameboy::joypad::Joypad;
-use mmu::mmuobject::MmuObject;
-use ppu::PPU;
+use lameboy::mmu::mmuobject::MmuObject;
+use lameboy::ppu::PPU;
 
 pub mod mmuobject;
 

@@ -1,7 +1,7 @@
 use gui::imgui_debug_state::ImguiDebugState;
 use imgui::{Condition, Ui, Window};
-use ppu::sprite::Sprite;
-use ppu::PPU;
+use lameboy::ppu::sprite::Sprite;
+use lameboy::ppu::PPU;
 
 pub fn oam_window<'a>(ppu: &PPU, ui: &Ui<'a>, imgui_debug: &mut ImguiDebugState) {
     Window::new(im_str!("PPU-OAM"))

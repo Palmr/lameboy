@@ -1,9 +1,9 @@
 use gui::imgui_debug_state::ImguiDebugState;
 use gui::imgui_debuggable::ImguiDebuggable;
 use imgui::{Condition, Ui, Window};
-use ppu::debug::oam::oam_window;
-use ppu::debug::registers::registers_window;
-use ppu::PPU;
+use lameboy::ppu::debug::oam::oam_window;
+use lameboy::ppu::debug::registers::registers_window;
+use lameboy::ppu::PPU;
 
 mod oam;
 mod registers;

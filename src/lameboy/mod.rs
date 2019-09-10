@@ -1,14 +1,19 @@
-use cart::Cart;
-use cpu::CPU;
-use mmu::MMU;
-use ppu::PPU;
+use lameboy::cart::Cart;
+use lameboy::cpu::CPU;
+use lameboy::joypad::Joypad;
+use lameboy::mmu::MMU;
+use lameboy::ppu::PPU;
+
+pub mod cart;
+pub mod cpu;
+pub mod joypad;
+pub mod mmu;
+pub mod ppu;
 
 mod debug;
-pub mod joypad;
 
 use gui::imgui_debug_state::ImguiDebugState;
 use gui::GUI;
-use lameboy::joypad::Joypad;
 
 pub struct Lameboy {
     pub active: bool,

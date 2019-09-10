@@ -1,6 +1,6 @@
 use imgui::{Condition, Ui, Window};
-use ppu::registers::StatusInterruptFlags;
-use ppu::PPU;
+use lameboy::ppu::registers::StatusInterruptFlags;
+use lameboy::ppu::PPU;
 
 pub fn registers_window<'a>(ppu: &PPU, ui: &Ui<'a>) {
     Window::new(im_str!("PPU-registers"))

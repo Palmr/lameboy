@@ -1,6 +1,6 @@
-use cpu::registers::Flags as RegisterFlags;
-use cpu::registers::{Reg16, Reg8};
-use cpu::{InterruptFlagDelayStatus, CPU};
+use lameboy::cpu::registers::Flags as RegisterFlags;
+use lameboy::cpu::registers::{Reg16, Reg8};
+use lameboy::cpu::{InterruptFlagDelayStatus, CPU};
 
 /// Panic if anything tries to run an undefined opcode, likely means the emulator has a bug.
 pub fn undefined(cpu: &CPU, opcode: u8) -> u8 {

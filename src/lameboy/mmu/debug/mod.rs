@@ -1,5 +1,5 @@
-pub use mmu::debug::disassembly::disassembly_window;
-pub use mmu::debug::hexdump::hexdump_window;
+pub use lameboy::mmu::debug::disassembly::disassembly_window;
+pub use lameboy::mmu::debug::hexdump::hexdump_window;
 
 mod disassembly;
 mod hexdump;
@@ -7,7 +7,7 @@ mod hexdump;
 use gui::imgui_debug_state::ImguiDebugState;
 use gui::imgui_debuggable::ImguiDebuggable;
 use imgui::{Condition, Ui, Window};
-use mmu::MMU;
+use lameboy::mmu::MMU;
 
 impl ImguiDebuggable for MMU {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebugState) {

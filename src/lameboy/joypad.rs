@@ -2,7 +2,7 @@ use imgui::{Condition, Ui, Window};
 
 use gui::imgui_debug_state::ImguiDebugState;
 use gui::imgui_debuggable::ImguiDebuggable;
-use mmu::mmuobject::MmuObject;
+use lameboy::mmu::mmuobject::MmuObject;
 
 const LOW_NIBBLE_MASK: u8 = 0x0F;
 const COLUMN_MASK: u8 = 0b0011_0000;

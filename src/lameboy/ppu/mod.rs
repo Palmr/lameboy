@@ -1,15 +1,15 @@
 use glium::backend::Facade;
 use glium::Surface;
 
-use cpu::interrupts::{INT_LCD_STAT, INT_VBLANK};
-use mmu::mmuobject::MmuObject;
-use ppu::gpu::*;
-use ppu::palette::*;
-use ppu::registers::ControlFlags;
-use ppu::registers::Registers;
-use ppu::registers::StatusInterruptFlags;
-use ppu::sprite::{Sprite, SpritePriority};
-use ppu::tile::Tile;
+use lameboy::cpu::interrupts::{INT_LCD_STAT, INT_VBLANK};
+use lameboy::mmu::mmuobject::MmuObject;
+use lameboy::ppu::gpu::*;
+use lameboy::ppu::palette::*;
+use lameboy::ppu::registers::ControlFlags;
+use lameboy::ppu::registers::Registers;
+use lameboy::ppu::registers::StatusInterruptFlags;
+use lameboy::ppu::sprite::{Sprite, SpritePriority};
+use lameboy::ppu::tile::Tile;
 
 mod debug;
 pub mod gpu;

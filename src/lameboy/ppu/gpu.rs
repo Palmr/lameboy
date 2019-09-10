@@ -7,7 +7,7 @@ use glium::uniforms::*;
 use glium::{IndexBuffer, Program, Surface, VertexBuffer};
 use nalgebra::Matrix4;
 
-use ppu::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use lameboy::ppu::{SCREEN_HEIGHT, SCREEN_WIDTH};
 
 #[derive(Copy, Clone)]
 struct Vertex {

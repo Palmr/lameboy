@@ -1,6 +1,6 @@
-use cpu::debug::registers::registers_window;
-use cpu::debug::stack::stack_window;
-use cpu::CPU;
+use lameboy::cpu::debug::registers::registers_window;
+use lameboy::cpu::debug::stack::stack_window;
+use lameboy::cpu::CPU;
 
 use gui::imgui_debug_state::ImguiDebugState;
 use gui::imgui_debuggable::ImguiDebuggable;

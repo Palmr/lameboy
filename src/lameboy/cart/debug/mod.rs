@@ -1,7 +1,7 @@
-use cart::Cart;
 use gui::imgui_debug_state::ImguiDebugState;
 use gui::imgui_debuggable::ImguiDebuggable;
 use imgui::{Condition, Ui, Window};
+use lameboy::cart::Cart;
 
 impl ImguiDebuggable for Cart {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebugState) {

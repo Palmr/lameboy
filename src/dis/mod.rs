@@ -1,5 +1,5 @@
 pub use dis::instructions::decode_instruction;
-use mmu::MMU;
+use lameboy::mmu::MMU;
 use std::fmt;
 
 mod instructions;

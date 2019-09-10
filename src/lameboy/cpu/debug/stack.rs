@@ -1,5 +1,5 @@
-use cpu::CPU;
 use imgui::{Condition, Ui, Window};
+use lameboy::cpu::CPU;
 
 pub fn stack_window<'a>(cpu: &CPU, ui: &Ui<'a>) {
     Window::new(im_str!("CPU - Stack"))

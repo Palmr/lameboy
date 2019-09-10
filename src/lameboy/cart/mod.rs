@@ -1,4 +1,4 @@
-use mmu::mmuobject::MmuObject;
+use lameboy::mmu::mmuobject::MmuObject;
 
 mod debug;
 

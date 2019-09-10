@@ -2,7 +2,7 @@ use dis;
 use dis::InstructionArg;
 use gui::imgui_debug_state::ImguiDebugState;
 use imgui::{Condition, Selectable, StyleColor, Ui, Window};
-use mmu::MMU;
+use lameboy::mmu::MMU;
 
 pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDebugState) {
     Window::new(im_str!("Disassembled code"))

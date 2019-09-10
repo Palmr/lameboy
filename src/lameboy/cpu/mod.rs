@@ -1,7 +1,7 @@
-use cpu::instructions::*;
-use cpu::interrupts::*;
-use cpu::registers::*;
-use mmu::MMU;
+use lameboy::cpu::instructions::*;
+use lameboy::cpu::interrupts::*;
+use lameboy::cpu::registers::*;
+use lameboy::mmu::MMU;
 
 mod debug;
 pub mod instructions;

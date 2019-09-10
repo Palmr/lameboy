@@ -24,11 +24,7 @@ use lameboy::Lameboy;
 mod dis;
 mod gui;
 
-mod cart;
-mod cpu;
 mod lameboy;
-mod mmu;
-mod ppu;
 
 const PKG_NAME: &str = env!("CARGO_PKG_NAME");
 const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
