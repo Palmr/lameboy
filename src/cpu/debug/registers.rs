@@ -1,5 +1,5 @@
-use imgui::{Condition, Ui, Window};
 use cpu::CPU;
+use imgui::{Condition, Ui, Window};
 
 pub fn registers_window<'a>(cpu: &CPU, ui: &Ui<'a>) {
     Window::new(im_str!("CPU - Registers"))
@@ -7,30 +7,30 @@ pub fn registers_window<'a>(cpu: &CPU, ui: &Ui<'a>) {
         .resizable(true)
         .build(ui, || {
             ui.text(im_str!(
-                    "PC: 0x{:04X} - SP: 0x{:04X}",
-                    cpu.registers.pc,
-                    cpu.registers.sp
-                ));
+                "PC: 0x{:04X} - SP: 0x{:04X}",
+                cpu.registers.pc,
+                cpu.registers.sp
+            ));
             ui.text(im_str!(
-                    " A: 0x{:02X}   -  F: 0x{:02X}",
-                    cpu.registers.a,
-                    cpu.registers.f.bits()
-                ));
+                " A: 0x{:02X}   -  F: 0x{:02X}",
+                cpu.registers.a,
+                cpu.registers.f.bits()
+            ));
             ui.text(im_str!(
-                    " B: 0x{:02X}   -  C: 0x{:02X}",
-                    cpu.registers.b,
-                    cpu.registers.c
-                ));
+                " B: 0x{:02X}   -  C: 0x{:02X}",
+                cpu.registers.b,
+                cpu.registers.c
+            ));
             ui.text(im_str!(
-                    " D: 0x{:02X}   -  E: 0x{:02X}",
-                    cpu.registers.d,
-                    cpu.registers.e
-                ));
+                " D: 0x{:02X}   -  E: 0x{:02X}",
+                cpu.registers.d,
+                cpu.registers.e
+            ));
             ui.text(im_str!(
-                    " H: 0x{:02X}   -  L: 0x{:02X}",
-                    cpu.registers.h,
-                    cpu.registers.l
-                ));
+                " H: 0x{:02X}   -  L: 0x{:02X}",
+                cpu.registers.h,
+                cpu.registers.l
+            ));
             ui.text(im_str!("Flags: {:?}", cpu.registers.f));
         });
 }

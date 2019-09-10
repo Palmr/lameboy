@@ -9,7 +9,8 @@ use imgui_winit_support::{HiDpiMode, WinitPlatform};
 
 use lameboy::Lameboy;
 
-pub mod imguidebug;
+pub mod imgui_debug_state;
+pub mod imgui_debuggable;
 
 pub struct GUI {
     events_loop: glutin::EventsLoop,

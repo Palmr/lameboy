@@ -1,6 +1,7 @@
 use imgui::{Condition, Ui, Window};
 
-use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
+use gui::imgui_debug_state::ImguiDebugState;
+use gui::imgui_debuggable::ImguiDebuggable;
 use mmu::mmuobject::MmuObject;
 
 const LOW_NIBBLE_MASK: u8 = 0x0F;
@@ -107,7 +108,7 @@ impl MmuObject for Joypad {
 }
 
 impl ImguiDebuggable for Joypad {
-    fn imgui_display(&mut self, ui: &Ui, _imgui_debug: &mut ImguiDebug) {
+    fn imgui_display(&mut self, ui: &Ui, _imgui_debug: &mut ImguiDebugState) {
         Window::new(im_str!("Joypad"))
             .size([150.0, 115.0], Condition::FirstUseEver)
             .resizable(true)

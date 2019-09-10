@@ -1,4 +1,4 @@
-use gui::imguidebug::ImguiDebuggable;
+use gui::imgui_debuggable::ImguiDebuggable;
 use imgui::Ui;
 use lameboy::Lameboy;
 

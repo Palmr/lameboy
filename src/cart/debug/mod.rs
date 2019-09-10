@@ -1,9 +1,10 @@
 use cart::Cart;
-use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
+use gui::imgui_debug_state::ImguiDebugState;
+use gui::imgui_debuggable::ImguiDebuggable;
 use imgui::{Condition, Ui, Window};
 
 impl ImguiDebuggable for Cart {
-    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebug) {
+    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebugState) {
         Window::new(im_str!("Cart"))
             .size([180.0, 127.0], Condition::FirstUseEver)
             .resizable(true)

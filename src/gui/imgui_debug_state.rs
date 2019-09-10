@@ -1,10 +1,4 @@
-use imgui::Ui;
-
-pub trait ImguiDebuggable {
-    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug);
-}
-
-pub struct ImguiDebug {
+pub struct ImguiDebugState {
     pub program_counter: u16,
     pub show_imgui_metrics: bool,
     pub show_menu: bool,
@@ -29,9 +23,9 @@ pub struct ImguiDebug {
     pub memory_breakpoints: Vec<u16>,
 }
 
-impl ImguiDebug {
-    pub fn new() -> ImguiDebug {
-        ImguiDebug {
+impl ImguiDebugState {
+    pub fn new() -> ImguiDebugState {
+        ImguiDebugState {
             program_counter: 0,
             show_imgui_metrics: false,
             show_menu: false,

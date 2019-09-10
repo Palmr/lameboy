@@ -1,14 +1,16 @@
-use imgui::Ui;
-use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
-use cpu::CPU;
 use cpu::debug::registers::registers_window;
 use cpu::debug::stack::stack_window;
+use cpu::CPU;
+
+use gui::imgui_debug_state::ImguiDebugState;
+use gui::imgui_debuggable::ImguiDebuggable;
+use imgui::Ui;
 
 mod registers;
 mod stack;
 
 impl ImguiDebuggable for CPU {
-    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebug) {
+    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebugState) {
         registers_window(self, ui);
         stack_window(self, ui);
     }

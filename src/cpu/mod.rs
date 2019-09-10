@@ -3,10 +3,10 @@ use cpu::interrupts::*;
 use cpu::registers::*;
 use mmu::MMU;
 
+mod debug;
 pub mod instructions;
 pub mod interrupts;
 pub mod registers;
-mod debug;
 
 enum InterruptFlagDelayStatus {
     Waiting,

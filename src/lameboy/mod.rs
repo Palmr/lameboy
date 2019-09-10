@@ -6,7 +6,7 @@ use ppu::PPU;
 mod debug;
 pub mod joypad;
 
-use gui::imguidebug::ImguiDebug;
+use gui::imgui_debug_state::ImguiDebugState;
 use gui::GUI;
 use lameboy::joypad::Joypad;
 
@@ -15,7 +15,7 @@ pub struct Lameboy {
     cpu: CPU,
     running: bool,
     trace_count: i32,
-    pub debug: ImguiDebug,
+    pub debug: ImguiDebugState,
 }
 
 impl Lameboy {
@@ -31,7 +31,7 @@ impl Lameboy {
             cpu,
             running: false,
             trace_count: 0,
-            debug: ImguiDebug::new(),
+            debug: ImguiDebugState::new(),
         }
     }
 
