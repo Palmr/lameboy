@@ -1,14 +1,12 @@
-use imgui::{Condition, Ui, Window};
-
 use cpu::instructions::*;
 use cpu::interrupts::*;
 use cpu::registers::*;
-use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
 use mmu::MMU;
 
 pub mod instructions;
 pub mod interrupts;
 pub mod registers;
+mod debug;
 
 enum InterruptFlagDelayStatus {
     Waiting,
@@ -524,64 +522,5 @@ impl CPU {
         };
 
         duration + 4
-    }
-}
-
-impl ImguiDebuggable for CPU {
-    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebug) {
-        Window::new(im_str!("CPU"))
-            .size([260.0, 140.0], Condition::FirstUseEver)
-            .resizable(true)
-            .build(ui, || {
-                ui.text(im_str!(
-                    "PC: 0x{:04X} - SP: 0x{:04X}",
-                    self.registers.pc,
-                    self.registers.sp
-                ));
-                ui.text(im_str!(
-                    " A: 0x{:02X}   -  F: 0x{:02X}",
-                    self.registers.a,
-                    self.registers.f.bits()
-                ));
-                ui.text(im_str!(
-                    " B: 0x{:02X}   -  C: 0x{:02X}",
-                    self.registers.b,
-                    self.registers.c
-                ));
-                ui.text(im_str!(
-                    " D: 0x{:02X}   -  E: 0x{:02X}",
-                    self.registers.d,
-                    self.registers.e
-                ));
-                ui.text(im_str!(
-                    " H: 0x{:02X}   -  L: 0x{:02X}",
-                    self.registers.h,
-                    self.registers.l
-                ));
-                ui.text(im_str!("Flags: {:?}", self.registers.f));
-            });
-
-        Window::new(im_str!("CPU - Stack"))
-            .size([260.0, 140.0], Condition::FirstUseEver)
-            .resizable(true)
-            .build(ui, || {
-                let display_stack_entry_count = 50;
-                let stack_addr_bottom = self.registers.sp.wrapping_sub(2);
-                let stack_addr_top = stack_addr_bottom.wrapping_add(display_stack_entry_count * 2);
-
-                let mut stack_addr = stack_addr_top;
-                while stack_addr > stack_addr_bottom {
-                    ui.text_colored([0.7, 0.7, 0.7, 1.0], im_str!("[0x{:04X}]", stack_addr));
-                    ui.same_line(0.0);
-                    ui.text(im_str!(" - "));
-                    ui.same_line(0.0);
-                    ui.text_colored(
-                        [1.0, 1.0, 0.0, 1.0],
-                        im_str!("0x{:04X}", self.mmu.read16(stack_addr)),
-                    );
-
-                    stack_addr = stack_addr.wrapping_sub(2);
-                }
-            });
     }
 }
