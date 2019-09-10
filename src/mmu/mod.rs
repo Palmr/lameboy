@@ -1,4 +1,4 @@
-use imgui::{Condition, ImGuiSelectableFlags, StyleColor, Ui};
+use imgui::{Condition, Selectable, StyleColor, Ui, Window};
 
 use cart::Cart;
 use dis;
@@ -181,10 +181,10 @@ impl<'m> MMU<'m> {
 
 impl<'m> ImguiDebuggable for MMU<'m> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
-        ui.window(im_str!("MMU"))
+        Window::new(im_str!("MMU"))
             .size([285.0, 122.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(|| {
+            .build(ui, || {
                 ui.input_int(im_str!("Addr"), &mut imgui_debug.input_memory_addr)
                     .chars_hexadecimal(true)
                     .build();
@@ -204,10 +204,11 @@ impl<'m> ImguiDebuggable for MMU<'m> {
                     );
                 }
             });
-        ui.window(im_str!("MMU - dump"))
+
+        Window::new(im_str!("MMU - dump"))
             .size([260.0, 140.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(|| {
+            .build(ui, || {
                 ui.checkbox(im_str!("Lock to PC"), &mut imgui_debug.dump_memory_pc_lock);
                 ui.same_line(0.0);
                 ui.input_int(im_str!("Addr"), &mut imgui_debug.dump_memory_addr)
@@ -234,13 +235,11 @@ impl<'m> ImguiDebuggable for MMU<'m> {
                     memory_addr_low = 0;
                 }
 
+                let mut selected_mem_ptr = None;
                 for row in 0..(context_size * 2) + 1 {
                     let row_addr = memory_addr_low + row * bytes_per_row;
 
-                    {
-                        let _color = ui.push_style_color(StyleColor::Text, [0.7, 0.7, 0.7, 1.0]);
-                        ui.text(im_str!("[0x{:04X}]", row_addr));
-                    }
+                    ui.text_colored([0.7, 0.7, 0.7, 1.0], im_str!("[0x{:04X}]", row_addr));
 
                     for offset in 0..bytes_per_row {
                         let mem_ptr = row_addr + offset;
@@ -253,37 +252,38 @@ impl<'m> ImguiDebuggable for MMU<'m> {
                         };
 
                         ui.same_line(0.0);
-                        {
-                            let _color = ui.push_style_color(StyleColor::Text, colour);
 
-                            if ui.selectable(
-                                im_str!("{:02X}", self.read8(mem_ptr)).as_ref(),
-                                false,
-                                ImGuiSelectableFlags::empty(),
-                                [11.0, 11.0],
-                            ) {
-                                match imgui_debug
-                                    .memory_breakpoints
-                                    .iter()
-                                    .position(|&r| r == mem_ptr)
-                                {
-                                    None => {
-                                        imgui_debug.memory_breakpoints.push(mem_ptr);
-                                    }
-                                    Some(idx) => {
-                                        imgui_debug.memory_breakpoints.remove(idx);
-                                    }
-                                }
-                            }
+                        let style = ui.push_style_color(StyleColor::Text, colour);
+                        if Selectable::new(&im_str!("{:02X}", self.read8(mem_ptr)))
+                            .size([11.0, 11.0])
+                            .build(ui)
+                        {
+                            selected_mem_ptr = Some(mem_ptr);
+                        }
+                        style.pop(ui);
+                    }
+                }
+
+                if let Some(mem_ptr) = selected_mem_ptr {
+                    match imgui_debug
+                        .memory_breakpoints
+                        .iter()
+                        .position(|&r| r == mem_ptr)
+                    {
+                        None => {
+                            imgui_debug.memory_breakpoints.push(mem_ptr);
+                        }
+                        Some(idx) => {
+                            imgui_debug.memory_breakpoints.remove(idx);
                         }
                     }
                 }
             });
 
-        ui.window(im_str!("Disassembled code"))
+        Window::new(im_str!("Disassembled code"))
             .size([260.0, 140.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(|| {
+            .build(ui, || {
                 ui.checkbox(
                     im_str!("Lock to PC"),
                     &mut imgui_debug.disassemble_memory_pc_lock,
@@ -338,33 +338,27 @@ impl<'m> ImguiDebuggable for MMU<'m> {
                         instruction_name
                     };
 
-                    {
-                        let _color = if imgui_debug.breakpoints.contains(&dump_memory_addr) {
-                            ui.push_style_color(StyleColor::Text, [1.0, 0.4, 0.4, 1.0])
-                        } else {
-                            ui.push_style_color(StyleColor::Text, [0.7, 0.7, 0.7, 1.0])
-                        };
-
-                        if ui.selectable(
-                            im_str!("[0x{:04X}] ", dump_memory_addr).as_ref(),
-                            false,
-                            ImGuiSelectableFlags::empty(),
-                            [0.0, 0.0],
-                        ) {
-                            match imgui_debug
-                                .breakpoints
-                                .iter()
-                                .position(|&r| r == dump_memory_addr)
-                            {
-                                None => {
-                                    imgui_debug.breakpoints.push(dump_memory_addr);
-                                }
-                                Some(idx) => {
-                                    imgui_debug.breakpoints.remove(idx);
-                                }
+                    let style = if imgui_debug.breakpoints.contains(&dump_memory_addr) {
+                        ui.push_style_color(StyleColor::Text, [1.0, 0.4, 0.4, 1.0])
+                    } else {
+                        ui.push_style_color(StyleColor::Text, [0.7, 0.7, 0.7, 1.0])
+                    };
+                    if Selectable::new(&im_str!("[0x{:04X}] ", dump_memory_addr)).build(ui) {
+                        match imgui_debug
+                            .breakpoints
+                            .iter()
+                            .position(|&r| r == dump_memory_addr)
+                        {
+                            None => {
+                                imgui_debug.breakpoints.push(dump_memory_addr);
+                            }
+                            Some(idx) => {
+                                imgui_debug.breakpoints.remove(idx);
                             }
                         }
                     }
+                    style.pop(ui);
+
                     ui.same_line(0.0);
                     ui.text(im_str!("{}", instruction_debug_str));
 

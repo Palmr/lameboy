@@ -15,7 +15,7 @@ nalgebra = "~0.18"
 log = "~0.4"
 log4rs = "~0.8"
 
-imgui = "0.1.0"
-imgui-glium-renderer = { version = "0.1.0" }
-imgui-winit-support = { version = "0.1.0" }
+imgui = "0.2"
+imgui-glium-renderer = { version = "0.2" }
+imgui-winit-support = { version = "0.2" }
 glium = { version = "0.25", default-features = true }

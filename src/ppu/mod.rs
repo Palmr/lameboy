@@ -1,6 +1,6 @@
 use glium::backend::Facade;
 use glium::Surface;
-use imgui::{Condition, Ui};
+use imgui::{Condition, Slider, Ui, Window};
 
 use cpu::interrupts::{INT_LCD_STAT, INT_VBLANK};
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
@@ -399,13 +399,12 @@ impl MmuObject for PPU {
 
 impl ImguiDebuggable for PPU {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebug) {
-        ui.window(im_str!("PPU"))
+        Window::new(im_str!("PPU"))
             .size([180.0, 115.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(|| {
+            .build(ui, || {
                 ui.checkbox(im_str!("Apply test"), &mut imgui_debug.apply_test_pattern);
-                ui.slider_int(im_str!("Mod"), &mut imgui_debug.ppu_mod, 1, 20)
-                    .build();
+                Slider::new(im_str!("Mod"), 1..=20).build(ui, &mut &mut imgui_debug.ppu_mod);
                 if ui.small_button(im_str!("Blank")) {
                     imgui_debug.test_pattern_type = TestPattern::BLANK;
                 }
@@ -423,10 +422,10 @@ impl ImguiDebuggable for PPU {
                 ui.text(im_str!("Mode: {:?}", self.mode));
             });
 
-        ui.window(im_str!("PPU-registers"))
+        Window::new(im_str!("PPU-registers"))
             .size([224.0, 230.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(|| {
+            .build(ui, || {
                 ui.text(im_str!("Control: {:?}", self.registers.control));
                 ui.text(im_str!(
                     "Status: {:?} - {:?}",
@@ -445,10 +444,10 @@ impl ImguiDebuggable for PPU {
                 ui.text(im_str!("Window X: {:?}", self.registers.window_x));
             });
 
-        ui.window(im_str!("PPU-OAM"))
+        Window::new(im_str!("PPU-OAM"))
             .size([224.0, 230.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(|| {
+            .build(ui, || {
                 ui.input_int(im_str!("Sprite Index"), &mut imgui_debug.ppu_sprite_index)
                     .build();
                 // Limit index

@@ -22,7 +22,7 @@ pub fn unpack_palette(palette: u8) -> [u8; 4] {
         .iter_mut()
         .enumerate()
         .for_each(|(idx, palette_entry)| {
-            *palette_entry = (palette >> (idx * 2)) & 3;
+            *palette_entry = (palette >> (idx as u8 * 2)) & 3;
         });
 
     unpacked_palette

@@ -1,4 +1,4 @@
-use imgui::{Condition, Ui};
+use imgui::{Condition, Ui, Window};
 
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
 use mmu::mmuobject::MmuObject;
@@ -108,10 +108,10 @@ impl MmuObject for Joypad {
 
 impl ImguiDebuggable for Joypad {
     fn imgui_display(&mut self, ui: &Ui, _imgui_debug: &mut ImguiDebug) {
-        ui.window(im_str!("Joypad"))
+        Window::new(im_str!("Joypad"))
             .size([150.0, 115.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(|| {
+            .build(ui, || {
                 ui.text(im_str!("A = {}", self.a));
                 ui.text(im_str!("B = {}", self.b));
                 ui.text(im_str!("Select = {}", self.select));

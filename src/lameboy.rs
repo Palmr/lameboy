@@ -1,4 +1,4 @@
-use imgui::{Condition, ImGuiSelectableFlags, Ui};
+use imgui::{Condition, MenuItem, Selectable, Ui, Window};
 
 use cart::Cart;
 use cpu::CPU;
@@ -115,45 +115,40 @@ impl<'l> Lameboy<'l> {
 
     pub fn draw<'a>(&mut self, ui: &Ui<'a>) {
         if self.debug.show_menu {
-            ui.main_menu_bar(|| {
-                ui.menu(im_str!("File")).build(|| {
-                    ui.menu_item(im_str!("Open ROM")).enabled(false).build();
-                    ui.menu_item(im_str!("Reload ROM")).enabled(false).build();
-                    ui.menu_item(im_str!("Reset")).enabled(false).build();
+            if let Some(menu_bar) = ui.begin_main_menu_bar() {
+                if let Some(menu) = ui.begin_menu(im_str!("File"), true) {
+                    MenuItem::new(im_str!("Open ROM"))
+                        .shortcut(im_str!("CTRL+O"))
+                        .build(ui);
+                    MenuItem::new(im_str!("Reset")).build(ui);
                     ui.separator();
-                    ui.menu_item(im_str!("Exit"))
-                        .selected(&mut self.active)
-                        .build();
-                });
-                ui.menu(im_str!("Options")).build(|| {
-                    ui.menu_item(im_str!("TODO")).enabled(false).build();
-                });
-                ui.menu(im_str!("Debug")).build(|| {
-                    ui.menu_item(im_str!("Emulator"))
-                        .selected(&mut self.debug.show_emulator)
-                        .build();
-                    ui.menu_item(im_str!("Cart"))
-                        .selected(&mut self.debug.show_cart)
-                        .build();
-                    ui.menu_item(im_str!("Memory"))
-                        .selected(&mut self.debug.show_memory)
-                        .build();
-                    ui.menu_item(im_str!("CPU"))
-                        .selected(&mut self.debug.show_cpu)
-                        .build();
-                    ui.menu_item(im_str!("PPU"))
-                        .selected(&mut self.debug.show_ppu)
-                        .build();
-                });
-                ui.menu(im_str!("Help")).build(|| {
-                    ui.menu_item(im_str!("About"))
-                        .selected(&mut self.debug.show_about)
-                        .build();
-                    ui.menu_item(im_str!("ImGUI Metrics"))
-                        .selected(&mut self.debug.show_imgui_metrics)
-                        .build();
-                });
-            });
+                    MenuItem::new(im_str!("Exit")).build_with_ref(ui, &mut self.active);
+
+                    menu.end(ui);
+                }
+
+                if let Some(menu) = ui.begin_menu(im_str!("Debug"), true) {
+                    MenuItem::new(im_str!("Emulator"))
+                        .build_with_ref(ui, &mut self.debug.show_emulator);
+                    MenuItem::new(im_str!("Cart")).build_with_ref(ui, &mut self.debug.show_cart);
+                    MenuItem::new(im_str!("Memory"))
+                        .build_with_ref(ui, &mut self.debug.show_memory);
+                    MenuItem::new(im_str!("CPU")).build_with_ref(ui, &mut self.debug.show_cpu);
+                    MenuItem::new(im_str!("PPU")).build_with_ref(ui, &mut self.debug.show_ppu);
+
+                    menu.end(ui);
+                }
+
+                if let Some(menu) = ui.begin_menu(im_str!("Help"), true) {
+                    MenuItem::new(im_str!("About")).build_with_ref(ui, &mut self.debug.show_about);
+                    MenuItem::new(im_str!("ImGUI Metrics"))
+                        .build_with_ref(ui, &mut self.debug.show_imgui_metrics);
+
+                    menu.end(ui);
+                }
+
+                menu_bar.end(ui);
+            }
         }
 
         if self.debug.show_imgui_metrics {
@@ -183,10 +178,10 @@ impl<'l> Lameboy<'l> {
         }
 
         if self.debug.show_emulator {
-            ui.window(im_str!("Emulator"))
+            Window::new(im_str!("Emulator"))
                 .size([255.0, 75.0], Condition::FirstUseEver)
                 .resizable(true)
-                .build(|| {
+                .build(ui, || {
                     if ui.button(im_str!("Reset"), [0.0, 0.0]) {
                         self.reset();
                     }
@@ -216,10 +211,10 @@ impl<'l> Lameboy<'l> {
                         .build();
                 });
 
-            ui.window(im_str!("Breakpoints"))
+            Window::new(im_str!("Breakpoints"))
                 .size([225.0, 150.0], Condition::FirstUseEver)
                 .resizable(true)
-                .build(|| {
+                .build(ui, || {
                     if ui.button(im_str!("Set"), [0.0, 0.0]) {
                         let breakpoint_addr = self.debug.input_breakpoint_addr as u16;
                         if !self.debug.breakpoints.contains(&breakpoint_addr) {
@@ -242,14 +237,11 @@ impl<'l> Lameboy<'l> {
                         ui.text(im_str!("None yet"));
                     } else {
                         for index in 0..self.debug.breakpoints.len() {
-                            if ui.selectable(
-                                &im_str!("0x{:04X}", self.debug.breakpoints[index]),
-                                false,
-                                ImGuiSelectableFlags::empty(),
-                                [0.0, 0.0],
-                            ) {
+                            if Selectable::new(&im_str!("0x{:04X}", self.debug.breakpoints[index]))
+                                .build(ui)
+                            {
                                 removal_index = Some(index);
-                            }
+                            };
                         }
                     }
                     if let Some(index) = removal_index {
@@ -257,10 +249,10 @@ impl<'l> Lameboy<'l> {
                     }
                 });
 
-            ui.window(im_str!("Memory Breakpoints"))
+            Window::new(im_str!("Memory Breakpoints"))
                 .size([225.0, 150.0], Condition::FirstUseEver)
                 .resizable(true)
-                .build(|| {
+                .build(ui, || {
                     if ui.button(im_str!("Set"), [0.0, 0.0]) {
                         let breakpoint_addr = self.debug.input_breakpoint_addr as u16;
                         if !self.debug.memory_breakpoints.contains(&breakpoint_addr) {
@@ -283,14 +275,14 @@ impl<'l> Lameboy<'l> {
                         ui.text(im_str!("None yet"));
                     } else {
                         for index in 0..self.debug.memory_breakpoints.len() {
-                            if ui.selectable(
-                                &im_str!("0x{:04X}", self.debug.memory_breakpoints[index]),
-                                false,
-                                ImGuiSelectableFlags::empty(),
-                                [0.0, 0.0],
-                            ) {
+                            if Selectable::new(&im_str!(
+                                "0x{:04X}",
+                                self.debug.memory_breakpoints[index]
+                            ))
+                            .build(ui)
+                            {
                                 removal_index = Some(index);
-                            }
+                            };
                         }
                     }
                     if let Some(index) = removal_index {
@@ -302,11 +294,11 @@ impl<'l> Lameboy<'l> {
         }
 
         if self.debug.show_about {
-            ui.window(&im_str!("About - {} v{}", PKG_NAME, PKG_VERSION))
+            Window::new(&im_str!("About - {} v{}", PKG_NAME, PKG_VERSION))
                 .size([250.0, 100.0], Condition::Always)
                 .collapsible(false)
                 .resizable(false)
-                .build(|| {
+                .build(ui, || {
                     ui.text(im_str!("{}", PKG_DESCRIPTION));
                     ui.text(im_str!("{}", PKG_AUTHORS));
                     if ui.button(im_str!("Close"), [75.0, 30.0]) {

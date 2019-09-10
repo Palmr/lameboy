@@ -3,7 +3,7 @@ use std::time::Instant;
 use glium::backend::glutin::glutin::{ElementState, VirtualKeyCode};
 use glium::glutin::{self, Event, WindowEvent};
 use glium::{Display, Surface};
-use imgui::{Context, FontConfig, FontSource, ImString, Ui};
+use imgui::{Context, FontConfig, FontSource, Ui};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
 
@@ -32,7 +32,7 @@ impl GUI {
             Display::new(builder, context, &events_loop).expect("Failed to initialize display");
 
         let mut imgui = Context::create();
-        imgui.set_ini_filename(Some(ImString::new("lameboy.ini")));
+        imgui.set_ini_filename(Some(std::path::PathBuf::from("lameboy.ini")));
 
         let mut platform = WinitPlatform::init(&mut imgui);
         {

@@ -1,4 +1,4 @@
-use imgui::{Condition, StyleColor, Ui};
+use imgui::{Condition, Ui, Window};
 
 use cpu::instructions::*;
 use cpu::interrupts::*;
@@ -529,10 +529,10 @@ impl<'c> CPU<'c> {
 
 impl<'c> ImguiDebuggable for CPU<'c> {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebug) {
-        ui.window(im_str!("CPU"))
+        Window::new(im_str!("CPU"))
             .size([260.0, 140.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(|| {
+            .build(ui, || {
                 ui.text(im_str!(
                     "PC: 0x{:04X} - SP: 0x{:04X}",
                     self.registers.pc,
@@ -560,27 +560,25 @@ impl<'c> ImguiDebuggable for CPU<'c> {
                 ));
                 ui.text(im_str!("Flags: {:?}", self.registers.f));
             });
-        ui.window(im_str!("CPU - Stack"))
+
+        Window::new(im_str!("CPU - Stack"))
             .size([260.0, 140.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(|| {
+            .build(ui, || {
                 let display_stack_entry_count = 50;
                 let stack_addr_bottom = self.registers.sp.wrapping_sub(2);
                 let stack_addr_top = stack_addr_bottom.wrapping_add(display_stack_entry_count * 2);
 
                 let mut stack_addr = stack_addr_top;
                 while stack_addr > stack_addr_bottom {
-                    {
-                        let _color = ui.push_style_color(StyleColor::Text, [0.7, 0.7, 0.7, 1.0]);
-                        ui.text(im_str!("[0x{:04X}]", stack_addr));
-                    }
+                    ui.text_colored([0.7, 0.7, 0.7, 1.0], im_str!("[0x{:04X}]", stack_addr));
                     ui.same_line(0.0);
                     ui.text(im_str!(" - "));
                     ui.same_line(0.0);
-                    {
-                        let _color = ui.push_style_color(StyleColor::Text, [1.0, 1.0, 0.0, 1.0]);
-                        ui.text(im_str!("0x{:04X}", self.mmu.read16(stack_addr)));
-                    }
+                    ui.text_colored(
+                        [1.0, 1.0, 0.0, 1.0],
+                        im_str!("0x{:04X}", self.mmu.read16(stack_addr)),
+                    );
 
                     stack_addr = stack_addr.wrapping_sub(2);
                 }

@@ -1,4 +1,4 @@
-use imgui::{Condition, Ui};
+use imgui::{Condition, Ui, Window};
 
 use gui::imguidebug::{ImguiDebug, ImguiDebuggable};
 use mmu::mmuobject::MmuObject;
@@ -91,10 +91,10 @@ impl MmuObject for Cart {
 
 impl ImguiDebuggable for Cart {
     fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebug) {
-        ui.window(im_str!("Cart"))
+        Window::new(im_str!("Cart"))
             .size([180.0, 127.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(|| {
+            .build(ui, || {
                 ui.text(im_str!("Size: {} bytes", self.get_size()));
                 ui.text(im_str!("Title: {}", self.get_title()));
                 ui.text(im_str!("Type: {}", self.get_cart_type()));
