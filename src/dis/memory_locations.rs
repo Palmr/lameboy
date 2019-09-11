@@ -1,4 +1,4 @@
-pub fn get_memory_comment(address: &u16) -> Option<&'static str> {
+pub fn get_memory_comment(address: u16) -> Option<&'static str> {
     match address {
         // Resets
         0x0000 => Some("RST_00"),

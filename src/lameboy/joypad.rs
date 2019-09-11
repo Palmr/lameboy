@@ -36,14 +36,6 @@ impl Joypad {
         }
     }
 
-    fn joypad_to_byte(&self) -> u8 {
-        match self.selected_column {
-            COLUMN_BUTTON_KEYS => self.button_byte(),
-            COLUMN_DIRECTION_KEYS => self.direction_byte(),
-            _ => LOW_NIBBLE_MASK,
-        }
-    }
-
     fn direction_byte(&self) -> u8 {
         let mut joyp = LOW_NIBBLE_MASK;
 
@@ -86,7 +78,11 @@ impl Joypad {
 impl MmuObject for Joypad {
     fn read8(&self, addr: u16) -> u8 {
         match addr {
-            0xFF00 => self.joypad_to_byte(),
+            0xFF00 => match self.selected_column {
+                COLUMN_BUTTON_KEYS => 0xC0 | self.selected_column | self.button_byte(),
+                COLUMN_DIRECTION_KEYS => 0xC0 | self.selected_column | self.direction_byte(),
+                _ => 0xC0 | self.selected_column | LOW_NIBBLE_MASK,
+            },
             _ => panic!(
                 "Attempted to access [RD] Joypad from an invalid address: {:#X}",
                 addr

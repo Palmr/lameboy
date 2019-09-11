@@ -14,8 +14,6 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
                 &mut imgui_debug.disassemble_memory_pc_lock,
             );
             ui.same_line(0.0);
-            ui.checkbox(im_str!("Raw"), &mut imgui_debug.disassemble_show_raw);
-            ui.same_line(0.0);
             ui.checkbox(im_str!("Read Args"), &mut imgui_debug.disassemble_read_args);
 
             ui.input_int(im_str!("Addr"), &mut imgui_debug.disassemble_memory_addr)
@@ -32,21 +30,23 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
             };
 
             for _ in 0..context_size {
-                let instruction = dis::decode_instruction(&instruction_addr, &mmu);
+                let instruction = dis::decode_instruction(instruction_addr, &mmu);
 
-                let instruction_debug_str = if imgui_debug.disassemble_show_raw {
-                    get_raw_instruction_debug_string(&instruction, mmu, instruction_addr)
-                } else {
-                    get_instruction_debug_string(
-                        &instruction,
-                        imgui_debug.disassemble_read_args,
-                        mmu,
-                        instruction_addr,
-                    )
-                };
+                let raw_instruction_debug_string =
+                    get_raw_instruction_debug_string(&instruction, mmu, instruction_addr);
+                let instruction_debug_str = get_instruction_debug_string(
+                    &instruction,
+                    imgui_debug.disassemble_read_args,
+                    mmu,
+                    instruction_addr,
+                );
 
-                let addr_string = im_str!("[0x{:04X}] ", instruction_addr);
-                let disassembly_string = im_str!("{}", instruction_debug_str);
+                let addr_string = im_str!("[0x{:04X}]", instruction_addr);
+                let disassembly_string = im_str!(
+                    "{: <14} | {}",
+                    raw_instruction_debug_string,
+                    instruction_debug_str
+                );
 
                 let style = if imgui_debug.breakpoints.contains(&instruction_addr) {
                     ui.push_style_color(StyleColor::Text, [1.0, 0.4, 0.4, 1.0])
@@ -76,7 +76,7 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
 
                 ui.text(disassembly_string);
 
-                if let Some(memory_comment) = dis::get_memory_comment(&instruction_addr) {
+                if let Some(memory_comment) = dis::get_memory_comment(instruction_addr) {
                     ui.same_line(0.0);
                     ui.text_colored([0.5, 0.5, 0.5, 1.0], im_str!(" ; {}", memory_comment));
                 }

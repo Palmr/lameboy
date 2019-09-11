@@ -1470,7 +1470,7 @@ pub fn sbc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// Always reset
 ///
 fn alu_and_8bit(cpu: &mut CPU, d8: u8) {
-    cpu.registers.a &= &d8;
+    cpu.registers.a &= d8;
 
     cpu.registers
         .f

@@ -71,6 +71,16 @@ impl Lameboy {
 
     // Let the CPU fetch, decode, and execute an opcode and update the PPU
     pub fn step(&mut self) -> u8 {
+        // Run the CPU for one opcode and get its cycle duration for the PPU
+        let cpu_duration = self.cpu.cycle();
+
+        // Run the PPU for one cycle getting any updated interrupt flags back
+        let int_flags = self.get_mmu().read8(0xFF0F);
+        let ppu_int_flags = self.get_ppu().cycle(cpu_duration);
+        self.get_mmu().write8(0xFF0F, int_flags | ppu_int_flags);
+
+        self.debug.program_counter = self.cpu.registers.pc;
+
         if self.trace_count > 0 {
             self.trace_count -= 1;
             trace!(
@@ -87,16 +97,6 @@ impl Lameboy {
                 self.cpu.registers.pc,
             );
         }
-
-        // Run the CPU for one opcode and get its cycle duration for the PPU
-        let cpu_duration = self.cpu.cycle();
-
-        // Run the PPU for one cycle getting any updated interrupt flags back
-        let int_flags = self.get_mmu().read8(0xFF0F);
-        let ppu_int_flags = self.get_ppu().cycle(cpu_duration);
-        self.get_mmu().write8(0xFF0F, int_flags | ppu_int_flags);
-
-        self.debug.program_counter = self.cpu.registers.pc;
 
         cpu_duration
     }
