@@ -1125,21 +1125,22 @@ pub fn add_hl_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```
 pub fn add_sp_d8(cpu: &mut CPU) -> u8 {
     // Read 8-bit value
-    let value = u16::from(cpu.fetch8());
+    let unsigned_value = cpu.fetch8();
+    let signed_value = unsigned_value as i8;
 
     let original_sp = cpu.registers.sp;
 
-    cpu.registers.sp = original_sp.wrapping_add(value);
+    cpu.registers.sp = original_sp.wrapping_add(signed_value as u16);
 
     cpu.registers.f.set(RegisterFlags::ZERO, false);
     cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
     cpu.registers.f.set(
         RegisterFlags::HALF_CARRY,
-        ((original_sp & 0x0F00) + (value & 0x0F00)) > 0x0F00,
+        ((original_sp & 0x0F) + (unsigned_value as u16 & 0x0F)) > 0x0F,
     );
     cpu.registers.f.set(
         RegisterFlags::CARRY,
-        (u32::from(original_sp) + u32::from(value)) > 0xFFFF,
+        ((original_sp & 0xFF) + (unsigned_value as u16 & 0xFF)) > 0xFF,
     );
 
     16
