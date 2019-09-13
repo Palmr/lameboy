@@ -43,7 +43,7 @@ impl GUI {
         }
 
         let hidpi_factor = platform.hidpi_factor();
-        let font_size = (11.0 * hidpi_factor) as f32;
+        let font_size = (13.0 * hidpi_factor) as f32;
         imgui.fonts().add_font(&[FontSource::DefaultFontData {
             config: Some(FontConfig {
                 size_pixels: font_size,

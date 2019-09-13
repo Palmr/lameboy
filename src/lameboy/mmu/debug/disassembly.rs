@@ -24,6 +24,7 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
             let context_size = 100;
 
             let mut instruction_addr: u16 = if imgui_debug.disassemble_memory_pc_lock {
+                imgui_debug.disassemble_memory_addr = i32::from(imgui_debug.program_counter);
                 imgui_debug.program_counter
             } else {
                 imgui_debug.disassemble_memory_addr as u16
