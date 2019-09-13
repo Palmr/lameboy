@@ -712,9 +712,10 @@ pub fn load_reg_a_a16(cpu: &mut CPU) -> u8 {
 pub fn load_reg_hl_reg_sp_d8(cpu: &mut CPU) -> u8 {
     // TODO - Could combine logic with add_sp_d8
     // Read 8-bit value
-    let value = u16::from(cpu.fetch8());
+    let unsigned_value = cpu.fetch8();
+    let signed_value = unsigned_value as i8;
 
-    let combined = cpu.registers.sp.wrapping_add(value);
+    let combined = cpu.registers.sp.wrapping_add(signed_value as u16);
 
     cpu.registers.write16(&Reg16::HL, combined);
 
@@ -722,11 +723,13 @@ pub fn load_reg_hl_reg_sp_d8(cpu: &mut CPU) -> u8 {
     cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
     cpu.registers.f.set(
         RegisterFlags::HALF_CARRY,
-        ((cpu.registers.sp & 0x0F) + (value & 0x0F)) > 0x0F,
+        ((cpu.registers.sp & 0x0F) + (unsigned_value as u16 & 0x0F)) > 0x0F,
     );
     cpu.registers
         .f
-        .set(RegisterFlags::CARRY, combined < cpu.registers.sp);
+        .set(RegisterFlags::CARRY,
+             ((cpu.registers.sp & 0xFF) + (unsigned_value as u16 & 0xFF)) > 0xFF,
+        );
 
     12
 }
