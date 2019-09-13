@@ -1104,7 +1104,7 @@ pub fn add_hl_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
     cpu.registers.f.set(
         RegisterFlags::HALF_CARRY,
-        ((original_hl & 0x0F00) + (value & 0x0F00)) > 0x0F00,
+        ((original_hl & 0x0FFF) + (value & 0x0FFF)) > 0x0FFF,
     );
     cpu.registers.f.set(
         RegisterFlags::CARRY,
