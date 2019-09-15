@@ -725,11 +725,10 @@ pub fn load_reg_hl_reg_sp_d8(cpu: &mut CPU) -> u8 {
         RegisterFlags::HALF_CARRY,
         ((cpu.registers.sp & 0x0F) + (unsigned_value as u16 & 0x0F)) > 0x0F,
     );
-    cpu.registers
-        .f
-        .set(RegisterFlags::CARRY,
-             ((cpu.registers.sp & 0xFF) + (unsigned_value as u16 & 0xFF)) > 0xFF,
-        );
+    cpu.registers.f.set(
+        RegisterFlags::CARRY,
+        ((cpu.registers.sp & 0xFF) + (unsigned_value as u16 & 0xFF)) > 0xFF,
+    );
 
     12
 }
