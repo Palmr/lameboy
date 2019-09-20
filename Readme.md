@@ -31,12 +31,11 @@ Plenty of debug windows are implemented which helps track down issues as they co
 - Sound
 - Serial support
 - Game Boy Camera & Printer support
-- Add a decompiler to make memory debugging easier
 - Ever more debug windows
   - Watchpoints
     - Watch address
     - See it in u8, u16, i8, i16
     - See it in hex, binary, decimal
     - Chart it?
-  - Comment/name calls in disassembly window
+  - Comment/name calls in disassembly window (save comments too)
 
