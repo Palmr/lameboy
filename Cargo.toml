@@ -10,10 +10,10 @@ license = "MIT"
 
 [dependencies]
 clap = "~2.33"
-bitflags = "~1.1"
-nalgebra = "~0.18"
+bitflags = "~1.2"
+nalgebra = "~0.21"
 log = "~0.4"
-log4rs = "~0.8"
+log4rs = "~0.12"
 
 imgui = "0.2"
 imgui-glium-renderer = { version = "0.2" }
