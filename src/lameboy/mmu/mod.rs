@@ -7,6 +7,32 @@ pub mod mmuobject;
 
 mod debug;
 
+pub(crate) const CART_ROM_BANK_0_START: u16 = 0x0000;
+pub(crate) const CART_ROM_BANK_0_END: u16 = 0x3FFF;
+pub(crate) const CART_ROM_BANK_X_START: u16 = 0x4000;
+pub(crate) const CART_ROM_BANK_X_END: u16 = 0x7FFF;
+pub(crate) const VRAM_START: u16 = 0x8000;
+pub(crate) const VRAM_END: u16 = 0x9FFF;
+pub(crate) const CART_RAM_BANK_X_START: u16 = 0xA000;
+pub(crate) const CART_RAM_BANK_X_END: u16 = 0xBFFF;
+pub(crate) const RAM_BANK_0_START: u16 = 0xC000;
+pub(crate) const RAM_BANK_0_END: u16 = 0xCFFF;
+pub(crate) const RAM_BANK_X_START: u16 = 0xD000;
+pub(crate) const RAM_BANK_X_END: u16 = 0xDFFF;
+pub(crate) const RAM_ECHO_BANK_0_START: u16 = 0xE000;
+pub(crate) const RAM_ECHO_BANK_0_END: u16 = 0xEFFF;
+pub(crate) const RAM_ECHO_BANK_X_START: u16 = 0xF000;
+pub(crate) const RAM_ECHO_BANK_X_END: u16 = 0xFDFF;
+pub(crate) const OAM_START: u16 = 0xFE00;
+pub(crate) const OAM_END: u16 = 0xFE9F;
+pub(crate) const UNUSABLE_START: u16 = 0xFEA0;
+pub(crate) const UNUSABLE_END: u16 = 0xFEFF;
+pub(crate) const IO_PORTS_START: u16 = 0xFF00;
+pub(crate) const IO_PORTS_END: u16 = 0xFF7F;
+pub(crate) const HIGH_RAM_START: u16 = 0xFF80;
+pub(crate) const HIGH_RAM_END: u16 = 0xFFFE;
+pub(crate) const INTERRUPT_ENABLE_REGISTER: u16 = 0xFFFF;
+
 pub struct MMU {
     pub cart: Cart,
     pub ppu: PPU,
@@ -88,8 +114,10 @@ impl MMU {
 
     pub fn read8_safe(&self, addr: u16) -> u8 {
         match addr {
-            0x0000..=0x7FFF | 0xA000..=0xBFFF => self.cart.read8(addr),
-            0x8000..=0x9FFF => {
+            CART_ROM_BANK_0_START..=CART_ROM_BANK_0_END
+            | CART_ROM_BANK_X_START..=CART_ROM_BANK_X_END
+            | CART_RAM_BANK_X_START..=CART_RAM_BANK_X_END => self.cart.read8(addr),
+            VRAM_START..=VRAM_END => {
                 // Return undefined data if accessing VRAM
                 if self.ppu.is_vram_accessible() {
                     self.ppu.read8(addr)
@@ -97,9 +125,13 @@ impl MMU {
                     0xFF
                 }
             }
-            0xC000..=0xCFFF | 0xE000..=0xEFFF => self.wram0[(addr as usize) & 0x0FFF],
-            0xD000..=0xDFFF | 0xF000..=0xFDFF => self.wram1[(addr as usize) & 0x0FFF],
-            0xFE00..=0xFE9F => {
+            RAM_BANK_0_START..=RAM_BANK_0_END | RAM_ECHO_BANK_0_START..=RAM_ECHO_BANK_0_END => {
+                self.wram0[(addr as usize) & 0x0FFF]
+            }
+            RAM_BANK_X_START..=RAM_BANK_X_END | RAM_ECHO_BANK_X_START..=RAM_ECHO_BANK_X_END => {
+                self.wram1[(addr as usize) & 0x0FFF]
+            }
+            OAM_START..=OAM_END => {
                 // Return undefined data if accessing VRAM or OAM
                 if self.ppu.is_oam_accessible() {
                     self.ppu.read8(addr)
@@ -107,8 +139,8 @@ impl MMU {
                     0xFF
                 }
             }
-            0xFEA0..=0xFEFF => self.unusable,
-            0xFF00..=0xFF7F => match addr {
+            UNUSABLE_START..=UNUSABLE_END => self.unusable,
+            IO_PORTS_START..=IO_PORTS_END => match addr {
                 0xFF00 => self.joypad.read8(addr),
                 0xFF40..=0xFF4B => self.ppu.read8(addr),
                 0xFF01..=0xFF3F | 0xFF4C..=0xFF7F => self.io[(addr as usize) & 0x00FF],
@@ -117,8 +149,8 @@ impl MMU {
                     addr
                 ),
             },
-            0xFF80..=0xFFFE => self.hram[((addr as usize) & 0x00FF) - 0x0080],
-            0xFFFF => self.ier,
+            HIGH_RAM_START..=HIGH_RAM_END => self.hram[((addr as usize) & 0x00FF) - 0x0080],
+            INTERRUPT_ENABLE_REGISTER => self.ier,
         }
     }
 
@@ -128,23 +160,29 @@ impl MMU {
         }
 
         match addr {
-            0x0000..=0x7FFF | 0xA000..=0xBFFF => self.cart.write8(addr, data),
-            0x8000..=0x9FFF => {
+            CART_ROM_BANK_0_START..=CART_ROM_BANK_0_END
+            | CART_ROM_BANK_X_START..=CART_ROM_BANK_X_END
+            | CART_RAM_BANK_X_START..=CART_RAM_BANK_X_END => self.cart.write8(addr, data),
+            VRAM_START..=VRAM_END => {
                 // Ignore update if PPU is accessing VRAM
                 if self.ppu.is_vram_accessible() {
                     self.ppu.write8(addr, data)
                 }
             }
-            0xC000..=0xCFFF | 0xE000..=0xEFFF => self.wram0[(addr as usize) & 0x0FFF] = data,
-            0xD000..=0xDFFF | 0xF000..=0xFDFF => self.wram1[(addr as usize) & 0x0FFF] = data,
-            0xFE00..=0xFE9F => {
+            RAM_BANK_0_START..=RAM_BANK_0_END | RAM_ECHO_BANK_0_START..=RAM_ECHO_BANK_0_END => {
+                self.wram0[(addr as usize) & 0x0FFF] = data
+            }
+            RAM_BANK_X_START..=RAM_BANK_X_END | RAM_ECHO_BANK_X_START..=RAM_ECHO_BANK_X_END => {
+                self.wram1[(addr as usize) & 0x0FFF] = data
+            }
+            OAM_START..=OAM_END => {
                 // Ignore update if PPU is accessing VRAM or OAM
                 if self.ppu.is_oam_accessible() {
                     self.ppu.write8(addr, data)
                 }
             }
-            0xFEA0..=0xFEFF => (),
-            0xFF00..=0xFF7F => {
+            UNUSABLE_START..=UNUSABLE_END => (),
+            IO_PORTS_START..=IO_PORTS_END => {
                 match addr {
                     0xFF00 => self.joypad.write8(addr, data),
                     0xFF46 => {
@@ -163,8 +201,8 @@ impl MMU {
                     ),
                 }
             }
-            0xFF80..=0xFFFE => self.hram[((addr as usize) & 0x00FF) - 0x0080] = data,
-            0xFFFF => self.ier = data,
+            HIGH_RAM_START..=HIGH_RAM_END => self.hram[((addr as usize) & 0x00FF) - 0x0080] = data,
+            INTERRUPT_ENABLE_REGISTER => self.ier = data,
         }
     }
 

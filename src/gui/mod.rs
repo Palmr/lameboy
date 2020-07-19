@@ -135,11 +135,8 @@ impl GUI {
                 let gl_window = display.gl_window();
                 platform.handle_event(imgui.io_mut(), gl_window.window(), &event);
 
-                match event {
-                    Event::WindowEvent { event: i, .. } => {
-                        GUI::update_events(&mut lameboy, &i);
-                    }
-                    _ => (),
+                if let Event::WindowEvent { event: i, .. } = event {
+                    GUI::update_events(&mut lameboy, &i);
                 }
             }
         })

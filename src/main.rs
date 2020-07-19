@@ -11,6 +11,7 @@ extern crate imgui_glium_renderer;
 extern crate imgui_winit_support;
 #[macro_use]
 extern crate log;
+extern crate core;
 extern crate log4rs;
 extern crate nalgebra;
 
