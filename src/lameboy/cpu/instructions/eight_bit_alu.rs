@@ -17,7 +17,9 @@ use lameboy::cpu::CPU;
 pub fn add_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    alu_add_8bit(cpu, value, false);
+    let (acc, flags) = alu_add_8bit(cpu.registers.a, cpu.registers.f, value, false);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     4
 }
@@ -34,7 +36,9 @@ pub fn add_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 pub fn add_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     let value = cpu.mmu.read8(cpu.registers.read16(r16));
 
-    alu_add_8bit(cpu, value, false);
+    let (acc, flags) = alu_add_8bit(cpu.registers.a, cpu.registers.f, value, false);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -52,7 +56,9 @@ pub fn add_d8(cpu: &mut CPU) -> u8 {
     // Read 8-bit value
     let value = cpu.fetch8();
 
-    alu_add_8bit(cpu, value, false);
+    let (acc, flags) = alu_add_8bit(cpu.registers.a, cpu.registers.f, value, false);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -70,7 +76,9 @@ pub fn adc_d8(cpu: &mut CPU) -> u8 {
     // Read 8-bit value
     let value = cpu.fetch8();
 
-    alu_add_8bit(cpu, value, true);
+    let (acc, flags) = alu_add_8bit(cpu.registers.a, cpu.registers.f, value, true);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -88,7 +96,9 @@ pub fn adc_d8(cpu: &mut CPU) -> u8 {
 pub fn adc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     let value = cpu.mmu.read8(cpu.registers.read16(r16));
 
-    alu_add_8bit(cpu, value, true);
+    let (acc, flags) = alu_add_8bit(cpu.registers.a, cpu.registers.f, value, true);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -105,7 +115,9 @@ pub fn adc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 pub fn adc_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    alu_add_8bit(cpu, value, true);
+    let (acc, flags) = alu_add_8bit(cpu.registers.a, cpu.registers.f, value, true);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     4
 }
@@ -489,7 +501,7 @@ pub fn inc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// DEC A
 /// DEC B
 /// ```
-#[warn(clippy::verbose_bit_mask)]
+#[allow(clippy::verbose_bit_mask)]
 pub fn dec_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let mut value = cpu.registers.read8(r8);
 

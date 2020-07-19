@@ -1,4 +1,4 @@
-use lameboy::cpu::registers::Flags as RegisterFlags;
+use lameboy::cpu::registers::{Flags as RegisterFlags, Flags};
 use lameboy::cpu::CPU;
 
 /// Add 8-bit value with register A, storing the result in A.
@@ -23,28 +23,63 @@ use lameboy::cpu::CPU;
 ///
 /// Set if the value added to A would have been too large to fit in a u8
 ///
-pub fn alu_add_8bit(cpu: &mut CPU, d8: u8, use_carry: bool) {
-    let original_a = cpu.registers.a;
-
-    let cy = if use_carry && cpu.registers.f.contains(RegisterFlags::CARRY) {
+pub fn alu_add_8bit(accumulator: u8, flags: Flags, d8: u8, use_carry: bool) -> (u8, Flags) {
+    let cy = if use_carry && flags.contains(RegisterFlags::CARRY) {
         1
     } else {
         0
     };
 
-    cpu.registers.a = original_a.wrapping_add(d8).wrapping_add(cy);
+    let new_accumulator = accumulator.wrapping_add(d8).wrapping_add(cy);
 
-    cpu.registers
-        .f
-        .set(RegisterFlags::ZERO, cpu.registers.a == 0);
-    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
-    cpu.registers.f.set(
+    let mut new_flags = flags;
+    new_flags.set(RegisterFlags::ZERO, new_accumulator == 0);
+    new_flags.set(RegisterFlags::SUBTRACT, false);
+    new_flags.set(
         RegisterFlags::HALF_CARRY,
-        ((original_a & 0x0F) + (d8 & 0x0F) + cy) > 0x0F,
+        ((accumulator & 0x0F) + (d8 & 0x0F) + cy) > 0x0F,
     );
-    cpu.registers
-        .f
-        .set(RegisterFlags::CARRY, cpu.registers.a < original_a);
+    new_flags.set(RegisterFlags::CARRY, new_accumulator < accumulator);
+
+    (new_accumulator, new_flags)
+}
+
+#[cfg(test)]
+mod test_alu_add_8bit {
+    use lameboy::cpu::instructions::alu::alu_add_8bit;
+    use lameboy::cpu::registers::Flags;
+
+    #[test]
+    fn check_basic() {
+        assert_eq!(
+            alu_add_8bit(0x00, Flags::empty(), 0x01, false),
+            (0x01, Flags::empty())
+        );
+    }
+
+    #[test]
+    fn check_overflow_to_zero() {
+        assert_eq!(
+            alu_add_8bit(0xFF, Flags::empty(), 0x01, false),
+            (0x00, Flags::ZERO | Flags::HALF_CARRY | Flags::CARRY)
+        );
+    }
+
+    #[test]
+    fn check_overflow() {
+        assert_eq!(
+            alu_add_8bit(0xFF, Flags::empty(), 0x69, false),
+            (0x68, Flags::HALF_CARRY | Flags::CARRY)
+        );
+    }
+
+    #[test]
+    fn check_half_overflow() {
+        assert_eq!(
+            alu_add_8bit(0x0F, Flags::empty(), 0x01, false),
+            (0x10, Flags::HALF_CARRY)
+        );
+    }
 }
 
 /// Subtract 8-bit value from register A, storing the result in A.
