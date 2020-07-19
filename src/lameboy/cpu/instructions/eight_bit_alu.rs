@@ -489,6 +489,7 @@ pub fn inc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// DEC A
 /// DEC B
 /// ```
+#[warn(clippy::verbose_bit_mask)]
 pub fn dec_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let mut value = cpu.registers.read8(r8);
 
