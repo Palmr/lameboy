@@ -1,7 +1,9 @@
 use std::time::Instant;
 
-use glium::backend::glutin::glutin::{ElementState, VirtualKeyCode};
-use glium::glutin::{self, Event, WindowEvent};
+use glium::glutin;
+use glium::glutin::event::{ElementState, Event, VirtualKeyCode, WindowEvent};
+use glium::glutin::event_loop::{ControlFlow, EventLoop};
+use glium::glutin::window::WindowBuilder;
 use glium::{Display, Surface};
 use imgui::{Context, FontConfig, FontSource};
 use imgui_glium_renderer::Renderer;
@@ -13,22 +15,26 @@ pub mod imgui_debug_state;
 pub mod imgui_debuggable;
 
 pub struct GUI {
-    events_loop: glutin::EventsLoop,
+    event_loop: EventLoop<()>,
     pub display: glium::Display,
     imgui: Context,
     platform: WinitPlatform,
     renderer: Renderer,
-    font_size: f32,
     last_frame: Instant,
+    background_colour: (f32, f32, f32, f32),
 }
 
 impl GUI {
-    pub fn init(window_size: (f64, f64), window_title: String) -> GUI {
-        let events_loop = glutin::EventsLoop::new();
+    pub fn init(
+        window_size: (f64, f64),
+        window_title: String,
+        background_colour: (f32, f32, f32, f32),
+    ) -> GUI {
+        let events_loop = EventLoop::new();
         let context = glutin::ContextBuilder::new().with_vsync(true);
-        let builder = glutin::WindowBuilder::new()
+        let builder = WindowBuilder::new()
             .with_title(window_title)
-            .with_dimensions(glutin::dpi::LogicalSize::new(window_size.0, window_size.1));
+            .with_inner_size(glutin::dpi::LogicalSize::new(window_size.0, window_size.1));
         let display =
             Display::new(builder, context, &events_loop).expect("Failed to initialize display");
 
@@ -51,82 +57,117 @@ impl GUI {
             }),
         }]);
 
-        imgui.io_mut().font_global_scale = (1.0 / hidpi_factor) as f32;
+        imgui.io_mut().font_global_scale = (1.0 / &hidpi_factor) as f32;
 
         let renderer = Renderer::init(&mut imgui, &display).expect("Failed to initialize renderer");
 
         GUI {
-            events_loop,
+            event_loop: events_loop,
             display,
             imgui,
             platform,
             renderer,
-            font_size,
             last_frame: Instant::now(),
+            background_colour,
         }
     }
 
-    pub fn render(&mut self, clear_color: (f32, f32, f32, f32), lameboy: &mut Lameboy) {
-        let gl_window = self.display.gl_window();
-        let window = gl_window.window();
+    pub fn main_loop(self, mut lameboy: Lameboy) {
+        let GUI {
+            event_loop,
+            display,
+            mut imgui,
+            mut platform,
+            mut renderer,
+            background_colour,
+            ..
+        } = self;
+        let mut last_frame = Instant::now();
 
-        let io = self.imgui.io_mut();
-        self.platform
-            .prepare_frame(io, &window)
-            .expect("Failed to start frame");
-        self.last_frame = io.update_delta_time(self.last_frame);
+        event_loop.run(move |event, _, control_flow| match event {
+            Event::NewEvents(_) => {
+                let now = Instant::now();
+                imgui.io_mut().update_delta_time(last_frame);
+                last_frame = now;
+            }
+            Event::MainEventsCleared => {
+                let gl_window = display.gl_window();
+                platform
+                    .prepare_frame(imgui.io_mut(), &gl_window.window())
+                    .expect("Failed to prepare frame");
+                gl_window.window().request_redraw();
+            }
+            Event::RedrawRequested(_) => {
+                let ui = imgui.frame();
 
-        let ui = self.imgui.frame();
-        let mut target = self.display.draw();
-        target.clear_color_srgb(clear_color.0, clear_color.1, clear_color.2, clear_color.3);
+                let gl_window = display.gl_window();
+                let mut target = display.draw();
+                target.clear_color_srgb(
+                    background_colour.0,
+                    background_colour.1,
+                    background_colour.2,
+                    background_colour.3,
+                );
+                platform.prepare_render(&ui, gl_window.window());
 
-        lameboy.get_ppu().draw(&mut target);
+                if lameboy.is_running() {
+                    lameboy.run_frame();
+                }
 
-        //        run_ui(&ui, &mut lameboy);
-        lameboy.imgui_display(&ui);
+                lameboy.get_ppu().draw(&mut target);
+                lameboy.imgui_display(&ui);
 
-        let draw_data = ui.render();
-        self.renderer
-            .render(&mut target, draw_data)
-            .expect("Rendering failed");
+                if !lameboy.active {
+                    *control_flow = ControlFlow::Exit;
+                }
 
-        target.finish().expect("Failed to swap buffers");
-    }
+                let draw_data = ui.render();
+                renderer
+                    .render(&mut target, draw_data)
+                    .expect("Rendering failed");
+                target.finish().expect("Failed to swap buffers");
+            }
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => *control_flow = ControlFlow::Exit,
+            event => {
+                let gl_window = display.gl_window();
+                platform.handle_event(imgui.io_mut(), gl_window.window(), &event);
 
-    pub fn update_events(&mut self, lameboy: &mut Lameboy) {
-        let gl_window = self.display.gl_window();
-        let window = gl_window.window();
-        let im = &mut self.imgui;
-        let platform = &mut self.platform;
-
-        self.events_loop.poll_events(|event| {
-            platform.handle_event(im.io_mut(), &window, &event);
-
-            if let Event::WindowEvent { event, .. } = event {
                 match event {
-                    WindowEvent::CloseRequested => lameboy.active = false,
-                    WindowEvent::KeyboardInput { input, .. } => {
-                        let pressed = input.state == ElementState::Pressed;
-                        match input.virtual_keycode {
-                            Some(VirtualKeyCode::Left) => lameboy.get_joypad().left = pressed,
-                            Some(VirtualKeyCode::Right) => lameboy.get_joypad().right = pressed,
-                            Some(VirtualKeyCode::Up) => lameboy.get_joypad().up = pressed,
-                            Some(VirtualKeyCode::Down) => lameboy.get_joypad().down = pressed,
-
-                            Some(VirtualKeyCode::Return) => lameboy.get_joypad().start = pressed,
-                            Some(VirtualKeyCode::A) => lameboy.get_joypad().a = pressed,
-                            Some(VirtualKeyCode::S) => lameboy.get_joypad().b = pressed,
-                            Some(VirtualKeyCode::LShift) | Some(VirtualKeyCode::RShift) => {
-                                lameboy.get_joypad().select = pressed
-                            }
-                            _ => {}
-                        }
+                    Event::WindowEvent { event: i, .. } => {
+                        GUI::update_events(&mut lameboy, &i);
                     }
-                    WindowEvent::CursorEntered { .. } => lameboy.debug.show_menu = true,
-                    WindowEvent::CursorLeft { .. } => lameboy.debug.show_menu = false,
                     _ => (),
                 }
             }
-        });
+        })
+    }
+
+    fn update_events(lameboy: &mut Lameboy, event: &WindowEvent) {
+        match event {
+            WindowEvent::CloseRequested => lameboy.active = false,
+            WindowEvent::KeyboardInput { input, .. } => {
+                let pressed = input.state == ElementState::Pressed;
+                match input.virtual_keycode {
+                    Some(VirtualKeyCode::Left) => lameboy.get_joypad().left = pressed,
+                    Some(VirtualKeyCode::Right) => lameboy.get_joypad().right = pressed,
+                    Some(VirtualKeyCode::Up) => lameboy.get_joypad().up = pressed,
+                    Some(VirtualKeyCode::Down) => lameboy.get_joypad().down = pressed,
+
+                    Some(VirtualKeyCode::Return) => lameboy.get_joypad().start = pressed,
+                    Some(VirtualKeyCode::A) => lameboy.get_joypad().a = pressed,
+                    Some(VirtualKeyCode::S) => lameboy.get_joypad().b = pressed,
+                    Some(VirtualKeyCode::LShift) | Some(VirtualKeyCode::RShift) => {
+                        lameboy.get_joypad().select = pressed
+                    }
+                    _ => {}
+                }
+            }
+            WindowEvent::CursorEntered { .. } => lameboy.debug.show_menu = true,
+            WindowEvent::CursorLeft { .. } => lameboy.debug.show_menu = false,
+            _ => (),
+        };
     }
 }

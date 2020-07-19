@@ -57,23 +57,11 @@ fn main() {
     info!("File length: {}", data.len());
 
     let window_title = format!("{} - Lameboy - v{}", rom_file_name, PKG_VERSION);
-    let mut gui = GUI::init((640f64, 576f64), window_title);
+    let gui = GUI::init((640f64, 576f64), window_title, CLEAR_COLOR);
 
     // Create all our hardware instances
     let mut lameboy = Lameboy::new(data, &gui);
     lameboy.reset();
 
-    loop {
-        if lameboy.is_running() {
-            lameboy.run_frame();
-        }
-
-        gui.update_events(&mut lameboy);
-
-        if !lameboy.active {
-            break;
-        }
-
-        gui.render(CLEAR_COLOR, &mut lameboy);
-    }
+    gui.main_loop(lameboy);
 }
