@@ -1,4 +1,14 @@
-use lameboy::cpu::instructions::*;
+use lameboy::cpu::instructions::bit_opcodes::*;
+use lameboy::cpu::instructions::calls::*;
+use lameboy::cpu::instructions::eight_bit_alu::*;
+use lameboy::cpu::instructions::eight_bit_loads::*;
+use lameboy::cpu::instructions::jumps::*;
+use lameboy::cpu::instructions::misc::*;
+use lameboy::cpu::instructions::restarts::*;
+use lameboy::cpu::instructions::returns::*;
+use lameboy::cpu::instructions::rotates_and_shifts::*;
+use lameboy::cpu::instructions::sixteen_bit_alu::*;
+use lameboy::cpu::instructions::sixteen_bit_loads::*;
 use lameboy::cpu::registers::*;
 use lameboy::interrupts::*;
 use lameboy::mmu::MMU;
@@ -378,7 +388,7 @@ impl CPU {
             0xC4 => call_conditional_d16(self, op),
             0xC5 => push_r16(self, &Reg16::BC),
             0xC6 => add_d8(self),
-            0xC7 => reset(self, op),
+            0xC7 => restart(self, op),
             0xC8 => ret_conditional(self, op),
             0xC9 => ret(self),
             0xCA => jump_conditional_d16(self, op),
@@ -386,7 +396,7 @@ impl CPU {
             0xCC => call_conditional_d16(self, op),
             0xCD => call_d16(self),
             0xCE => adc_d8(self),
-            0xCF => reset(self, op),
+            0xCF => restart(self, op),
 
             0xD0 => ret_conditional(self, op),
             0xD1 => pop_r16(self, &Reg16::DE),
@@ -395,7 +405,7 @@ impl CPU {
             0xD4 => call_conditional_d16(self, op),
             0xD5 => push_r16(self, &Reg16::DE),
             0xD6 => sub_d8(self),
-            0xD7 => reset(self, op),
+            0xD7 => restart(self, op),
             0xD8 => ret_conditional(self, op),
             0xD9 => ret_interrupt(self),
             0xDA => jump_conditional_d16(self, op),
@@ -403,7 +413,7 @@ impl CPU {
             0xDC => call_conditional_d16(self, op),
             0xDD => undefined(self, op),
             0xDE => sbc_d8(self),
-            0xDF => reset(self, op),
+            0xDF => restart(self, op),
 
             0xE0 => load_high_mem_d8_reg_a(self),
             0xE1 => pop_r16(self, &Reg16::HL),
@@ -412,7 +422,7 @@ impl CPU {
             0xE4 => undefined(self, op),
             0xE5 => push_r16(self, &Reg16::HL),
             0xE6 => and_d8(self),
-            0xE7 => reset(self, op),
+            0xE7 => restart(self, op),
             0xE8 => add_sp_d8(self),
             0xE9 => jump_r16(self, &Reg16::HL),
             0xEA => load_a16_reg_a(self),
@@ -420,7 +430,7 @@ impl CPU {
             0xEC => undefined(self, op),
             0xED => undefined(self, op),
             0xEE => xor_d8(self),
-            0xEF => reset(self, op),
+            0xEF => restart(self, op),
 
             0xF0 => load_reg_a_high_mem_d8(self),
             0xF1 => pop_r16(self, &Reg16::AF),
@@ -429,7 +439,7 @@ impl CPU {
             0xF4 => undefined(self, op),
             0xF5 => push_r16(self, &Reg16::AF),
             0xF6 => or_d8(self),
-            0xF7 => reset(self, op),
+            0xF7 => restart(self, op),
             0xF8 => load_reg_hl_reg_sp_d8(self),
             0xF9 => load_r16_r16(self, &Reg16::SP, &Reg16::HL),
             0xFA => load_reg_a_a16(self),
@@ -437,7 +447,7 @@ impl CPU {
             0xFC => undefined(self, op),
             0xFD => undefined(self, op),
             0xFE => cp_d8(self),
-            0xFF => reset(self, op),
+            0xFF => restart(self, op),
         }
     }
 
