@@ -1,0 +1,20 @@
+#!/bin/bash
+
+## Shamelessly stolen from (with modifications for modern rustfmt args) https://eugene-babichenko.github.io/blog/2018/11/08/rustfmt-git-hook/
+
+HAS_ISSUES=0
+
+for file in $(git diff --name-only --staged | grep '.rs$'); do
+    FMT_RESULT="$(rustfmt --check $file 2>/dev/null || true)"
+    if [ "$FMT_RESULT" != "" ]; then
+        echo " - $file"
+        HAS_ISSUES=1
+    fi
+done
+
+if [ $HAS_ISSUES -eq 0 ]; then
+    exit 0
+fi
+
+printf "\xE2\x98\xA0 Your code has formatting issues in files listed above. Forgot to run \`rustfmt\`?\n"
+exit 1
