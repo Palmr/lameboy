@@ -40,7 +40,7 @@ pub fn call_conditional_d16(cpu: &mut CPU, opcode: u8) -> u8 {
     // Read 16-bit jump target address
     let jump_target = cpu.fetch16();
 
-    if opcode_flag_test(cpu, opcode) {
+    if opcode_flag_test(opcode, cpu.registers.f) {
         // Push current PC to the stack
         let current_pc = cpu.registers.pc;
         push_stack_d16(cpu, current_pc);

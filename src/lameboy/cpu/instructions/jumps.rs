@@ -36,7 +36,7 @@ pub fn jump_conditional_d16(cpu: &mut CPU, opcode: u8) -> u8 {
     let jump_target = cpu.fetch16();
 
     // Test if the condition matches and if we need to jump
-    if opcode_flag_test(cpu, opcode) {
+    if opcode_flag_test(opcode, cpu.registers.f) {
         // Jump PC to that target address
         cpu.registers.pc = jump_target;
 
@@ -96,7 +96,7 @@ pub fn jump_relative_conditional_d8(cpu: &mut CPU, opcode: u8) -> u8 {
     let jump_offset: i8 = cpu.fetch8() as i8;
 
     // Test if the condition matches and if we need to jump
-    if opcode_flag_test(cpu, opcode) {
+    if opcode_flag_test(opcode, cpu.registers.f) {
         // Jump PC to that target address
         cpu.registers.pc = cpu.registers.pc.wrapping_add(jump_offset as u16);
 

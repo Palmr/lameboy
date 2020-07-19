@@ -1,5 +1,4 @@
-use lameboy::cpu::registers::Flags as RegisterFlags;
-use lameboy::cpu::CPU;
+use lameboy::cpu::registers::{Flags as RegisterFlags, Flags};
 
 pub mod bit_opcodes;
 pub mod calls;
@@ -28,16 +27,58 @@ mod stack;
 /// | 10 | NC        | CY = 0 |
 /// | 11 | C         | CY = 0 |
 ///
-fn opcode_flag_test(cpu: &CPU, opcode: u8) -> bool {
+fn opcode_flag_test(opcode: u8, flags: Flags) -> bool {
     let cc = (opcode & 0b0001_1000) >> 3;
     match cc {
-        0b00 => !cpu.registers.f.contains(RegisterFlags::ZERO),
-        0b01 => cpu.registers.f.contains(RegisterFlags::ZERO),
-        0b10 => !cpu.registers.f.contains(RegisterFlags::CARRY),
-        0b11 => cpu.registers.f.contains(RegisterFlags::CARRY),
+        0b00 => !flags.contains(RegisterFlags::ZERO),
+        0b01 => flags.contains(RegisterFlags::ZERO),
+        0b10 => !flags.contains(RegisterFlags::CARRY),
+        0b11 => flags.contains(RegisterFlags::CARRY),
         _ => {
             warn!("Unhandled condition: {}", cc);
             false
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::opcode_flag_test;
+    use lameboy::cpu::registers::Flags;
+
+    #[test]
+    fn check_opcode_flag_nz() {
+        assert_eq!(true, opcode_flag_test(0b0000_0000, Flags::empty()));
+        assert_eq!(false, opcode_flag_test(0b0000_0000, Flags::ZERO));
+        assert_eq!(true, opcode_flag_test(0b0000_0000, Flags::SUBTRACT));
+        assert_eq!(true, opcode_flag_test(0b0000_0000, Flags::HALF_CARRY));
+        assert_eq!(true, opcode_flag_test(0b0000_0000, Flags::CARRY));
+    }
+
+    #[test]
+    fn check_opcode_flag_z() {
+        assert_eq!(false, opcode_flag_test(0b0000_1000, Flags::empty()));
+        assert_eq!(true, opcode_flag_test(0b0000_1000, Flags::ZERO));
+        assert_eq!(false, opcode_flag_test(0b0000_1000, Flags::SUBTRACT));
+        assert_eq!(false, opcode_flag_test(0b0000_1000, Flags::HALF_CARRY));
+        assert_eq!(false, opcode_flag_test(0b0000_1000, Flags::CARRY));
+    }
+
+    #[test]
+    fn check_opcode_flag_nc() {
+        assert_eq!(true, opcode_flag_test(0b0001_0000, Flags::empty()));
+        assert_eq!(true, opcode_flag_test(0b0001_0000, Flags::ZERO));
+        assert_eq!(true, opcode_flag_test(0b0001_0000, Flags::SUBTRACT));
+        assert_eq!(true, opcode_flag_test(0b0001_0000, Flags::HALF_CARRY));
+        assert_eq!(false, opcode_flag_test(0b0001_0000, Flags::CARRY));
+    }
+
+    #[test]
+    fn check_opcode_flag_c() {
+        assert_eq!(false, opcode_flag_test(0b0001_1000, Flags::empty()));
+        assert_eq!(false, opcode_flag_test(0b0001_1000, Flags::ZERO));
+        assert_eq!(false, opcode_flag_test(0b0001_1000, Flags::SUBTRACT));
+        assert_eq!(false, opcode_flag_test(0b0001_1000, Flags::HALF_CARRY));
+        assert_eq!(true, opcode_flag_test(0b0001_1000, Flags::CARRY));
     }
 }

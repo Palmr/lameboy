@@ -31,7 +31,7 @@ pub fn ret(cpu: &mut CPU) -> u8 {
 /// RET ; PC <<- STACK;
 /// ```
 pub fn ret_conditional(cpu: &mut CPU, opcode: u8) -> u8 {
-    if opcode_flag_test(cpu, opcode) {
+    if opcode_flag_test(opcode, cpu.registers.f) {
         ret(cpu);
 
         20
