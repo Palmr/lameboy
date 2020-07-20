@@ -1,4 +1,4 @@
-use lameboy::cpu::registers::{Flags as RegisterFlags, Flags};
+use lameboy::cpu::registers::Flags;
 
 pub mod bit_opcodes;
 pub mod calls;
@@ -30,10 +30,10 @@ mod stack;
 fn opcode_flag_test(opcode: u8, flags: Flags) -> bool {
     let cc = (opcode & 0b0001_1000) >> 3;
     match cc {
-        0b00 => !flags.contains(RegisterFlags::ZERO),
-        0b01 => flags.contains(RegisterFlags::ZERO),
-        0b10 => !flags.contains(RegisterFlags::CARRY),
-        0b11 => flags.contains(RegisterFlags::CARRY),
+        0b00 => !flags.contains(Flags::ZERO),
+        0b01 => flags.contains(Flags::ZERO),
+        0b10 => !flags.contains(Flags::CARRY),
+        0b11 => flags.contains(Flags::CARRY),
         _ => {
             warn!("Unhandled condition: {}", cc);
             false

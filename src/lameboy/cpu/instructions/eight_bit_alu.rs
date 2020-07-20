@@ -1,8 +1,7 @@
 use lameboy::cpu::instructions::alu::{
     alu_add_8bit, alu_and_8bit, alu_cp_8bit, alu_or_8bit, alu_sub_8bit, alu_xor_8bit,
 };
-use lameboy::cpu::registers::Flags as RegisterFlags;
-use lameboy::cpu::registers::{Reg16, Reg8};
+use lameboy::cpu::registers::{Flags, Reg16, Reg8};
 use lameboy::cpu::CPU;
 
 /// ADD 8-bit register with register A, storing the result in A.
@@ -456,14 +455,12 @@ pub fn cp_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 pub fn inc_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let mut value = cpu.registers.read8(r8);
 
-    cpu.registers
-        .f
-        .set(RegisterFlags::HALF_CARRY, value & 0xf == 0xf);
+    cpu.registers.f.set(Flags::HALF_CARRY, value & 0xf == 0xf);
 
     value = value.wrapping_add(1);
 
-    cpu.registers.f.set(RegisterFlags::ZERO, value == 0);
-    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(Flags::ZERO, value == 0);
+    cpu.registers.f.set(Flags::SUBTRACT, false);
 
     cpu.registers.write8(r8, value);
 
@@ -505,14 +502,12 @@ pub fn inc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 pub fn dec_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let mut value = cpu.registers.read8(r8);
 
-    cpu.registers
-        .f
-        .set(RegisterFlags::HALF_CARRY, value & 0xf == 0x0);
+    cpu.registers.f.set(Flags::HALF_CARRY, value & 0xf == 0x0);
 
     value = value.wrapping_sub(1);
 
-    cpu.registers.f.set(RegisterFlags::ZERO, value == 0);
-    cpu.registers.f.set(RegisterFlags::SUBTRACT, true);
+    cpu.registers.f.set(Flags::ZERO, value == 0);
+    cpu.registers.f.set(Flags::SUBTRACT, true);
 
     cpu.registers.write8(r8, value);
 

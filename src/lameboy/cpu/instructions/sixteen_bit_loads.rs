@@ -1,6 +1,5 @@
 use lameboy::cpu::instructions::stack::{pop_stack_d16, push_stack_d16};
-use lameboy::cpu::registers::Flags as RegisterFlags;
-use lameboy::cpu::registers::Reg16;
+use lameboy::cpu::registers::{Flags, Reg16};
 use lameboy::cpu::CPU;
 
 /// Load a 16-bit value into a 16-bit register.
@@ -59,14 +58,14 @@ pub fn load_reg_hl_reg_sp_d8(cpu: &mut CPU) -> u8 {
 
     cpu.registers.write16(&Reg16::HL, combined);
 
-    cpu.registers.f.set(RegisterFlags::ZERO, false);
-    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(Flags::ZERO, false);
+    cpu.registers.f.set(Flags::SUBTRACT, false);
     cpu.registers.f.set(
-        RegisterFlags::HALF_CARRY,
+        Flags::HALF_CARRY,
         ((cpu.registers.sp & 0x0F) + (unsigned_value as u16 & 0x0F)) > 0x0F,
     );
     cpu.registers.f.set(
-        RegisterFlags::CARRY,
+        Flags::CARRY,
         ((cpu.registers.sp & 0xFF) + (unsigned_value as u16 & 0xFF)) > 0xFF,
     );
 

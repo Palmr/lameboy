@@ -1,5 +1,4 @@
-use lameboy::cpu::registers::Flags as RegisterFlags;
-use lameboy::cpu::registers::Reg16;
+use lameboy::cpu::registers::{Flags, Reg16};
 use lameboy::cpu::CPU;
 
 /// ADD 16-bit register with register HL, storing the result in HL.
@@ -19,14 +18,14 @@ pub fn add_hl_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 
     cpu.registers.write16(&Reg16::HL, combined);
 
-    // No change for RegisterFlags::ZERO
-    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    // No change for Flags::ZERO
+    cpu.registers.f.set(Flags::SUBTRACT, false);
     cpu.registers.f.set(
-        RegisterFlags::HALF_CARRY,
+        Flags::HALF_CARRY,
         ((original_hl & 0x0FFF) + (value & 0x0FFF)) > 0x0FFF,
     );
     cpu.registers.f.set(
-        RegisterFlags::CARRY,
+        Flags::CARRY,
         (u32::from(original_hl) + u32::from(value)) > 0xFFFF,
     );
 
@@ -51,14 +50,14 @@ pub fn add_sp_d8(cpu: &mut CPU) -> u8 {
 
     cpu.registers.sp = original_sp.wrapping_add(signed_value as u16);
 
-    cpu.registers.f.set(RegisterFlags::ZERO, false);
-    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
+    cpu.registers.f.set(Flags::ZERO, false);
+    cpu.registers.f.set(Flags::SUBTRACT, false);
     cpu.registers.f.set(
-        RegisterFlags::HALF_CARRY,
+        Flags::HALF_CARRY,
         ((original_sp & 0x0F) + (unsigned_value as u16 & 0x0F)) > 0x0F,
     );
     cpu.registers.f.set(
-        RegisterFlags::CARRY,
+        Flags::CARRY,
         ((original_sp & 0xFF) + (unsigned_value as u16 & 0xFF)) > 0xFF,
     );
 

@@ -1,6 +1,5 @@
 use lameboy::cpu::instructions::alu::alu_swap;
-use lameboy::cpu::registers::Flags as RegisterFlags;
-use lameboy::cpu::registers::{Reg16, Reg8};
+use lameboy::cpu::registers::{Flags, Reg16, Reg8};
 use lameboy::cpu::{InterruptFlagDelayStatus, CPU};
 
 /// Swap high and low bits of an 8-bit register.
@@ -30,7 +29,7 @@ pub fn swap_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// SLA (HL) ; Shift memory[hl] left (sets Flag::RegisterFlags::ZERO if rotated result == 0)
+/// SLA (HL) ; Shift memory[hl] left (sets Flags::ZERO if rotated result == 0)
 /// ```
 pub fn swap_indirect_hl(cpu: &mut CPU) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
@@ -56,33 +55,31 @@ pub fn swap_indirect_hl(cpu: &mut CPU) -> u8 {
 pub fn decimal_adjust(cpu: &mut CPU) -> u8 {
     let mut carry = false;
 
-    if !cpu.registers.f.contains(RegisterFlags::SUBTRACT) {
-        if cpu.registers.f.contains(RegisterFlags::CARRY) || cpu.registers.a > 0x99 {
+    if !cpu.registers.f.contains(Flags::SUBTRACT) {
+        if cpu.registers.f.contains(Flags::CARRY) || cpu.registers.a > 0x99 {
             cpu.registers.a = cpu.registers.a.wrapping_add(0x60);
             carry = true;
         }
-        if cpu.registers.f.contains(RegisterFlags::HALF_CARRY) || cpu.registers.a & 0x0F > 0x09 {
+        if cpu.registers.f.contains(Flags::HALF_CARRY) || cpu.registers.a & 0x0F > 0x09 {
             cpu.registers.a = cpu.registers.a.wrapping_add(0x06);
         }
-    } else if cpu.registers.f.contains(RegisterFlags::CARRY) {
+    } else if cpu.registers.f.contains(Flags::CARRY) {
         carry = true;
         cpu.registers.a =
             cpu.registers
                 .a
-                .wrapping_add(if cpu.registers.f.contains(RegisterFlags::HALF_CARRY) {
+                .wrapping_add(if cpu.registers.f.contains(Flags::HALF_CARRY) {
                     0x9A
                 } else {
                     0xA0
                 });
-    } else if cpu.registers.f.contains(RegisterFlags::HALF_CARRY) {
+    } else if cpu.registers.f.contains(Flags::HALF_CARRY) {
         cpu.registers.a = cpu.registers.a.wrapping_add(0xFA);
     }
 
-    cpu.registers
-        .f
-        .set(RegisterFlags::ZERO, cpu.registers.a == 0);
-    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
-    cpu.registers.f.set(RegisterFlags::CARRY, carry);
+    cpu.registers.f.set(Flags::ZERO, cpu.registers.a == 0);
+    cpu.registers.f.set(Flags::HALF_CARRY, false);
+    cpu.registers.f.set(Flags::CARRY, carry);
 
     4
 }
@@ -100,8 +97,8 @@ pub fn complement(cpu: &mut CPU) -> u8 {
     let value = cpu.registers.a;
     cpu.registers.a = !value;
 
-    cpu.registers.f.set(RegisterFlags::SUBTRACT, true);
-    cpu.registers.f.set(RegisterFlags::HALF_CARRY, true);
+    cpu.registers.f.set(Flags::SUBTRACT, true);
+    cpu.registers.f.set(Flags::HALF_CARRY, true);
 
     4
 }
@@ -113,12 +110,12 @@ pub fn complement(cpu: &mut CPU) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// CCF ; Flag::RegisterFlags::CARRY = !Flag::RegisterFlags::CARRY
+/// CCF ; Flags::CARRY = !Flags::CARRY
 /// ```
 pub fn complement_carry_flag(cpu: &mut CPU) -> u8 {
-    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
-    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
-    cpu.registers.f.toggle(RegisterFlags::CARRY);
+    cpu.registers.f.set(Flags::SUBTRACT, false);
+    cpu.registers.f.set(Flags::HALF_CARRY, false);
+    cpu.registers.f.toggle(Flags::CARRY);
 
     4
 }
@@ -130,12 +127,12 @@ pub fn complement_carry_flag(cpu: &mut CPU) -> u8 {
 /// # Examples
 ///
 /// ```asm
-/// SCF ; Flag::RegisterFlags::CARRY = 1
+/// SCF ; Flags::CARRY = 1
 /// ```
 pub fn set_carry_flag(cpu: &mut CPU) -> u8 {
-    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
-    cpu.registers.f.set(RegisterFlags::HALF_CARRY, false);
-    cpu.registers.f.set(RegisterFlags::CARRY, true);
+    cpu.registers.f.set(Flags::SUBTRACT, false);
+    cpu.registers.f.set(Flags::HALF_CARRY, false);
+    cpu.registers.f.set(Flags::CARRY, true);
 
     4
 }

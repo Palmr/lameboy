@@ -1,5 +1,4 @@
-use lameboy::cpu::registers::Reg8;
-use lameboy::cpu::registers::{Flags as RegisterFlags, Reg16};
+use lameboy::cpu::registers::{Flags, Reg16, Reg8};
 use lameboy::cpu::CPU;
 
 /// Put the complement of an 8-bit values single bit into the RegisterFlags::ZERO flag.
@@ -29,9 +28,9 @@ pub fn bit_test(cpu: &mut CPU, opcode: u8) -> u8 {
 
     let tested_value = value & (0x01 << bit_index);
 
-    cpu.registers.f.set(RegisterFlags::ZERO, tested_value == 0);
-    cpu.registers.f.set(RegisterFlags::SUBTRACT, false);
-    cpu.registers.f.set(RegisterFlags::HALF_CARRY, true);
+    cpu.registers.f.set(Flags::ZERO, tested_value == 0);
+    cpu.registers.f.set(Flags::SUBTRACT, false);
+    cpu.registers.f.set(Flags::HALF_CARRY, true);
     //    cpu.registers.f.set(RegisterFlags::CARRY, false);
 
     duration
