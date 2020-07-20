@@ -58,6 +58,14 @@ mod test_alu_add_8bit {
     }
 
     #[test]
+    fn check_reset_subtract() {
+        assert_eq!(
+            alu_add_8bit(0x00, Flags::SUBTRACT, 0x01, false),
+            (0x01, Flags::empty())
+        );
+    }
+
+    #[test]
     fn check_overflow_to_zero() {
         assert_eq!(
             alu_add_8bit(0xFF, Flags::empty(), 0x01, false),
@@ -76,8 +84,40 @@ mod test_alu_add_8bit {
     #[test]
     fn check_half_overflow() {
         assert_eq!(
-            alu_add_8bit(0x0F, Flags::empty(), 0x01, false),
+            alu_add_8bit(0x0F, Flags::CARRY, 0x01, false),
             (0x10, Flags::HALF_CARRY)
+        );
+    }
+
+    #[test]
+    fn check_basic_use_carry() {
+        assert_eq!(
+            alu_add_8bit(0x00, Flags::CARRY, 0x01, true),
+            (0x02, Flags::empty())
+        );
+    }
+
+    #[test]
+    fn check_overflow_to_zero_use_carry() {
+        assert_eq!(
+            alu_add_8bit(0xFE, Flags::CARRY, 0x01, true),
+            (0x00, Flags::ZERO | Flags::HALF_CARRY | Flags::CARRY)
+        );
+    }
+
+    #[test]
+    fn check_overflow_use_carry() {
+        assert_eq!(
+            alu_add_8bit(0xFF, Flags::CARRY, 0x69, true),
+            (0x69, Flags::HALF_CARRY | Flags::CARRY)
+        );
+    }
+
+    #[test]
+    fn check_half_overflow_use_carry() {
+        assert_eq!(
+            alu_add_8bit(0x0F, Flags::CARRY, 0x01, true),
+            (0x11, Flags::HALF_CARRY)
         );
     }
 }
