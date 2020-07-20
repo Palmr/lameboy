@@ -131,10 +131,11 @@ pub fn adc_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// SUB $DA ; A <- A - 0xDA
 /// ```
 pub fn sub_d8(cpu: &mut CPU) -> u8 {
-    // Read 8-bit value
     let value = cpu.fetch8();
 
-    alu_sub_8bit(cpu, value, false);
+    let (acc, flags) = alu_sub_8bit(cpu.registers.a, cpu.registers.f, value, false);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -152,7 +153,9 @@ pub fn sub_d8(cpu: &mut CPU) -> u8 {
 pub fn sub_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     let value = cpu.mmu.read8(cpu.registers.read16(r16));
 
-    alu_sub_8bit(cpu, value, false);
+    let (acc, flags) = alu_sub_8bit(cpu.registers.a, cpu.registers.f, value, false);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -169,7 +172,9 @@ pub fn sub_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 pub fn sub_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    alu_sub_8bit(cpu, value, false);
+    let (acc, flags) = alu_sub_8bit(cpu.registers.a, cpu.registers.f, value, false);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     4
 }
@@ -186,7 +191,9 @@ pub fn sub_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 pub fn sbc_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    alu_sub_8bit(cpu, value, true);
+    let (acc, flags) = alu_sub_8bit(cpu.registers.a, cpu.registers.f, value, true);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     4
 }
@@ -204,7 +211,9 @@ pub fn sbc_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 pub fn sbc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     let value = cpu.mmu.read8(cpu.registers.read16(r16));
 
-    alu_sub_8bit(cpu, value, true);
+    let (acc, flags) = alu_sub_8bit(cpu.registers.a, cpu.registers.f, value, true);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -222,7 +231,9 @@ pub fn sbc_d8(cpu: &mut CPU) -> u8 {
     // Read 8-bit value
     let value = cpu.fetch8();
 
-    alu_sub_8bit(cpu, value, true);
+    let (acc, flags) = alu_sub_8bit(cpu.registers.a, cpu.registers.f, value, true);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -239,7 +250,9 @@ pub fn sbc_d8(cpu: &mut CPU) -> u8 {
 pub fn and_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    alu_and_8bit(cpu, value);
+    let (acc, flags) = alu_and_8bit(cpu.registers.a, cpu.registers.f, value);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     4
 }
@@ -254,10 +267,11 @@ pub fn and_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// AND $DA ; A <- A & 0xDA
 /// ```
 pub fn and_d8(cpu: &mut CPU) -> u8 {
-    // Read 8-bit value
     let value = cpu.fetch8();
 
-    alu_and_8bit(cpu, value);
+    let (acc, flags) = alu_and_8bit(cpu.registers.a, cpu.registers.f, value);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -275,7 +289,9 @@ pub fn and_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     // Read 8-bit value
     let value = cpu.mmu.read8(cpu.registers.read16(r16));
 
-    alu_and_8bit(cpu, value);
+    let (acc, flags) = alu_and_8bit(cpu.registers.a, cpu.registers.f, value);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -292,7 +308,9 @@ pub fn and_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 pub fn xor_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    alu_xor_8bit(cpu, value);
+    let (acc, flags) = alu_xor_8bit(cpu.registers.a, cpu.registers.f, value);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     4
 }
@@ -307,10 +325,11 @@ pub fn xor_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// XOR $DA ; A <- A ^ 0xDA
 /// ```
 pub fn xor_d8(cpu: &mut CPU) -> u8 {
-    // Read 8-bit value
     let value = cpu.fetch8();
 
-    alu_xor_8bit(cpu, value);
+    let (acc, flags) = alu_xor_8bit(cpu.registers.a, cpu.registers.f, value);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -325,10 +344,11 @@ pub fn xor_d8(cpu: &mut CPU) -> u8 {
 /// XOR (HL) ; A <- A ^ memory[HL]
 /// ```
 pub fn xor_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
-    // Read 8-bit value
     let value = cpu.mmu.read8(cpu.registers.read16(r16));
 
-    alu_xor_8bit(cpu, value);
+    let (acc, flags) = alu_xor_8bit(cpu.registers.a, cpu.registers.f, value);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -345,7 +365,9 @@ pub fn xor_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 pub fn or_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    alu_or_8bit(cpu, value);
+    let (acc, flags) = alu_or_8bit(cpu.registers.a, cpu.registers.f, value);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     4
 }
@@ -360,10 +382,11 @@ pub fn or_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// OR $DA ; A <- A | 0xDA
 /// ```
 pub fn or_d8(cpu: &mut CPU) -> u8 {
-    // Read 8-bit value
     let value = cpu.fetch8();
 
-    alu_or_8bit(cpu, value);
+    let (acc, flags) = alu_or_8bit(cpu.registers.a, cpu.registers.f, value);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -378,10 +401,11 @@ pub fn or_d8(cpu: &mut CPU) -> u8 {
 /// OR (HL) ; A <- A | memory[HL]
 /// ```
 pub fn or_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
-    // Read 8-bit value
     let value = cpu.mmu.read8(cpu.registers.read16(r16));
 
-    alu_or_8bit(cpu, value);
+    let (acc, flags) = alu_or_8bit(cpu.registers.a, cpu.registers.f, value);
+    cpu.registers.a = acc;
+    cpu.registers.f = flags;
 
     8
 }
@@ -399,7 +423,7 @@ pub fn or_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 pub fn cp_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    alu_cp_8bit(cpu, value);
+    cpu.registers.f = alu_cp_8bit(cpu.registers.a, cpu.registers.f, value);
 
     4
 }
@@ -415,10 +439,9 @@ pub fn cp_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// CP $DA ; Flag::RegisterFlags::ZERO true if A == 0xDA, Flag::RegisterFlags::CARRY true if A < 0xDA
 /// ```
 pub fn cp_d8(cpu: &mut CPU) -> u8 {
-    // Read 8-bit value
     let value = cpu.fetch8();
 
-    alu_cp_8bit(cpu, value);
+    cpu.registers.f = alu_cp_8bit(cpu.registers.a, cpu.registers.f, value);
 
     8
 }
@@ -434,10 +457,9 @@ pub fn cp_d8(cpu: &mut CPU) -> u8 {
 /// CP (HL) ; Flag::RegisterFlags::ZERO true if A == memory[HL], Flag::RegisterFlags::CARRY true if A < memory[HL]
 /// ```
 pub fn cp_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
-    // Read 8-bit value
     let value = cpu.mmu.read8(cpu.registers.read16(r16));
 
-    alu_cp_8bit(cpu, value);
+    cpu.registers.f = alu_cp_8bit(cpu.registers.a, cpu.registers.f, value);
 
     8
 }
