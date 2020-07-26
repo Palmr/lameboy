@@ -11,7 +11,7 @@ pub use lameboy::cpu::instructions::alu::and::alu_and_8bit;
 pub use lameboy::cpu::instructions::alu::compare::alu_cp_8bit;
 pub use lameboy::cpu::instructions::alu::or::alu_or_8bit;
 pub use lameboy::cpu::instructions::alu::sub::alu_sub_8bit;
-pub use lameboy::cpu::instructions::alu::swap::alu_swap;
+pub use lameboy::cpu::instructions::alu::swap::alu_swap_8bit;
 pub use lameboy::cpu::instructions::alu::xor::alu_xor_8bit;
 
 use lameboy::cpu::registers::Flags;

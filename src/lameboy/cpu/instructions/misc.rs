@@ -1,4 +1,4 @@
-use lameboy::cpu::instructions::alu::alu_swap;
+use lameboy::cpu::instructions::alu::alu_swap_8bit;
 use lameboy::cpu::registers::{Flags, Reg16, Reg8};
 use lameboy::cpu::{InterruptFlagDelayStatus, CPU};
 
@@ -14,7 +14,7 @@ use lameboy::cpu::{InterruptFlagDelayStatus, CPU};
 pub fn swap_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    let (swapped_value, flags) = alu_swap(value, cpu.registers.f);
+    let (swapped_value, flags) = alu_swap_8bit(value, cpu.registers.f);
     cpu.registers.write8(r8, swapped_value);
     cpu.registers.f = flags;
 
@@ -35,7 +35,7 @@ pub fn swap_indirect_hl(cpu: &mut CPU) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
     let value = cpu.mmu.read8(a16_addr);
 
-    let (swapped_value, flags) = alu_swap(value, cpu.registers.f);
+    let (swapped_value, flags) = alu_swap_8bit(value, cpu.registers.f);
     cpu.mmu.write8(a16_addr, swapped_value);
     cpu.registers.f = flags;
 

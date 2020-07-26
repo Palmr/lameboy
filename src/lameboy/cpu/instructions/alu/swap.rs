@@ -20,7 +20,7 @@ use lameboy::cpu::registers::Flags;
 ///
 /// Reset
 ///
-pub fn alu_swap(d8: u8, flags: Flags) -> (u8, Flags) {
+pub fn alu_swap_8bit(d8: u8, flags: Flags) -> (u8, Flags) {
     let swapped_value = ((d8 & 0x0F) << 4) | ((d8 & 0xF0) >> 4);
 
     let mut new_flags = flags;
@@ -33,24 +33,24 @@ pub fn alu_swap(d8: u8, flags: Flags) -> (u8, Flags) {
 }
 
 #[cfg(test)]
-mod test_alu_swap {
-    use super::alu_swap;
+mod test_alu_swap_8bit {
+    use super::alu_swap_8bit;
     use lameboy::cpu::registers::Flags;
 
     #[test]
     fn check_basic() {
-        assert_eq!(alu_swap(0xF0, Flags::empty()), (0x0F, Flags::empty()));
+        assert_eq!(alu_swap_8bit(0xF0, Flags::empty()), (0x0F, Flags::empty()));
     }
 
     #[test]
     fn set_zero_flag_if_result_zero() {
-        assert_eq!(alu_swap(0x00, Flags::empty()), (0x00, Flags::ZERO));
+        assert_eq!(alu_swap_8bit(0x00, Flags::empty()), (0x00, Flags::ZERO));
     }
 
     #[test]
     fn clear_all_flags() {
         assert_eq!(
-            alu_swap(
+            alu_swap_8bit(
                 0x01,
                 Flags::ZERO | Flags::SUBTRACT | Flags::HALF_CARRY | Flags::CARRY
             ),
