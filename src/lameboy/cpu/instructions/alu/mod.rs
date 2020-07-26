@@ -1,6 +1,7 @@
 mod add;
 mod and;
 mod compare;
+mod increment_decrement;
 mod or;
 mod rotate;
 mod shift;
@@ -11,6 +12,7 @@ mod xor;
 pub use lameboy::cpu::instructions::alu::add::alu_add_8bit;
 pub use lameboy::cpu::instructions::alu::and::alu_and_8bit;
 pub use lameboy::cpu::instructions::alu::compare::alu_cp_8bit;
+pub use lameboy::cpu::instructions::alu::increment_decrement::{alu_dec_8bit, alu_inc_8bit};
 pub use lameboy::cpu::instructions::alu::or::alu_or_8bit;
 pub use lameboy::cpu::instructions::alu::rotate::alu_rotate_left;
 pub use lameboy::cpu::instructions::alu::rotate::alu_rotate_right;

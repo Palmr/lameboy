@@ -18,7 +18,7 @@ use lameboy::cpu::registers::Flags;
 ///
 /// Set if the lower nibble of the value subtracted from the lower nibble of A would have attempted
 /// to borrow a bit. i.e. the lower nibble of the value is larger than the lower nibble of A.
-///
+///set
 /// ## Flags::CARRY
 ///
 /// Set if the value subtracted from A would have required a borrow, otherwise reset

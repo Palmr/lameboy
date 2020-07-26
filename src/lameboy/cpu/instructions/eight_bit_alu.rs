@@ -1,7 +1,8 @@
 use lameboy::cpu::instructions::alu::{
-    alu_add_8bit, alu_and_8bit, alu_cp_8bit, alu_or_8bit, alu_sub_8bit, alu_xor_8bit,
+    alu_add_8bit, alu_and_8bit, alu_cp_8bit, alu_dec_8bit, alu_inc_8bit, alu_or_8bit, alu_sub_8bit,
+    alu_xor_8bit,
 };
-use lameboy::cpu::registers::{Flags, Reg16, Reg8};
+use lameboy::cpu::registers::{Reg16, Reg8};
 use lameboy::cpu::CPU;
 
 /// ADD 8-bit register with register A, storing the result in A.
@@ -475,14 +476,10 @@ pub fn cp_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// INC B
 /// ```
 pub fn inc_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let mut value = cpu.registers.read8(r8);
+    let d8 = cpu.registers.read8(r8);
 
-    cpu.registers.f.set(Flags::HALF_CARRY, value & 0xf == 0xf);
-
-    value = value.wrapping_add(1);
-
-    cpu.registers.f.set(Flags::ZERO, value == 0);
-    cpu.registers.f.set(Flags::SUBTRACT, false);
+    let (value, flags) = alu_inc_8bit(d8, cpu.registers.f);
+    cpu.registers.f = flags;
 
     cpu.registers.write8(r8, value);
 
@@ -500,10 +497,10 @@ pub fn inc_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```
 pub fn inc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     let a16_addr = cpu.registers.read16(r16);
+    let d8 = cpu.mmu.read8(a16_addr);
 
-    let mut value = cpu.mmu.read8(a16_addr);
-
-    value = value.wrapping_add(1);
+    let (value, flags) = alu_inc_8bit(d8, cpu.registers.f);
+    cpu.registers.f = flags;
 
     cpu.mmu.write8(a16_addr, value);
 
@@ -522,14 +519,10 @@ pub fn inc_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```
 #[allow(clippy::verbose_bit_mask)]
 pub fn dec_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
-    let mut value = cpu.registers.read8(r8);
+    let d8 = cpu.registers.read8(r8);
 
-    cpu.registers.f.set(Flags::HALF_CARRY, value & 0xf == 0x0);
-
-    value = value.wrapping_sub(1);
-
-    cpu.registers.f.set(Flags::ZERO, value == 0);
-    cpu.registers.f.set(Flags::SUBTRACT, true);
+    let (value, flags) = alu_dec_8bit(d8, cpu.registers.f);
+    cpu.registers.f = flags;
 
     cpu.registers.write8(r8, value);
 
@@ -547,10 +540,10 @@ pub fn dec_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```
 pub fn dec_indirect_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
     let a16_addr = cpu.registers.read16(r16);
+    let d8 = cpu.mmu.read8(a16_addr);
 
-    let mut value = cpu.mmu.read8(a16_addr);
-
-    value = value.wrapping_sub(1);
+    let (value, flags) = alu_dec_8bit(d8, cpu.registers.f);
+    cpu.registers.f = flags;
 
     cpu.mmu.write8(a16_addr, value);
 
