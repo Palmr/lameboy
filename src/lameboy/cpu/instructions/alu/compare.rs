@@ -32,3 +32,40 @@ pub fn alu_cp_8bit(accumulator: u8, flags: Flags, d8: u8) -> Flags {
 
     new_flags
 }
+
+#[cfg(test)]
+mod test_alu_cp_8bit {
+    use super::alu_cp_8bit;
+    use lameboy::cpu::registers::Flags;
+
+    #[test]
+    fn check_basic() {
+        assert_eq!(alu_cp_8bit(0xFF, Flags::empty(), 0x01), Flags::SUBTRACT);
+    }
+
+    #[test]
+    fn check_qual_values_set_zero() {
+        assert_eq!(
+            alu_cp_8bit(0x01, Flags::empty(), 0x01),
+            Flags::ZERO | Flags::SUBTRACT
+        );
+    }
+
+    #[test]
+    fn check_underflow() {
+        assert_eq!(
+            alu_cp_8bit(0x00, Flags::empty(), 0x03),
+            Flags::SUBTRACT | Flags::HALF_CARRY | Flags::CARRY
+        );
+    }
+
+    #[test]
+    fn check_half_underflow() {
+        assert_eq!(alu_cp_8bit(0x37, Flags::empty(), 0x17), Flags::SUBTRACT);
+
+        assert_eq!(
+            alu_cp_8bit(0x37, Flags::empty(), 0x18),
+            Flags::SUBTRACT | Flags::HALF_CARRY
+        );
+    }
+}

@@ -31,3 +31,50 @@ pub fn alu_or_8bit(accumulator: u8, flags: Flags, d8: u8) -> (u8, Flags) {
 
     (new_accumulator, new_flags)
 }
+
+#[cfg(test)]
+mod test_alu_or_8bit {
+    use super::alu_or_8bit;
+    use lameboy::cpu::registers::Flags;
+
+    #[test]
+    fn check_basic() {
+        assert_eq!(
+            alu_or_8bit(0xF8, Flags::empty(), 0x0A),
+            (0xFA, Flags::empty())
+        );
+    }
+
+    #[test]
+    fn check_flags_get_reset() {
+        assert_eq!(
+            alu_or_8bit(
+                0x01,
+                Flags::ZERO | Flags::SUBTRACT | Flags::HALF_CARRY | Flags::CARRY,
+                0x10
+            ),
+            (0x11, Flags::empty())
+        );
+    }
+
+    #[test]
+    fn check_zero_flag_set() {
+        assert_eq!(alu_or_8bit(0x00, Flags::empty(), 0x00), (0x00, Flags::ZERO));
+    }
+
+    #[test]
+    fn check_or() {
+        assert_eq!(
+            alu_or_8bit(0b1111_1111, Flags::empty(), 0b0101_0101),
+            (0b1111_1111, Flags::empty())
+        );
+        assert_eq!(
+            alu_or_8bit(0b0000_1111, Flags::empty(), 0b0101_0101),
+            (0b0101_1111, Flags::empty())
+        );
+        assert_eq!(
+            alu_or_8bit(0b1111_0000, Flags::empty(), 0b0101_0101),
+            (0b1111_0101, Flags::empty())
+        );
+    }
+}
