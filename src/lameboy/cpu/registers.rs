@@ -7,7 +7,13 @@ bitflags! {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
+pub enum Register {
+    Reg8(Reg8),
+    Reg16(Reg16),
+}
+
+#[derive(Debug, Eq, PartialEq)]
 pub enum Reg8 {
     A,
     B,
@@ -18,7 +24,7 @@ pub enum Reg8 {
     L,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum Reg16 {
     AF,
     BC,

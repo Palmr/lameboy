@@ -1,4 +1,5 @@
-use lameboy::cpu::registers::{Flags, Reg16, Reg8};
+use lameboy::cpu::instructions::{bit_index_from_opcode, register_from_opcode};
+use lameboy::cpu::registers::{Flags, Reg16, Reg8, Register};
 use lameboy::cpu::CPU;
 
 /// Put the complement of an 8-bit values single bit into the RegisterFlags::ZERO flag.
@@ -47,19 +48,11 @@ pub fn bit_test(cpu: &mut CPU, opcode: u8) -> u8 {
 /// RES 4, B  ; B = (B & 0x01 << 4)
 /// ```
 pub fn bit_assign(cpu: &mut CPU, opcode: u8, set_bit: bool) -> u8 {
-    let register = opcode & 0b0000_0111;
-    let bit_index = (opcode & 0b0011_1000) >> 3;
+    let bit_index = bit_index_from_opcode(opcode);
 
-    let (mut value, duration) = match register {
-        0b111 => (cpu.registers.read8(&Reg8::A), 8),
-        0b000 => (cpu.registers.read8(&Reg8::B), 8),
-        0b001 => (cpu.registers.read8(&Reg8::C), 8),
-        0b010 => (cpu.registers.read8(&Reg8::D), 8),
-        0b011 => (cpu.registers.read8(&Reg8::E), 8),
-        0b100 => (cpu.registers.read8(&Reg8::H), 8),
-        0b101 => (cpu.registers.read8(&Reg8::L), 8),
-        0b110 => (cpu.mmu.read8(cpu.registers.read16(&Reg16::HL)), 16),
-        _ => panic!("Unhandled register bit pattern: 0b{:08b}", register),
+    let (mut value, duration) = match register_from_opcode(opcode) {
+        Register::Reg8(r8) => (cpu.registers.read8(&r8), 8),
+        Register::Reg16(r16) => (cpu.mmu.read8(cpu.registers.read16(&r16)), 16),
     };
 
     if set_bit {
@@ -68,16 +61,9 @@ pub fn bit_assign(cpu: &mut CPU, opcode: u8, set_bit: bool) -> u8 {
         value &= !(0x01 << bit_index);
     }
 
-    match register {
-        0b111 => cpu.registers.write8(&Reg8::A, value),
-        0b000 => cpu.registers.write8(&Reg8::B, value),
-        0b001 => cpu.registers.write8(&Reg8::C, value),
-        0b010 => cpu.registers.write8(&Reg8::D, value),
-        0b011 => cpu.registers.write8(&Reg8::E, value),
-        0b100 => cpu.registers.write8(&Reg8::H, value),
-        0b101 => cpu.registers.write8(&Reg8::L, value),
-        0b110 => cpu.mmu.write8(cpu.registers.read16(&Reg16::HL), value),
-        _ => panic!("Unhandled register bit pattern: 0b{:08b}", register),
+    match register_from_opcode(opcode) {
+        Register::Reg8(r8) => cpu.registers.write8(&r8, value),
+        Register::Reg16(r16) => cpu.mmu.write8(cpu.registers.read16(&r16), value),
     };
 
     duration
