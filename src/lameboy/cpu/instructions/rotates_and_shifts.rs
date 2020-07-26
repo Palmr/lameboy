@@ -1,7 +1,7 @@
 use lameboy::cpu::instructions::alu::{
     alu_rotate_left, alu_rotate_right, alu_shift_left, alu_shift_right,
 };
-use lameboy::cpu::registers::{Reg16, Reg8};
+use lameboy::cpu::registers::{Flags, Reg16, Reg8};
 use lameboy::cpu::CPU;
 
 /// Rotate an 8-bit register to the left.
@@ -30,11 +30,12 @@ use lameboy::cpu::CPU;
 pub fn rotate_left_r8(cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero: bool) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    let rotated_value = alu_rotate_left(cpu, value, through_carry, reset_zero);
-
+    let (rotated_value, flags) = alu_rotate_left(value, cpu.registers.f, through_carry);
     cpu.registers.write8(r8, rotated_value);
+    cpu.registers.f = flags;
 
     if reset_zero {
+        cpu.registers.f.remove(Flags::ZERO);
         4
     } else {
         8
@@ -63,9 +64,12 @@ pub fn rotate_left_indirect_hl(cpu: &mut CPU, through_carry: bool, reset_zero: b
     let a16_addr = cpu.registers.read16(&Reg16::HL);
     let value = cpu.mmu.read8(a16_addr);
 
-    let rotated_value = alu_rotate_right(cpu, value, through_carry, reset_zero);
-
+    let (rotated_value, flags) = alu_rotate_left(value, cpu.registers.f, through_carry);
     cpu.mmu.write8(a16_addr, rotated_value);
+    cpu.registers.f = flags;
+    if reset_zero {
+        cpu.registers.f.remove(Flags::ZERO);
+    }
 
     16
 }
@@ -96,11 +100,11 @@ pub fn rotate_left_indirect_hl(cpu: &mut CPU, through_carry: bool, reset_zero: b
 pub fn rotate_right_r8(cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero: bool) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    let rotated_value = alu_rotate_right(cpu, value, through_carry, reset_zero);
-
+    let (rotated_value, flags) = alu_rotate_right(value, cpu.registers.f, through_carry);
     cpu.registers.write8(r8, rotated_value);
-
+    cpu.registers.f = flags;
     if reset_zero {
+        cpu.registers.f.remove(Flags::ZERO);
         4
     } else {
         8
@@ -129,9 +133,12 @@ pub fn rotate_right_indirect_hl(cpu: &mut CPU, through_carry: bool, reset_zero: 
     let a16_addr = cpu.registers.read16(&Reg16::HL);
     let value = cpu.mmu.read8(a16_addr);
 
-    let rotated_value = alu_rotate_right(cpu, value, through_carry, reset_zero);
-
+    let (rotated_value, flags) = alu_rotate_right(value, cpu.registers.f, through_carry);
     cpu.mmu.write8(a16_addr, rotated_value);
+    cpu.registers.f = flags;
+    if reset_zero {
+        cpu.registers.f.remove(Flags::ZERO)
+    }
 
     16
 }
