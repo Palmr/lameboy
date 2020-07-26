@@ -3,6 +3,7 @@ mod and;
 mod compare;
 mod or;
 mod sub;
+mod swap;
 mod xor;
 
 pub use lameboy::cpu::instructions::alu::add::alu_add_8bit;
@@ -10,41 +11,11 @@ pub use lameboy::cpu::instructions::alu::and::alu_and_8bit;
 pub use lameboy::cpu::instructions::alu::compare::alu_cp_8bit;
 pub use lameboy::cpu::instructions::alu::or::alu_or_8bit;
 pub use lameboy::cpu::instructions::alu::sub::alu_sub_8bit;
+pub use lameboy::cpu::instructions::alu::swap::alu_swap;
 pub use lameboy::cpu::instructions::alu::xor::alu_xor_8bit;
 
 use lameboy::cpu::registers::Flags;
 use lameboy::cpu::CPU;
-
-/// Swap upper and lower nibbles of an 8-bit value.
-///
-/// Update flags:
-///
-/// ## Flags::ZERO
-///
-/// Set if the result equals zero.
-///
-/// ## Flags::SUBTRACT
-///
-/// Reset
-///
-/// ## Flags::HALF_CARRY
-///
-/// Reset
-///
-/// ## Flags::CARRY
-///
-/// Reset
-///
-pub fn alu_swap(cpu: &mut CPU, d8: u8) -> u8 {
-    let swapped_value = (d8 & 0x0F << 4) & (d8 & 0xF0 >> 4);
-
-    cpu.registers.f.set(Flags::ZERO, swapped_value == 0);
-    cpu.registers.f.set(Flags::SUBTRACT, false);
-    cpu.registers.f.set(Flags::HALF_CARRY, false);
-    cpu.registers.f.set(Flags::CARRY, false);
-
-    swapped_value
-}
 
 /// Rotate an 8-bit register to the left.
 ///
