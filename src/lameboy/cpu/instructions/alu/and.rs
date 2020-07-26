@@ -31,3 +31,62 @@ pub fn alu_and_8bit(accumulator: u8, flags: Flags, d8: u8) -> (u8, Flags) {
 
     (new_accumulator, new_flags)
 }
+
+#[cfg(test)]
+mod test_alu_sand_8bit {
+    use lameboy::cpu::instructions::alu::and::alu_and_8bit;
+    use lameboy::cpu::registers::Flags;
+
+    #[test]
+    fn check_basic() {
+        assert_eq!(
+            alu_and_8bit(0xFF, Flags::empty(), 0xFF),
+            (0xFF, Flags::HALF_CARRY)
+        );
+    }
+
+    #[test]
+    fn check_flags_get_reset() {
+        assert_eq!(
+            alu_and_8bit(0x01, Flags::SUBTRACT | Flags::CARRY, 0x01),
+            (0x01, Flags::HALF_CARRY)
+        );
+    }
+
+    #[test]
+    fn check_zero_flag_set() {
+        assert_eq!(
+            alu_and_8bit(0xF0, Flags::SUBTRACT | Flags::CARRY, 0x0F),
+            (0x00, Flags::ZERO | Flags::HALF_CARRY)
+        );
+    }
+
+    #[test]
+    fn check_masking() {
+        assert_eq!(
+            alu_and_8bit(0b1111_1111, Flags::SUBTRACT | Flags::CARRY, 0b0101_0101),
+            (0b0101_0101, Flags::HALF_CARRY)
+        );
+        assert_eq!(
+            alu_and_8bit(0b0000_1111, Flags::SUBTRACT | Flags::CARRY, 0b0101_0101),
+            (0b0000_0101, Flags::HALF_CARRY)
+        );
+        assert_eq!(
+            alu_and_8bit(0b1111_0000, Flags::SUBTRACT | Flags::CARRY, 0b0101_0101),
+            (0b0101_0000, Flags::HALF_CARRY)
+        );
+
+        assert_eq!(
+            alu_and_8bit(0b0101_0101, Flags::SUBTRACT | Flags::CARRY, 0b1111_1111),
+            (0b0101_0101, Flags::HALF_CARRY)
+        );
+        assert_eq!(
+            alu_and_8bit(0b0101_0101, Flags::SUBTRACT | Flags::CARRY, 0b0000_1111),
+            (0b0000_0101, Flags::HALF_CARRY)
+        );
+        assert_eq!(
+            alu_and_8bit(0b0101_0101, Flags::SUBTRACT | Flags::CARRY, 0b1111_0000),
+            (0b0101_0000, Flags::HALF_CARRY)
+        );
+    }
+}
