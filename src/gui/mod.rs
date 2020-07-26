@@ -5,7 +5,7 @@ use glium::glutin::event::{ElementState, Event, VirtualKeyCode, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::glutin::window::WindowBuilder;
 use glium::{Display, Surface};
-use imgui::{Context, FontConfig, FontSource};
+use imgui::{Context, FontConfig, FontSource, Style};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
 
@@ -39,6 +39,7 @@ impl GUI {
             Display::new(builder, context, &events_loop).expect("Failed to initialize display");
 
         let mut imgui = Context::create();
+        imgui.style_mut().window_rounding = 0.;
         imgui.set_ini_filename(Some(std::path::PathBuf::from("lameboy.ini")));
 
         let mut platform = WinitPlatform::init(&mut imgui);
@@ -136,13 +137,13 @@ impl GUI {
                 platform.handle_event(imgui.io_mut(), gl_window.window(), &event);
 
                 if let Event::WindowEvent { event: i, .. } = event {
-                    GUI::update_events(&mut lameboy, &i);
+                    GUI::update_events(&mut lameboy, &i, imgui.style_mut());
                 }
             }
         })
     }
 
-    fn update_events(lameboy: &mut Lameboy, event: &WindowEvent) {
+    fn update_events(lameboy: &mut Lameboy, event: &WindowEvent, style: &mut Style) {
         match event {
             WindowEvent::CloseRequested => lameboy.active = false,
             WindowEvent::KeyboardInput { input, .. } => {
@@ -162,8 +163,14 @@ impl GUI {
                     _ => {}
                 }
             }
-            WindowEvent::CursorEntered { .. } => lameboy.debug.show_menu = true,
-            WindowEvent::CursorLeft { .. } => lameboy.debug.show_menu = false,
+            WindowEvent::CursorEntered { .. } => {
+                lameboy.debug.show_menu = true;
+                style.alpha = 0.95;
+            }
+            WindowEvent::CursorLeft { .. } => {
+                lameboy.debug.show_menu = false;
+                style.alpha = 0.75;
+            }
             _ => (),
         };
     }

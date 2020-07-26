@@ -11,9 +11,9 @@ This emulator is a rust learning project for me. It currently isn't aiming to be
 
 ## Current Status
 
-Currently just about loads non-MBC roms and has plenty of issues (definitely need to write instruction-level tests).
+Lameboy currently loads non-MBC roms and can run some, but it has plenty of issues.
 
-Plenty of debug windows are implemented which helps track down issues as they come up however.
+There are plenty of debug windows implemented which can help track down issues as they come up.
 
 ![Screenshot of first BG displaying correctly](images/screenshot-25-7-17.png)
 
@@ -21,7 +21,9 @@ Plenty of debug windows are implemented which helps track down issues as they co
 
 ### TODO
 
+- Support MBC1
 - Fix the many bugs that currently exist
+  - Add support for timer operation (TAC, TIMA, TMA)
   - Verify all existing instructions work
   - Re-write all the PPU code
 - Handle all interrupt types & HALT 
