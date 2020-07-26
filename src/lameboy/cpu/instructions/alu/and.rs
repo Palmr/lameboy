@@ -34,7 +34,7 @@ pub fn alu_and_8bit(accumulator: u8, flags: Flags, d8: u8) -> (u8, Flags) {
 
 #[cfg(test)]
 mod test_alu_sand_8bit {
-    use lameboy::cpu::instructions::alu::and::alu_and_8bit;
+    use super::alu_and_8bit;
     use lameboy::cpu::registers::Flags;
 
     #[test]

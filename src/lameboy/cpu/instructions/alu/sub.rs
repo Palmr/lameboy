@@ -43,7 +43,7 @@ pub fn alu_sub_8bit(accumulator: u8, flags: Flags, d8: u8, use_carry: bool) -> (
 
 #[cfg(test)]
 mod test_alu_sub_8bit {
-    use lameboy::cpu::instructions::alu::sub::alu_sub_8bit;
+    use super::alu_sub_8bit;
     use lameboy::cpu::registers::Flags;
 
     #[test]

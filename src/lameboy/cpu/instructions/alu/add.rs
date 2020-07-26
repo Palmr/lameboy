@@ -45,7 +45,7 @@ pub fn alu_add_8bit(accumulator: u8, flags: Flags, d8: u8, use_carry: bool) -> (
 
 #[cfg(test)]
 mod test_alu_add_8bit {
-    use lameboy::cpu::instructions::alu::add::alu_add_8bit;
+    use super::alu_add_8bit;
     use lameboy::cpu::registers::Flags;
 
     #[test]

@@ -34,7 +34,7 @@ pub fn alu_swap(d8: u8, flags: Flags) -> (u8, Flags) {
 
 #[cfg(test)]
 mod test_alu_swap {
-    use lameboy::cpu::instructions::alu::swap::alu_swap;
+    use super::alu_swap;
     use lameboy::cpu::registers::Flags;
 
     #[test]
