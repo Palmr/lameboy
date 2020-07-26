@@ -40,3 +40,83 @@ pub fn alu_sub_8bit(accumulator: u8, flags: Flags, d8: u8, use_carry: bool) -> (
 
     (new_accumulator, new_flags)
 }
+
+#[cfg(test)]
+mod test_alu_sub_8bit {
+    use lameboy::cpu::instructions::alu::sub::alu_sub_8bit;
+    use lameboy::cpu::registers::Flags;
+
+    #[test]
+    fn check_basic() {
+        assert_eq!(
+            alu_sub_8bit(0xFF, Flags::empty(), 0x01, false),
+            (0xFE, Flags::SUBTRACT)
+        );
+    }
+
+    #[test]
+    fn check_underflow_to_zero() {
+        assert_eq!(
+            alu_sub_8bit(0x01, Flags::empty(), 0x01, false),
+            (0x00, Flags::ZERO | Flags::SUBTRACT)
+        );
+    }
+
+    #[test]
+    fn check_underflow() {
+        assert_eq!(
+            alu_sub_8bit(0x00, Flags::empty(), 0x03, false),
+            (0xFD, Flags::SUBTRACT | Flags::HALF_CARRY | Flags::CARRY)
+        );
+    }
+
+    #[test]
+    fn check_half_underflow() {
+        assert_eq!(
+            alu_sub_8bit(0x37, Flags::empty(), 0x17, false),
+            (0x20, Flags::SUBTRACT)
+        );
+
+        assert_eq!(
+            alu_sub_8bit(0x37, Flags::empty(), 0x18, false),
+            (0x1F, Flags::SUBTRACT | Flags::HALF_CARRY)
+        );
+    }
+
+    #[test]
+    fn check_basic_use_carry() {
+        assert_eq!(
+            alu_sub_8bit(0x05, Flags::empty(), 0x01, true),
+            (0x04, Flags::SUBTRACT)
+        );
+
+        assert_eq!(
+            alu_sub_8bit(0x05, Flags::CARRY, 0x01, true),
+            (0x03, Flags::SUBTRACT)
+        );
+    }
+
+    #[test]
+    fn check_underflow_to_zero_use_carry() {
+        assert_eq!(
+            alu_sub_8bit(0x02, Flags::CARRY, 0x01, true),
+            (0x00, Flags::ZERO | Flags::SUBTRACT)
+        );
+    }
+
+    #[test]
+    fn check_underflow_use_carry() {
+        assert_eq!(
+            alu_sub_8bit(0x00, Flags::CARRY, 0x03, true),
+            (0xFC, Flags::SUBTRACT | Flags::HALF_CARRY | Flags::CARRY)
+        );
+    }
+
+    #[test]
+    fn check_half_underflow_use_carry() {
+        assert_eq!(
+            alu_sub_8bit(0x38, Flags::CARRY, 0x18, true),
+            (0x1F, Flags::SUBTRACT | Flags::HALF_CARRY)
+        );
+    }
+}
