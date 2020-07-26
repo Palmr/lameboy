@@ -155,9 +155,9 @@ pub fn rotate_right_indirect_hl(cpu: &mut CPU, through_carry: bool, reset_zero: 
 pub fn shift_left_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    let shifted_value = alu_shift_left(cpu, value);
-
+    let (shifted_value, flags) = alu_shift_left(value, cpu.registers.f);
     cpu.registers.write8(r8, shifted_value);
+    cpu.registers.f = flags;
 
     8
 }
@@ -175,9 +175,9 @@ pub fn shift_left_indirect_hl(cpu: &mut CPU) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
     let value = cpu.mmu.read8(a16_addr);
 
-    let shifted_value = alu_shift_left(cpu, value);
-
+    let (shifted_value, flags) = alu_shift_left(value, cpu.registers.f);
     cpu.mmu.write8(a16_addr, shifted_value);
+    cpu.registers.f = flags;
 
     16
 }
@@ -198,9 +198,9 @@ pub fn shift_left_indirect_hl(cpu: &mut CPU) -> u8 {
 pub fn shift_right_r8(cpu: &mut CPU, r8: &Reg8, reset_high_bit: bool) -> u8 {
     let value = cpu.registers.read8(r8);
 
-    let shifted_value = alu_shift_right(cpu, value, reset_high_bit);
-
+    let (shifted_value, flags) = alu_shift_right(value, cpu.registers.f, reset_high_bit);
     cpu.registers.write8(r8, shifted_value);
+    cpu.registers.f = flags;
 
     8
 }
@@ -222,9 +222,9 @@ pub fn shift_right_indirect_hl(cpu: &mut CPU, reset_high_bit: bool) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
     let value = cpu.mmu.read8(a16_addr);
 
-    let shifted_value = alu_shift_right(cpu, value, reset_high_bit);
-
+    let (shifted_value, flags) = alu_shift_right(value, cpu.registers.f, reset_high_bit);
     cpu.mmu.write8(a16_addr, shifted_value);
+    cpu.registers.f = flags;
 
     16
 }
