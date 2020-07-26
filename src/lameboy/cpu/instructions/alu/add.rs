@@ -29,18 +29,19 @@ pub fn alu_add_8bit(accumulator: u8, flags: Flags, d8: u8, use_carry: bool) -> (
         0
     };
 
-    let new_accumulator = accumulator.wrapping_add(d8).wrapping_add(cy);
+    let big_accumulator: u16 = accumulator as u16 + d8 as u16 + cy as u16;
+    let result = big_accumulator as u8;
 
     let mut new_flags = flags;
-    new_flags.set(Flags::ZERO, new_accumulator == 0);
+    new_flags.set(Flags::ZERO, result == 0);
     new_flags.set(Flags::SUBTRACT, false);
     new_flags.set(
         Flags::HALF_CARRY,
         ((accumulator & 0x0F) + (d8 & 0x0F) + cy) > 0x0F,
     );
-    new_flags.set(Flags::CARRY, new_accumulator < accumulator);
+    new_flags.set(Flags::CARRY, big_accumulator > 0xFF);
 
-    (new_accumulator, new_flags)
+    (result, new_flags)
 }
 
 #[cfg(test)]
@@ -117,6 +118,14 @@ mod test_alu_add_8bit {
         assert_eq!(
             alu_add_8bit(0x0F, Flags::CARRY, 0x01, true),
             (0x11, Flags::HALF_CARRY)
+        );
+    }
+
+    #[test]
+    fn carry_boundary_case() {
+        assert_eq!(
+            alu_add_8bit(0xFF, Flags::CARRY, 0xFF, true),
+            (0xFF, Flags::CARRY | Flags::HALF_CARRY)
         );
     }
 }
