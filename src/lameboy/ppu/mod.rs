@@ -83,17 +83,11 @@ impl PPU {
     }
 
     pub fn is_vram_accessible(&self) -> bool {
-        match self.mode {
-            Mode::ReadVram => false,
-            _ => true,
-        }
+        !matches!(self.mode, Mode::ReadVram)
     }
 
     pub fn is_oam_accessible(&self) -> bool {
-        match self.mode {
-            Mode::ReadVram | Mode::ReadOam => false,
-            _ => true,
-        }
+        !matches!(self.mode, Mode::ReadVram | Mode::ReadOam)
     }
 
     /// Cycle the PPU based on the how long the CPU spent since it last cycled.
