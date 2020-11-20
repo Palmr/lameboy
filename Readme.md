@@ -2,7 +2,7 @@
 
 
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.txt)
-[![Build Status](https://travis-ci.org/Palmr/lameboy.svg?branch=master)](https://travis-ci.org/Palmr/lameboy)
+![Rust](https://github.com/Palmr/lameboy/workflows/Rust/badge.svg)
 
 Yet another Game Boy emulator.
 
