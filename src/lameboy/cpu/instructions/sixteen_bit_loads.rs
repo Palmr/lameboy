@@ -1,6 +1,6 @@
 use lameboy::cpu::instructions::stack::{pop_stack_d16, push_stack_d16};
 use lameboy::cpu::registers::{Flags, Reg16};
-use lameboy::cpu::CPU;
+use lameboy::cpu::Cpu;
 
 /// Load a 16-bit value into a 16-bit register.
 ///
@@ -12,7 +12,7 @@ use lameboy::cpu::CPU;
 /// LD SP, $FFFE
 /// LD HL, $9FFF
 /// ```
-pub fn load_r16_d16(cpu: &mut CPU, r16: &Reg16) -> u8 {
+pub fn load_r16_d16(cpu: &mut Cpu, r16: &Reg16) -> u8 {
     // Read 16-bit value
     let value: u16 = cpu.fetch16();
 
@@ -31,7 +31,7 @@ pub fn load_r16_d16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```asm
 /// LD SP, HL
 /// ```
-pub fn load_r16_r16(cpu: &mut CPU, r16_target: &Reg16, r16_source: &Reg16) -> u8 {
+pub fn load_r16_r16(cpu: &mut Cpu, r16_target: &Reg16, r16_source: &Reg16) -> u8 {
     // Copy from source register to target register
     let value = cpu.registers.read16(r16_source);
     cpu.registers.write16(r16_target, value);
@@ -48,7 +48,7 @@ pub fn load_r16_r16(cpu: &mut CPU, r16_target: &Reg16, r16_source: &Reg16) -> u8
 /// ```asm
 /// LD HL, SP+d8 ; HL <- SP + d8
 /// ```
-pub fn load_reg_hl_reg_sp_d8(cpu: &mut CPU) -> u8 {
+pub fn load_reg_hl_reg_sp_d8(cpu: &mut Cpu) -> u8 {
     // TODO - Could combine logic with add_sp_d8
     // Read 8-bit value
     let unsigned_value = cpu.fetch8();
@@ -81,7 +81,7 @@ pub fn load_reg_hl_reg_sp_d8(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// LD ($8000), SP ; memory[0x8000] <- SP
 /// ```
-pub fn load_indirect_a16_r16(cpu: &mut CPU, r16_source: &Reg16) -> u8 {
+pub fn load_indirect_a16_r16(cpu: &mut Cpu, r16_source: &Reg16) -> u8 {
     // Read 16-bit address
     let a16_addr = cpu.fetch16();
 
@@ -106,7 +106,7 @@ pub fn load_indirect_a16_r16(cpu: &mut CPU, r16_source: &Reg16) -> u8 {
 /// ```asm
 /// PUSH BC ; STACK <<- BC
 /// ```
-pub fn push_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
+pub fn push_r16(cpu: &mut Cpu, r16: &Reg16) -> u8 {
     let value = cpu.registers.read16(r16);
     push_stack_d16(cpu, value);
 
@@ -122,7 +122,7 @@ pub fn push_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```asm
 /// POP BC ; BC <<- STACK
 /// ```
-pub fn pop_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
+pub fn pop_r16(cpu: &mut Cpu, r16: &Reg16) -> u8 {
     let value = pop_stack_d16(cpu);
     cpu.registers.write16(r16, value);
 

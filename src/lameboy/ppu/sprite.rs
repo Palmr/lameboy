@@ -1,5 +1,5 @@
 use lameboy::mmu::mmuobject::MmuObject;
-use lameboy::ppu::PPU;
+use lameboy::ppu::Ppu;
 
 use lameboy::ppu::palette::ObjectPalette;
 
@@ -31,7 +31,7 @@ pub struct Sprite {
 }
 
 impl Sprite {
-    pub fn new(ppu: &PPU, sprite_number: u8) -> Sprite {
+    pub fn new(ppu: &Ppu, sprite_number: u8) -> Sprite {
         let sprite_address = 0xFE00 | (u16::from(sprite_number) << 2);
 
         let sprite_y = ppu.read8(sprite_address);

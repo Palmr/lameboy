@@ -1,5 +1,5 @@
 use lameboy::cpu::registers::{Reg16, Reg8};
-use lameboy::cpu::CPU;
+use lameboy::cpu::Cpu;
 
 /// Load an 8-bit value into a 8-bit register.
 ///
@@ -11,7 +11,7 @@ use lameboy::cpu::CPU;
 /// LD A, $FF
 /// LD B, $9F
 /// ```
-pub fn load_r8_d8(cpu: &mut CPU, r8: &Reg8) -> u8 {
+pub fn load_r8_d8(cpu: &mut Cpu, r8: &Reg8) -> u8 {
     let value = cpu.fetch8();
 
     cpu.registers.write8(r8, value);
@@ -28,7 +28,7 @@ pub fn load_r8_d8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```asm
 /// LD A, ($0150) ; A <- memory[0x0150]
 /// ```
-pub fn load_reg_a_a16(cpu: &mut CPU) -> u8 {
+pub fn load_reg_a_a16(cpu: &mut Cpu) -> u8 {
     let addr = cpu.fetch16();
 
     // Read 8-bit value
@@ -49,7 +49,7 @@ pub fn load_reg_a_a16(cpu: &mut CPU) -> u8 {
 /// LD A, B ; A <- B
 /// LD B, D ; B <- D
 /// ```
-pub fn load_r8_r8(cpu: &mut CPU, r8_target: &Reg8, r8_source: &Reg8) -> u8 {
+pub fn load_r8_r8(cpu: &mut Cpu, r8_target: &Reg8, r8_source: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8_source);
     cpu.registers.write8(r8_target, value);
 
@@ -65,7 +65,7 @@ pub fn load_r8_r8(cpu: &mut CPU, r8_target: &Reg8, r8_source: &Reg8) -> u8 {
 /// ```asm
 /// LD (HL), $DA ; memory[HL] <- 0xDA
 /// ```
-pub fn load_indirect_r16_d8(cpu: &mut CPU, r16_indirect_addr: &Reg16) -> u8 {
+pub fn load_indirect_r16_d8(cpu: &mut Cpu, r16_indirect_addr: &Reg16) -> u8 {
     // Read 8-bit value
     let value = cpu.fetch8();
 
@@ -86,7 +86,7 @@ pub fn load_indirect_r16_d8(cpu: &mut CPU, r16_indirect_addr: &Reg16) -> u8 {
 /// ```asm
 /// LD A, (HL) ; A <- memory[HL]
 /// ```
-pub fn load_r8_indirect_r16(cpu: &mut CPU, r8_target: &Reg8, r16_indirect_addr: &Reg16) -> u8 {
+pub fn load_r8_indirect_r16(cpu: &mut Cpu, r8_target: &Reg8, r16_indirect_addr: &Reg16) -> u8 {
     let indirect_addr = cpu.registers.read16(r16_indirect_addr);
     let value = cpu.mmu.read8(indirect_addr);
     cpu.registers.write8(r8_target, value);
@@ -103,7 +103,7 @@ pub fn load_r8_indirect_r16(cpu: &mut CPU, r8_target: &Reg8, r16_indirect_addr: 
 /// ```asm
 /// LD (HL), A ; memory[HL] <- A
 /// ```
-pub fn load_indirect_r16_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, r8_source: &Reg8) -> u8 {
+pub fn load_indirect_r16_r8(cpu: &mut Cpu, r16_indirect_addr: &Reg16, r8_source: &Reg8) -> u8 {
     let indirect_addr = cpu.registers.read16(r16_indirect_addr);
     let register_val = cpu.registers.read8(r8_source);
     cpu.mmu.write8(indirect_addr, register_val);
@@ -120,7 +120,7 @@ pub fn load_indirect_r16_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, r8_source:
 /// ```asm
 /// LD ($0150), A ; memory[0x0150] <- A
 /// ```
-pub fn load_a16_reg_a(cpu: &mut CPU) -> u8 {
+pub fn load_a16_reg_a(cpu: &mut Cpu) -> u8 {
     // Read 16-bit address value
     let addr = cpu.fetch16();
 
@@ -140,7 +140,7 @@ pub fn load_a16_reg_a(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// LDH A, (C) ; A <- memory[0xFF00 + C]
 /// ```
-pub fn load_reg_a_high_mem_reg_c(cpu: &mut CPU) -> u8 {
+pub fn load_reg_a_high_mem_reg_c(cpu: &mut Cpu) -> u8 {
     let address = 0xFF00 + u16::from(cpu.registers.c);
 
     cpu.registers.a = cpu.mmu.read8(address);
@@ -158,7 +158,7 @@ pub fn load_reg_a_high_mem_reg_c(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// LD (C), A ; memory[0xFF00 + C] <- A
 /// ```
-pub fn load_high_mem_reg_c_reg_a(cpu: &mut CPU) -> u8 {
+pub fn load_high_mem_reg_c_reg_a(cpu: &mut Cpu) -> u8 {
     let address = 0xFF00 + u16::from(cpu.registers.c);
 
     // Write the byte to memory
@@ -178,7 +178,7 @@ pub fn load_high_mem_reg_c_reg_a(cpu: &mut CPU) -> u8 {
 /// LD A, (HL-) ; A <- memory[HL]; HL--
 /// ```
 pub fn load_r8_indirect_r16_decrement(
-    cpu: &mut CPU,
+    cpu: &mut Cpu,
     r8_target: &Reg8,
     r16_indirect_addr: &Reg16,
 ) -> u8 {
@@ -205,7 +205,7 @@ pub fn load_r8_indirect_r16_decrement(
 /// ```asm
 /// LD A, (HL-) ; memory[HL] <- A; HL--
 /// ```
-pub fn load_indirect_r16_decrement_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, r8: &Reg8) -> u8 {
+pub fn load_indirect_r16_decrement_r8(cpu: &mut Cpu, r16_indirect_addr: &Reg16, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
     let indirect_addr = cpu.registers.read16(r16_indirect_addr);
 
@@ -228,7 +228,7 @@ pub fn load_indirect_r16_decrement_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, 
 /// ```asm
 /// LD (HL+), A ; memory[HL] <- A; HL++
 /// ```
-pub fn load_indirect_r16_increment_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, r8: &Reg8) -> u8 {
+pub fn load_indirect_r16_increment_r8(cpu: &mut Cpu, r16_indirect_addr: &Reg16, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
     // Copy from memory using 16-bit register value as address
@@ -254,7 +254,7 @@ pub fn load_indirect_r16_increment_r8(cpu: &mut CPU, r16_indirect_addr: &Reg16, 
 /// LD A, (HL+) ; A <- memory[HL]; HL++
 /// ```
 pub fn load_r8_indirect_r16_increment(
-    cpu: &mut CPU,
+    cpu: &mut Cpu,
     r8_target: &Reg8,
     r16_indirect_addr: &Reg16,
 ) -> u8 {
@@ -281,7 +281,7 @@ pub fn load_r8_indirect_r16_increment(
 /// ```asm
 /// LDH A, ($DA) ; A <- memory[0xFFDA]
 /// ```
-pub fn load_reg_a_high_mem_d8(cpu: &mut CPU) -> u8 {
+pub fn load_reg_a_high_mem_d8(cpu: &mut Cpu) -> u8 {
     // Address is offset plus 8-bit data
     let addr = 0xFF00 + u16::from(cpu.fetch8());
 
@@ -302,7 +302,7 @@ pub fn load_reg_a_high_mem_d8(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// LDH ($DA), A ; memory[0xFFDA] <- A
 /// ```
-pub fn load_high_mem_d8_reg_a(cpu: &mut CPU) -> u8 {
+pub fn load_high_mem_d8_reg_a(cpu: &mut Cpu) -> u8 {
     // Read 8-bit value
     let address = 0xFF00 + u16::from(cpu.fetch8());
 

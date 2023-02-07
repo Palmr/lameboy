@@ -119,8 +119,7 @@ pub fn parse_rom_size(rom_size: u8) -> Result<usize, String> {
         0x53 => Ok(0x0014_0000),
         0x54 => Ok(0x0018_0000),
         _ => Err(format!(
-            "Unknown rom size value found in the cart header: 0x{:02X}",
-            rom_size
+            "Unknown rom size value found in the cart header: 0x{rom_size:02X}"
         )),
     }
 }
@@ -137,8 +136,7 @@ pub fn parse_ram_size(ram_size: u8) -> Result<usize, String> {
     match ram_size {
         0x00 => Ok(0x800),
         _ => Err(format!(
-            "Unknown ram size value found in the cart header: 0x{:02X}",
-            ram_size
+            "Unknown ram size value found in the cart header: 0x{ram_size:02X}"
         )),
     }
 }

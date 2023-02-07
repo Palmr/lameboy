@@ -1,11 +1,11 @@
 mod nombc;
 
-pub trait MBC {
+pub trait Mbc {
     fn read(&self, addr: u16) -> u8;
     fn write(&self, addr: u16, data: u8);
 }
 
-pub trait DebuggableMBC: MBC + core::fmt::Debug {}
+pub trait DebuggableMBC: Mbc + core::fmt::Debug {}
 
 /// Map cart type value from cart header into an Memory Bank Controller object
 /// which can be used to resolve an address.
@@ -48,7 +48,7 @@ pub fn get_mbc(
         0x00 => {
             nombc::NoMBC::new(rom_data, rom_size).map(|v| Box::new(v) as Box<dyn DebuggableMBC>)
         }
-        _ => Err(format!("Unsupported MBC type: 0x{:02X}", cart_type)),
+        _ => Err(format!("Unsupported MBC type: 0x{cart_type:02X}")),
     }
 }
 
@@ -65,7 +65,7 @@ mod tests {
                 if msg == expected_msg {
                     Ok(())
                 } else {
-                    Err(format!("Expected: '{}' Got: '{}'", expected_msg, msg))
+                    Err(format!("Expected: '{expected_msg}' Got: '{msg}'"))
                 }
             }
         }
@@ -80,7 +80,7 @@ mod tests {
                 if msg == expected_msg {
                     Ok(())
                 } else {
-                    Err(format!("Expected: '{}' Got: '{}'", expected_msg, msg))
+                    Err(format!("Expected: '{expected_msg}' Got: '{msg}'"))
                 }
             }
         }
@@ -93,7 +93,7 @@ mod tests {
                 // TODO - not sure how to check the impl of the MBC type here...
                 Ok(())
             }
-            Err(msg) => Err(format!("Expected valid nombc Got: '{}'", msg)),
+            Err(msg) => Err(format!("Expected valid nombc Got: '{msg}'")),
         }
     }
 }

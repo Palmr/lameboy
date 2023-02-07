@@ -1,5 +1,5 @@
 use lameboy::cpu::registers::{Flags, Reg16};
-use lameboy::cpu::CPU;
+use lameboy::cpu::Cpu;
 
 /// ADD 16-bit register with register HL, storing the result in HL.
 ///
@@ -10,7 +10,7 @@ use lameboy::cpu::CPU;
 /// ```asm
 /// ADD HL, BC ; HL <- HL + BC
 /// ```
-pub fn add_hl_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
+pub fn add_hl_r16(cpu: &mut Cpu, r16: &Reg16) -> u8 {
     let value = cpu.registers.read16(r16);
     let original_hl = cpu.registers.read16(&Reg16::HL);
 
@@ -41,7 +41,7 @@ pub fn add_hl_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```asm
 /// ADD SP, $DA ; SP <- SP + 0xDA
 /// ```
-pub fn add_sp_d8(cpu: &mut CPU) -> u8 {
+pub fn add_sp_d8(cpu: &mut Cpu) -> u8 {
     // Read 8-bit value
     let unsigned_value = cpu.fetch8();
     let signed_value = unsigned_value as i8;
@@ -74,7 +74,7 @@ pub fn add_sp_d8(cpu: &mut CPU) -> u8 {
 /// INC AB
 /// INC CD
 /// ```
-pub fn inc_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
+pub fn inc_r16(cpu: &mut Cpu, r16: &Reg16) -> u8 {
     let mut value = cpu.registers.read16(r16);
 
     value = value.wrapping_add(1);
@@ -94,7 +94,7 @@ pub fn inc_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// DEC AB
 /// DEC CD
 /// ```
-pub fn dec_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
+pub fn dec_r16(cpu: &mut Cpu, r16: &Reg16) -> u8 {
     let mut value = cpu.registers.read16(r16);
 
     value = value.wrapping_sub(1);

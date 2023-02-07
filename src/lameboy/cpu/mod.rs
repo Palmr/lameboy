@@ -11,7 +11,7 @@ use lameboy::cpu::instructions::sixteen_bit_alu::*;
 use lameboy::cpu::instructions::sixteen_bit_loads::*;
 use lameboy::cpu::registers::*;
 use lameboy::interrupts::*;
-use lameboy::mmu::MMU;
+use lameboy::mmu::Mmu;
 
 pub mod instructions;
 pub mod registers;
@@ -24,9 +24,9 @@ enum InterruptFlagDelayStatus {
     FinishedDelay,
 }
 
-pub struct CPU {
+pub struct Cpu {
     pub registers: Registers,
-    pub mmu: MMU,
+    pub mmu: Mmu,
     ie_delay_state: InterruptFlagDelayStatus,
     de_delay_state: InterruptFlagDelayStatus,
     ime: bool,
@@ -35,11 +35,11 @@ pub struct CPU {
     pub pc_history_pointer: usize,
 }
 
-impl CPU {
-    pub fn new(mmu: MMU) -> CPU {
+impl Cpu {
+    pub fn new(mmu: Mmu) -> Cpu {
         let pc_history = vec![0x00; 200];
 
-        CPU {
+        Cpu {
             registers: Registers::new(),
             mmu,
             ie_delay_state: InterruptFlagDelayStatus::Waiting,
@@ -83,7 +83,7 @@ impl CPU {
 
     /// Run a fetch, decode, and execute cycle on the CPU
     pub fn cycle(&mut self) -> u8 {
-        self.pc_history[self.pc_history_pointer as usize] = self.registers.pc;
+        self.pc_history[self.pc_history_pointer] = self.registers.pc;
         self.pc_history_pointer = self.pc_history_pointer.wrapping_add(1) % self.pc_history.len();
 
         self.handle_ime_delay();

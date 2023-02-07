@@ -1,5 +1,5 @@
 use core::fmt;
-use lameboy::cart::mbc::{DebuggableMBC, MBC};
+use lameboy::cart::mbc::{DebuggableMBC, Mbc};
 use lameboy::cart::parse_rom_size;
 use lameboy::mmu::{
     CART_RAM_BANK_X_END, CART_RAM_BANK_X_START, CART_ROM_BANK_0_END, CART_ROM_BANK_0_START,
@@ -17,14 +17,13 @@ impl NoMBC {
             Ok(NoMBC { rom_data })
         } else {
             Err(format!(
-                "ROM defined no MBC: expected file size 32KB but got {} bytes",
-                file_size
+                "ROM defined no MBC: expected file size 32KB but got {file_size} bytes"
             ))
         }
     }
 }
 
-impl MBC for NoMBC {
+impl Mbc for NoMBC {
     fn read(&self, addr: u16) -> u8 {
         match addr {
             CART_ROM_BANK_0_START..=CART_ROM_BANK_0_END
@@ -38,10 +37,7 @@ impl MBC for NoMBC {
     }
 
     fn write(&self, addr: u16, data: u8) {
-        debug!(
-            "Attempted to access cart [WRITE] to no-MBC cart [0x{:04X}] = 0x{:02X}",
-            addr, data
-        );
+        debug!("Attempted to access cart [WRITE] to no-MBC cart [0x{addr:04X}] = 0x{data:02X}");
     }
 }
 

@@ -4,7 +4,7 @@ use imgui::{Condition, Ui, Window};
 use lameboy::cart::Cart;
 
 impl ImguiDebuggable for Cart {
-    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, _: &mut ImguiDebugState) {
+    fn imgui_display<'a>(&mut self, ui: &Ui<'_>, _: &mut ImguiDebugState) {
         Window::new(im_str!("Cart"))
             .size([180.0, 127.0], Condition::FirstUseEver)
             .resizable(true)

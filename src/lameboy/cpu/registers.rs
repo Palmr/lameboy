@@ -105,10 +105,10 @@ impl Registers {
     pub fn read16(&self, r16: &Reg16) -> u16 {
         use self::Reg16::*;
         match r16 {
-            AF => ((u16::from(self.a) << 8) | (u16::from(self.f.bits()))),
-            BC => ((u16::from(self.b) << 8) | (u16::from(self.c))),
-            DE => ((u16::from(self.d) << 8) | (u16::from(self.e))),
-            HL => ((u16::from(self.h) << 8) | (u16::from(self.l))),
+            AF => (u16::from(self.a) << 8) | (u16::from(self.f.bits())),
+            BC => (u16::from(self.b) << 8) | (u16::from(self.c)),
+            DE => (u16::from(self.d) << 8) | (u16::from(self.e)),
+            HL => (u16::from(self.h) << 8) | (u16::from(self.l)),
             SP => self.sp,
         }
     }

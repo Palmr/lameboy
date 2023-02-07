@@ -1,7 +1,7 @@
 use gui::imgui_debug_state::ImguiDebugState;
 use imgui::{Condition, Selectable, Ui, Window};
 
-pub fn breakpoint_windows<'a>(ui: &Ui<'a>, imgui_debug: &mut ImguiDebugState) {
+pub fn breakpoint_windows(ui: &Ui, imgui_debug: &mut ImguiDebugState) {
     Window::new(im_str!("Breakpoints"))
         .size([225.0, 150.0], Condition::FirstUseEver)
         .resizable(true)

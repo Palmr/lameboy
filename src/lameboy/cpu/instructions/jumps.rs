@@ -1,6 +1,6 @@
 use lameboy::cpu::instructions::opcode_flag_test;
 use lameboy::cpu::registers::Reg16;
-use lameboy::cpu::CPU;
+use lameboy::cpu::Cpu;
 
 /// Jump to a different address using 16-bit data as an address.
 ///
@@ -11,7 +11,7 @@ use lameboy::cpu::CPU;
 /// ```asm
 /// JP $0150 ; PC <- 0x0150
 /// ```
-pub fn jump_d16(cpu: &mut CPU) -> u8 {
+pub fn jump_d16(cpu: &mut Cpu) -> u8 {
     // Read 16-bit jump target address
     let jump_target = cpu.fetch16();
 
@@ -31,7 +31,7 @@ pub fn jump_d16(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// JP NZ $0150 ; IF !Flags::RegisterFlags::ZERO { PC <- 0x0150 }
 /// ```
-pub fn jump_conditional_d16(cpu: &mut CPU, opcode: u8) -> u8 {
+pub fn jump_conditional_d16(cpu: &mut Cpu, opcode: u8) -> u8 {
     // Read 16-bit jump target address
     let jump_target = cpu.fetch16();
 
@@ -55,7 +55,7 @@ pub fn jump_conditional_d16(cpu: &mut CPU, opcode: u8) -> u8 {
 /// ```asm
 /// JP (HL) ; PC <- HL
 /// ```
-pub fn jump_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
+pub fn jump_r16(cpu: &mut Cpu, r16: &Reg16) -> u8 {
     // Set PC to whatever the 16-bit register is
     cpu.registers.pc = cpu.registers.read16(r16);
 
@@ -71,7 +71,7 @@ pub fn jump_r16(cpu: &mut CPU, r16: &Reg16) -> u8 {
 /// ```asm
 /// JR $DA ; PC <- PC + 0xDA
 /// ```
-pub fn jump_relative_d8(cpu: &mut CPU) -> u8 {
+pub fn jump_relative_d8(cpu: &mut Cpu) -> u8 {
     // Read signed 8-bit jump offset
     let jump_offset: i8 = cpu.fetch8() as i8;
 
@@ -91,7 +91,7 @@ pub fn jump_relative_d8(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// JR NZ $DA ; IF !Flags::RegisterFlags::ZERO { PC <- PC + $DA }
 /// ```
-pub fn jump_relative_conditional_d8(cpu: &mut CPU, opcode: u8) -> u8 {
+pub fn jump_relative_conditional_d8(cpu: &mut Cpu, opcode: u8) -> u8 {
     // Read signed 8-bit jump offset
     let jump_offset: i8 = cpu.fetch8() as i8;
 

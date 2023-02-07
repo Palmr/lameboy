@@ -1,6 +1,6 @@
 use lameboy::cpu::instructions::{bit_index_from_opcode, register_from_opcode};
 use lameboy::cpu::registers::{Flags, Reg16, Reg8, Register};
-use lameboy::cpu::CPU;
+use lameboy::cpu::Cpu;
 
 /// Put the complement of an 8-bit values single bit into the RegisterFlags::ZERO flag.
 ///
@@ -11,7 +11,7 @@ use lameboy::cpu::CPU;
 /// ```asm
 /// BIT 4, B  ; Flag::RegisterFlags::ZERO = (B & 0x01 << 4)
 /// ```
-pub fn bit_test(cpu: &mut CPU, opcode: u8) -> u8 {
+pub fn bit_test(cpu: &mut Cpu, opcode: u8) -> u8 {
     let register = opcode & 0b0000_0111;
     let bit_index = (opcode & 0b0011_1000) >> 3;
 
@@ -47,7 +47,7 @@ pub fn bit_test(cpu: &mut CPU, opcode: u8) -> u8 {
 /// SET 4, B  ; B = (B | 0x01 << 4)
 /// RES 4, B  ; B = (B & 0x01 << 4)
 /// ```
-pub fn bit_assign(cpu: &mut CPU, opcode: u8, set_bit: bool) -> u8 {
+pub fn bit_assign(cpu: &mut Cpu, opcode: u8, set_bit: bool) -> u8 {
     let bit_index = bit_index_from_opcode(opcode);
 
     let (mut value, duration) = match register_from_opcode(opcode) {

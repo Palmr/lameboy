@@ -1,7 +1,7 @@
 use imgui::{Condition, Ui, Window};
 use lameboy::Lameboy;
 
-pub fn emulator_window<'a>(lameboy: &mut Lameboy, ui: &Ui<'a>) {
+pub fn emulator_window(lameboy: &mut Lameboy, ui: &Ui) {
     Window::new(im_str!("Emulator"))
         .size([255.0, 75.0], Condition::FirstUseEver)
         .resizable(true)

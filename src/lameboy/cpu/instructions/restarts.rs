@@ -1,5 +1,5 @@
 use lameboy::cpu::instructions::stack::push_stack_d16;
-use lameboy::cpu::CPU;
+use lameboy::cpu::Cpu;
 
 /// Push the current PC to the stack and then jump to one of 8 positions in the zero page.
 ///
@@ -10,7 +10,7 @@ use lameboy::cpu::CPU;
 /// ```asm
 /// RST 1 ; STACK <<- PC; PC <- 0x0008
 /// ```
-pub fn restart(cpu: &mut CPU, opcode: u8) -> u8 {
+pub fn restart(cpu: &mut Cpu, opcode: u8) -> u8 {
     // Push current PC to the stack
     let current_pc = cpu.registers.pc;
     push_stack_d16(cpu, current_pc);

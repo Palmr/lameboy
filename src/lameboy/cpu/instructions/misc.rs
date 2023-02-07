@@ -1,6 +1,6 @@
 use lameboy::cpu::instructions::alu::alu_swap_8bit;
 use lameboy::cpu::registers::{Flags, Reg16, Reg8};
-use lameboy::cpu::{InterruptFlagDelayStatus, CPU};
+use lameboy::cpu::{Cpu, InterruptFlagDelayStatus};
 
 /// Swap high and low bits of an 8-bit register.
 ///
@@ -11,7 +11,7 @@ use lameboy::cpu::{InterruptFlagDelayStatus, CPU};
 /// ```asm
 /// SWAP B  ; B = (B & 0x0F << 4) & (B & 0xF0 >> 4)
 /// ```
-pub fn swap_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
+pub fn swap_r8(cpu: &mut Cpu, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
     let (swapped_value, flags) = alu_swap_8bit(value, cpu.registers.f);
@@ -31,7 +31,7 @@ pub fn swap_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```asm
 /// SLA (HL) ; Shift memory[hl] left (sets Flags::ZERO if rotated result == 0)
 /// ```
-pub fn swap_indirect_hl(cpu: &mut CPU) -> u8 {
+pub fn swap_indirect_hl(cpu: &mut Cpu) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
     let value = cpu.mmu.read8(a16_addr);
 
@@ -52,7 +52,7 @@ pub fn swap_indirect_hl(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// DAA
 /// ```
-pub fn decimal_adjust(cpu: &mut CPU) -> u8 {
+pub fn decimal_adjust(cpu: &mut Cpu) -> u8 {
     let mut carry = false;
 
     if !cpu.registers.f.contains(Flags::SUBTRACT) {
@@ -93,7 +93,7 @@ pub fn decimal_adjust(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// CPL
 /// ```
-pub fn complement(cpu: &mut CPU) -> u8 {
+pub fn complement(cpu: &mut Cpu) -> u8 {
     let value = cpu.registers.a;
     cpu.registers.a = !value;
 
@@ -112,7 +112,7 @@ pub fn complement(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// CCF ; Flags::CARRY = !Flags::CARRY
 /// ```
-pub fn complement_carry_flag(cpu: &mut CPU) -> u8 {
+pub fn complement_carry_flag(cpu: &mut Cpu) -> u8 {
     cpu.registers.f.set(Flags::SUBTRACT, false);
     cpu.registers.f.set(Flags::HALF_CARRY, false);
     cpu.registers.f.toggle(Flags::CARRY);
@@ -129,7 +129,7 @@ pub fn complement_carry_flag(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// SCF ; Flags::CARRY = 1
 /// ```
-pub fn set_carry_flag(cpu: &mut CPU) -> u8 {
+pub fn set_carry_flag(cpu: &mut Cpu) -> u8 {
     cpu.registers.f.set(Flags::SUBTRACT, false);
     cpu.registers.f.set(Flags::HALF_CARRY, false);
     cpu.registers.f.set(Flags::CARRY, true);
@@ -146,7 +146,7 @@ pub fn set_carry_flag(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// NOP
 /// ```
-pub fn nop(_: &CPU) -> u8 {
+pub fn nop(_: &Cpu) -> u8 {
     // Do nothing
     4
 }
@@ -162,7 +162,7 @@ pub fn nop(_: &CPU) -> u8 {
 /// ```asm
 /// HALT
 /// ```
-pub fn halt(cpu: &mut CPU) -> u8 {
+pub fn halt(cpu: &mut Cpu) -> u8 {
     cpu.halt = true;
 
     4
@@ -179,7 +179,7 @@ pub fn halt(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// STOP
 /// ```
-pub fn stop(cpu: &mut CPU) -> u8 {
+pub fn stop(cpu: &mut Cpu) -> u8 {
     // Read 8-bit value
     let value = cpu.fetch8();
 
@@ -206,7 +206,7 @@ pub fn stop(cpu: &mut CPU) -> u8 {
 /// DI
 /// EI
 /// ```
-pub fn interrupts(cpu: &mut CPU, enabled: bool) -> u8 {
+pub fn interrupts(cpu: &mut Cpu, enabled: bool) -> u8 {
     if enabled {
         cpu.ie_delay_state = InterruptFlagDelayStatus::ChangeScheduled;
     } else {
@@ -216,7 +216,7 @@ pub fn interrupts(cpu: &mut CPU, enabled: bool) -> u8 {
     4
 }
 
-pub fn undefined(cpu: &CPU, opcode: u8) -> u8 {
+pub fn undefined(cpu: &Cpu, opcode: u8) -> u8 {
     panic!(
         "Undefined opcode 0x{:02X} at pc=0x{:04X}",
         opcode, cpu.registers.pc

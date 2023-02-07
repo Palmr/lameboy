@@ -1,9 +1,9 @@
 use gui::imgui_debug_state::ImguiDebugState;
 use imgui::{Condition, Ui, Window};
 use lameboy::ppu::sprite::Sprite;
-use lameboy::ppu::PPU;
+use lameboy::ppu::Ppu;
 
-pub fn oam_window<'a>(ppu: &PPU, ui: &Ui<'a>, imgui_debug: &mut ImguiDebugState) {
+pub fn oam_window(ppu: &Ppu, ui: &Ui, imgui_debug: &mut ImguiDebugState) {
     Window::new(im_str!("PPU-OAM"))
         .size([224.0, 230.0], Condition::FirstUseEver)
         .resizable(true)

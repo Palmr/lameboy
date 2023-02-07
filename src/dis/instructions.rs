@@ -1,8 +1,8 @@
 use dis::Instruction;
 use dis::InstructionArg::{Data16, Data8};
-use lameboy::mmu::MMU;
+use lameboy::mmu::Mmu;
 
-pub fn decode_instruction(instruction_addr: u16, mmu: &MMU) -> Instruction {
+pub fn decode_instruction(instruction_addr: u16, mmu: &Mmu) -> Instruction {
     let opcode = mmu.read8_safe(instruction_addr);
 
     match opcode {
@@ -285,7 +285,7 @@ pub fn decode_instruction(instruction_addr: u16, mmu: &MMU) -> Instruction {
     }
 }
 
-fn decode_cb_prefix_instruction(instruction_addr: u16, mmu: &MMU) -> Instruction {
+fn decode_cb_prefix_instruction(instruction_addr: u16, mmu: &Mmu) -> Instruction {
     let opcode = mmu.read8_safe(instruction_addr.wrapping_add(1));
 
     match opcode {

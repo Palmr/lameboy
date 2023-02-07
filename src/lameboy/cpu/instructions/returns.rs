@@ -1,6 +1,6 @@
 use lameboy::cpu::instructions::opcode_flag_test;
 use lameboy::cpu::instructions::stack::pop_stack_d16;
-use lameboy::cpu::CPU;
+use lameboy::cpu::Cpu;
 
 /// Return to an address that was pushed to the stack.
 ///
@@ -11,7 +11,7 @@ use lameboy::cpu::CPU;
 /// ```asm
 /// RET ; PC <<- STACK;
 /// ```
-pub fn ret(cpu: &mut CPU) -> u8 {
+pub fn ret(cpu: &mut Cpu) -> u8 {
     // Read 16-bit jump target address
     let jump_target: u16 = pop_stack_d16(cpu);
 
@@ -30,7 +30,7 @@ pub fn ret(cpu: &mut CPU) -> u8 {
 /// ```asm
 /// RET ; PC <<- STACK;
 /// ```
-pub fn ret_conditional(cpu: &mut CPU, opcode: u8) -> u8 {
+pub fn ret_conditional(cpu: &mut Cpu, opcode: u8) -> u8 {
     if opcode_flag_test(opcode, cpu.registers.f) {
         ret(cpu);
 
@@ -50,7 +50,7 @@ pub fn ret_conditional(cpu: &mut CPU, opcode: u8) -> u8 {
 /// ```asm
 /// RETI ; PC <<- STACK; ime == true
 /// ```
-pub fn ret_interrupt(cpu: &mut CPU) -> u8 {
+pub fn ret_interrupt(cpu: &mut Cpu) -> u8 {
     cpu.ime = true;
 
     ret(cpu)

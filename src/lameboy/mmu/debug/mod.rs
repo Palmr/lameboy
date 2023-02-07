@@ -7,10 +7,10 @@ mod hexdump;
 use gui::imgui_debug_state::ImguiDebugState;
 use gui::imgui_debuggable::ImguiDebuggable;
 use imgui::{Condition, Ui, Window};
-use lameboy::mmu::MMU;
+use lameboy::mmu::Mmu;
 
-impl ImguiDebuggable for MMU {
-    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebugState) {
+impl ImguiDebuggable for Mmu {
+    fn imgui_display(&mut self, ui: &Ui, imgui_debug: &mut ImguiDebugState) {
         Window::new(im_str!("MMU"))
             .size([285.0, 122.0], Condition::FirstUseEver)
             .resizable(true)
@@ -35,7 +35,7 @@ impl ImguiDebuggable for MMU {
                 }
             });
 
-        hexdump_window(&self, ui, imgui_debug);
-        disassembly_window(&self, ui, imgui_debug);
+        hexdump_window(self, ui, imgui_debug);
+        disassembly_window(self, ui, imgui_debug);
     }
 }

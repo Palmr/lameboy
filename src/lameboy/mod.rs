@@ -1,8 +1,8 @@
 use lameboy::cart::Cart;
-use lameboy::cpu::CPU;
+use lameboy::cpu::Cpu;
 use lameboy::joypad::Joypad;
-use lameboy::mmu::MMU;
-use lameboy::ppu::PPU;
+use lameboy::mmu::Mmu;
+use lameboy::ppu::Ppu;
 
 pub mod cart;
 pub mod cpu;
@@ -14,23 +14,23 @@ pub mod ppu;
 mod debug;
 
 use gui::imgui_debug_state::ImguiDebugState;
-use gui::GUI;
+use gui::Gui;
 
 pub struct Lameboy {
     pub active: bool,
-    cpu: CPU,
+    cpu: Cpu,
     running: bool,
     trace_count: i32,
     pub debug: ImguiDebugState,
 }
 
 impl Lameboy {
-    pub fn new(data: Vec<u8>, gui: &GUI) -> Lameboy {
+    pub fn new(data: Vec<u8>, gui: &Gui) -> Lameboy {
         let joypad = Joypad::new();
         let cart = Cart::new(data);
-        let ppu = PPU::new(&gui.display);
-        let mmu = MMU::new(cart, ppu, joypad);
-        let cpu = CPU::new(mmu);
+        let ppu = Ppu::new(&gui.display);
+        let mmu = Mmu::new(cart, ppu, joypad);
+        let cpu = Cpu::new(mmu);
 
         Lameboy {
             active: true,
@@ -107,11 +107,11 @@ impl Lameboy {
         self.get_mmu().reset();
     }
 
-    pub fn get_cpu(&mut self) -> &mut CPU {
+    pub fn get_cpu(&mut self) -> &mut Cpu {
         &mut self.cpu
     }
 
-    pub fn get_mmu(&mut self) -> &mut MMU {
+    pub fn get_mmu(&mut self) -> &mut Mmu {
         &mut self.get_cpu().mmu
     }
 
@@ -119,7 +119,7 @@ impl Lameboy {
         &mut self.get_mmu().cart
     }
 
-    pub fn get_ppu(&mut self) -> &mut PPU {
+    pub fn get_ppu(&mut self) -> &mut Ppu {
         &mut self.get_mmu().ppu
     }
 

@@ -19,7 +19,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-use gui::GUI;
+use gui::Gui;
 use lameboy::Lameboy;
 
 mod dis;
@@ -57,8 +57,8 @@ fn main() {
     f.read_to_end(&mut data).expect("Unable to read data");
     info!("File length: {}", data.len());
 
-    let window_title = format!("{} - Lameboy - v{}", rom_file_name, PKG_VERSION);
-    let gui = GUI::init((640f64, 576f64), window_title, CLEAR_COLOR);
+    let window_title = format!("{rom_file_name} - Lameboy - v{PKG_VERSION}");
+    let gui = Gui::init((640f64, 576f64), window_title, CLEAR_COLOR);
 
     // Create all our hardware instances
     let mut lameboy = Lameboy::new(data, &gui);

@@ -1,8 +1,8 @@
 use gui::imgui_debug_state::ImguiDebugState;
 use imgui::{Condition, Selectable, StyleColor, Ui, Window};
-use lameboy::mmu::MMU;
+use lameboy::mmu::Mmu;
 
-pub fn hexdump_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDebugState) {
+pub fn hexdump_window(mmu: &Mmu, ui: &Ui, imgui_debug: &mut ImguiDebugState) {
     Window::new(im_str!("MMU - dump"))
         .size([260.0, 140.0], Condition::FirstUseEver)
         .resizable(true)

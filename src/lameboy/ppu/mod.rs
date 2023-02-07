@@ -29,7 +29,7 @@ enum Mode {
     VBlank,
 }
 
-pub struct PPU {
+pub struct Ppu {
     /// Video RAM [0x8000 - 0x9FFF] (Bank 0-1 in CGB Mode)
     vram: Box<[u8; 0x2000]>,
     /// Sprite Attribute Table [0xFE00 - 0xFE9F]
@@ -37,15 +37,15 @@ pub struct PPU {
     mode_clock: usize,
     mode: Mode,
     registers: Registers,
-    gpu: GPU,
+    gpu: Gpu,
     screen_buffer: Box<[u8; SCREEN_WIDTH * SCREEN_HEIGHT]>,
 }
 
-impl PPU {
-    pub fn new<F: Facade>(display: &F) -> PPU {
-        let gpu = GPU::new(display);
+impl Ppu {
+    pub fn new<F: Facade>(display: &F) -> Ppu {
+        let gpu = Gpu::new(display);
 
-        PPU {
+        Ppu {
             vram: Box::new([0; 0x2000]),
             oam: Box::new([0; 0x00A0]),
             mode_clock: 0,
@@ -294,8 +294,7 @@ impl PPU {
 
                     for x in 0..8 {
                         let line_x: i16 = i16::from(sprite.x + x) - 8;
-                        if line_x >= 0
-                            && line_x < 160
+                        if (0..160).contains(&line_x)
                             && tile_row[x as usize] != 0
                             && (sprite.priority == SpritePriority::AboveBackground
                                 || line_buffer[line_x as usize] != bg_palette[0])
@@ -322,7 +321,7 @@ impl PPU {
     }
 }
 
-impl MmuObject for PPU {
+impl MmuObject for Ppu {
     /// Handle memory reads from the PPU data registers only, otherwise panic
     fn read8(&self, addr: u16) -> u8 {
         match addr {

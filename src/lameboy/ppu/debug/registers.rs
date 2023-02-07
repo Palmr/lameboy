@@ -1,8 +1,8 @@
 use imgui::{Condition, Ui, Window};
 use lameboy::ppu::registers::StatusInterruptFlags;
-use lameboy::ppu::PPU;
+use lameboy::ppu::Ppu;
 
-pub fn registers_window<'a>(ppu: &PPU, ui: &Ui<'a>) {
+pub fn registers_window(ppu: &Ppu, ui: &Ui) {
     Window::new(im_str!("PPU-registers"))
         .size([224.0, 230.0], Condition::FirstUseEver)
         .resizable(true)

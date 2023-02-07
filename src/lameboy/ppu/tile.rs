@@ -1,12 +1,12 @@
 use lameboy::mmu::mmuobject::MmuObject;
-use lameboy::ppu::PPU;
+use lameboy::ppu::Ppu;
 
 pub struct Tile {
     pub rows: [[u8; 8]; 8],
 }
 
 impl Tile {
-    pub fn new(ppu: &PPU, tile_index: u8) -> Tile {
+    pub fn new(ppu: &Ppu, tile_index: u8) -> Tile {
         let tile_address = 0x8000 | u16::from(tile_index) << 4;
         let mut rows = [[0u8; 8]; 8];
 

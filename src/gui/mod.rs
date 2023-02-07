@@ -14,7 +14,7 @@ use lameboy::Lameboy;
 pub mod imgui_debug_state;
 pub mod imgui_debuggable;
 
-pub struct GUI {
+pub struct Gui {
     event_loop: EventLoop<()>,
     pub display: glium::Display,
     imgui: Context,
@@ -24,12 +24,12 @@ pub struct GUI {
     background_colour: (f32, f32, f32, f32),
 }
 
-impl GUI {
+impl Gui {
     pub fn init(
         window_size: (f64, f64),
         window_title: String,
         background_colour: (f32, f32, f32, f32),
-    ) -> GUI {
+    ) -> Gui {
         let events_loop = EventLoop::new();
         let context = glutin::ContextBuilder::new().with_vsync(true);
         let builder = WindowBuilder::new()
@@ -46,7 +46,7 @@ impl GUI {
         {
             let gl_window = display.gl_window();
             let window = gl_window.window();
-            platform.attach_window(imgui.io_mut(), &window, HiDpiMode::Rounded);
+            platform.attach_window(imgui.io_mut(), window, HiDpiMode::Rounded);
         }
 
         let hidpi_factor = platform.hidpi_factor();
@@ -62,7 +62,7 @@ impl GUI {
 
         let renderer = Renderer::init(&mut imgui, &display).expect("Failed to initialize renderer");
 
-        GUI {
+        Gui {
             event_loop: events_loop,
             display,
             imgui,
@@ -74,7 +74,7 @@ impl GUI {
     }
 
     pub fn main_loop(self, mut lameboy: Lameboy) {
-        let GUI {
+        let Gui {
             event_loop,
             display,
             mut imgui,
@@ -94,7 +94,7 @@ impl GUI {
             Event::MainEventsCleared => {
                 let gl_window = display.gl_window();
                 platform
-                    .prepare_frame(imgui.io_mut(), &gl_window.window())
+                    .prepare_frame(imgui.io_mut(), gl_window.window())
                     .expect("Failed to prepare frame");
                 gl_window.window().request_redraw();
             }
@@ -137,7 +137,7 @@ impl GUI {
                 platform.handle_event(imgui.io_mut(), gl_window.window(), &event);
 
                 if let Event::WindowEvent { event: i, .. } = event {
-                    GUI::update_events(&mut lameboy, &i, imgui.style_mut());
+                    Gui::update_events(&mut lameboy, &i, imgui.style_mut());
                 }
             }
         })

@@ -1,7 +1,7 @@
 use imgui::{Condition, Ui, Window};
-use lameboy::cpu::CPU;
+use lameboy::cpu::Cpu;
 
-pub fn registers_window<'a>(cpu: &CPU, ui: &Ui<'a>) {
+pub fn registers_window(cpu: &Cpu, ui: &Ui) {
     Window::new(im_str!("CPU - Registers"))
         .size([260.0, 140.0], Condition::FirstUseEver)
         .resizable(true)

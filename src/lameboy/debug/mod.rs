@@ -13,7 +13,7 @@ mod emulator;
 mod menu;
 
 impl Lameboy {
-    pub fn imgui_display<'a>(&mut self, ui: &Ui<'a>) {
+    pub fn imgui_display(&mut self, ui: &Ui) {
         if self.debug.show_menu {
             build_menu(self, ui);
         }

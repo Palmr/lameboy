@@ -1,7 +1,7 @@
 use lameboy::cart::Cart;
 use lameboy::joypad::Joypad;
 use lameboy::mmu::mmuobject::MmuObject;
-use lameboy::ppu::PPU;
+use lameboy::ppu::Ppu;
 
 pub mod mmuobject;
 
@@ -33,9 +33,9 @@ pub(crate) const HIGH_RAM_START: u16 = 0xFF80;
 pub(crate) const HIGH_RAM_END: u16 = 0xFFFE;
 pub(crate) const INTERRUPT_ENABLE_REGISTER: u16 = 0xFFFF;
 
-pub struct MMU {
+pub struct Mmu {
     pub cart: Cart,
-    pub ppu: PPU,
+    pub ppu: Ppu,
     pub joypad: Joypad,
     /// Work RAM 0 [0xC000 - 0xCFFF]
     wram0: Box<[u8; 0x1000]>,
@@ -53,9 +53,9 @@ pub struct MMU {
     pub breakpoint_hit: u16,
 }
 
-impl MMU {
-    pub fn new(cart: Cart, ppu: PPU, joypad: Joypad) -> MMU {
-        MMU {
+impl Mmu {
+    pub fn new(cart: Cart, ppu: Ppu, joypad: Joypad) -> Mmu {
+        Mmu {
             cart,
             ppu,
             joypad,

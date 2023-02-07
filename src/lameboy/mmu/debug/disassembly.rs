@@ -2,9 +2,9 @@ use dis;
 use dis::{Instruction, InstructionArg};
 use gui::imgui_debug_state::ImguiDebugState;
 use imgui::{Condition, Selectable, StyleColor, Ui, Window};
-use lameboy::mmu::MMU;
+use lameboy::mmu::Mmu;
 
-pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDebugState) {
+pub fn disassembly_window(mmu: &Mmu, ui: &Ui, imgui_debug: &mut ImguiDebugState) {
     Window::new(im_str!("Disassembled code"))
         .size([260.0, 140.0], Condition::FirstUseEver)
         .resizable(true)
@@ -31,7 +31,7 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
             };
 
             for _ in 0..context_size {
-                let instruction = dis::decode_instruction(instruction_addr, &mmu);
+                let instruction = dis::decode_instruction(instruction_addr, mmu);
 
                 let raw_instruction_debug_string =
                     get_raw_instruction_debug_string(&instruction, mmu, instruction_addr);
@@ -90,7 +90,7 @@ pub fn disassembly_window<'a>(mmu: &MMU, ui: &Ui<'a>, imgui_debug: &mut ImguiDeb
 
 fn get_raw_instruction_debug_string(
     instruction: &Instruction,
-    mmu: &MMU,
+    mmu: &Mmu,
     instruction_addr: u16,
 ) -> String {
     format!(
@@ -113,7 +113,7 @@ fn get_raw_instruction_debug_string(
 fn get_instruction_debug_string(
     instruction: &Instruction,
     read_args: bool,
-    mmu: &MMU,
+    mmu: &Mmu,
     instruction_addr: u16,
 ) -> String {
     if read_args {

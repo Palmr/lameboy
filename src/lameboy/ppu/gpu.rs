@@ -48,7 +48,7 @@ const FRAGMENT_SHADER_SRC: &str = r#"
             }
         "#;
 
-pub struct GPU {
+pub struct Gpu {
     vertex_buffer: VertexBuffer<Vertex>,
     index_buffer: IndexBuffer<u16>,
     program: Program,
@@ -57,8 +57,8 @@ pub struct GPU {
     pixel_buffer: PixelBuffer<u8>,
 }
 
-impl GPU {
-    pub fn new<F: Facade>(display: &F) -> GPU {
+impl Gpu {
+    pub fn new<F: Facade>(display: &F) -> Gpu {
         let vertexes = [
             Vertex {
                 position: [-1.0, -1.0],
@@ -99,7 +99,7 @@ impl GPU {
         };
 
         let pixel_buffer = PixelBuffer::new_empty(display, SCREEN_WIDTH * SCREEN_HEIGHT);
-        let empty_pixel_buffer = &vec![0 as u8; pixel_buffer.get_size()];
+        let empty_pixel_buffer = &vec![0_u8; pixel_buffer.get_size()];
         pixel_buffer.write(empty_pixel_buffer);
 
         let texture = match glium::Texture2d::empty_with_format(
@@ -126,7 +126,7 @@ impl GPU {
             1.0, 1.0,
         ) / 255.0;
 
-        GPU {
+        Gpu {
             vertex_buffer,
             index_buffer,
             program,
@@ -159,7 +159,7 @@ impl GPU {
     /// Fill the texture with data
     pub fn load_texture(&mut self, image: &[u8]) {
         // Load image pixels into pixel buffer
-        self.pixel_buffer.write(&image);
+        self.pixel_buffer.write(image);
         // Load texture with data from pixel buffer
         self.texture.main_level().raw_upload_from_pixel_buffer(
             self.pixel_buffer.as_slice(),

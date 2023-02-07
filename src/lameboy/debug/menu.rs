@@ -1,7 +1,7 @@
 use imgui::{MenuItem, Ui};
 use lameboy::Lameboy;
 
-pub fn build_menu<'a>(lameboy: &mut Lameboy, ui: &Ui<'a>) {
+pub fn build_menu(lameboy: &mut Lameboy, ui: &Ui) {
     if let Some(menu_bar) = ui.begin_main_menu_bar() {
         if let Some(menu) = ui.begin_menu(im_str!("File"), true) {
             MenuItem::new(im_str!("Open ROM")).build(ui);

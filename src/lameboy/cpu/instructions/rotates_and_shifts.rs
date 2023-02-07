@@ -2,7 +2,7 @@ use lameboy::cpu::instructions::alu::{
     alu_rotate_left, alu_rotate_right, alu_shift_left, alu_shift_right,
 };
 use lameboy::cpu::registers::{Flags, Reg16, Reg8};
-use lameboy::cpu::CPU;
+use lameboy::cpu::Cpu;
 
 /// Rotate an 8-bit register to the left.
 ///
@@ -27,7 +27,7 @@ use lameboy::cpu::CPU;
 /// RL B  ; Rotate B left through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 ///
 /// ```
-pub fn rotate_left_r8(cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero: bool) -> u8 {
+pub fn rotate_left_r8(cpu: &mut Cpu, r8: &Reg8, through_carry: bool, reset_zero: bool) -> u8 {
     let value = cpu.registers.read8(r8);
 
     let (rotated_value, flags) = alu_rotate_left(value, cpu.registers.f, through_carry);
@@ -60,7 +60,7 @@ pub fn rotate_left_r8(cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero:
 /// RL (HL)  ; Rotate memory[hl] left through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 ///
 /// ```
-pub fn rotate_left_indirect_hl(cpu: &mut CPU, through_carry: bool, reset_zero: bool) -> u8 {
+pub fn rotate_left_indirect_hl(cpu: &mut Cpu, through_carry: bool, reset_zero: bool) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
     let value = cpu.mmu.read8(a16_addr);
 
@@ -97,7 +97,7 @@ pub fn rotate_left_indirect_hl(cpu: &mut CPU, through_carry: bool, reset_zero: b
 /// RR B  ; Rotate B right through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 ///
 /// ```
-pub fn rotate_right_r8(cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero: bool) -> u8 {
+pub fn rotate_right_r8(cpu: &mut Cpu, r8: &Reg8, through_carry: bool, reset_zero: bool) -> u8 {
     let value = cpu.registers.read8(r8);
 
     let (rotated_value, flags) = alu_rotate_right(value, cpu.registers.f, through_carry);
@@ -129,7 +129,7 @@ pub fn rotate_right_r8(cpu: &mut CPU, r8: &Reg8, through_carry: bool, reset_zero
 /// RR (HL)  ; Rotate memory[hl] right through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 ///
 /// ```
-pub fn rotate_right_indirect_hl(cpu: &mut CPU, through_carry: bool, reset_zero: bool) -> u8 {
+pub fn rotate_right_indirect_hl(cpu: &mut Cpu, through_carry: bool, reset_zero: bool) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
     let value = cpu.mmu.read8(a16_addr);
 
@@ -152,7 +152,7 @@ pub fn rotate_right_indirect_hl(cpu: &mut CPU, through_carry: bool, reset_zero: 
 /// ```asm
 /// SLA B  ; Shift B left through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 /// ```
-pub fn shift_left_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
+pub fn shift_left_r8(cpu: &mut Cpu, r8: &Reg8) -> u8 {
     let value = cpu.registers.read8(r8);
 
     let (shifted_value, flags) = alu_shift_left(value, cpu.registers.f);
@@ -171,7 +171,7 @@ pub fn shift_left_r8(cpu: &mut CPU, r8: &Reg8) -> u8 {
 /// ```asm
 /// SLA (HL) ; Shift memory[hl] left (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 /// ```
-pub fn shift_left_indirect_hl(cpu: &mut CPU) -> u8 {
+pub fn shift_left_indirect_hl(cpu: &mut Cpu) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
     let value = cpu.mmu.read8(a16_addr);
 
@@ -195,7 +195,7 @@ pub fn shift_left_indirect_hl(cpu: &mut CPU) -> u8 {
 /// SRA B  ; Shift B right through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 /// SRL B  ; Shift B right through the carry flag (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 /// ```
-pub fn shift_right_r8(cpu: &mut CPU, r8: &Reg8, reset_high_bit: bool) -> u8 {
+pub fn shift_right_r8(cpu: &mut Cpu, r8: &Reg8, reset_high_bit: bool) -> u8 {
     let value = cpu.registers.read8(r8);
 
     let (shifted_value, flags) = alu_shift_right(value, cpu.registers.f, reset_high_bit);
@@ -218,7 +218,7 @@ pub fn shift_right_r8(cpu: &mut CPU, r8: &Reg8, reset_high_bit: bool) -> u8 {
 /// SRA (HL) ; Shift memory[hl] right (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 /// SRL (HL) ; Shift memory[hl] right (sets Flag::RegisterFlags::ZERO if rotated result == 0)
 /// ```
-pub fn shift_right_indirect_hl(cpu: &mut CPU, reset_high_bit: bool) -> u8 {
+pub fn shift_right_indirect_hl(cpu: &mut Cpu, reset_high_bit: bool) -> u8 {
     let a16_addr = cpu.registers.read16(&Reg16::HL);
     let value = cpu.mmu.read8(a16_addr);
 

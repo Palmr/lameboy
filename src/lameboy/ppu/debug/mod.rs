@@ -3,13 +3,13 @@ use gui::imgui_debuggable::ImguiDebuggable;
 use imgui::{Condition, Ui, Window};
 use lameboy::ppu::debug::oam::oam_window;
 use lameboy::ppu::debug::registers::registers_window;
-use lameboy::ppu::PPU;
+use lameboy::ppu::Ppu;
 
 mod oam;
 mod registers;
 
-impl ImguiDebuggable for PPU {
-    fn imgui_display<'a>(&mut self, ui: &Ui<'a>, imgui_debug: &mut ImguiDebugState) {
+impl ImguiDebuggable for Ppu {
+    fn imgui_display(&mut self, ui: &Ui, imgui_debug: &mut ImguiDebugState) {
         Window::new(im_str!("PPU"))
             .size([180.0, 115.0], Condition::FirstUseEver)
             .resizable(true)
