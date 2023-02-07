@@ -1,11 +1,11 @@
-use gui::imgui_debuggable::ImguiDebuggable;
+use crate::gui::imgui_debuggable::ImguiDebuggable;
+use crate::lameboy::Lameboy;
 use imgui::Ui;
-use lameboy::Lameboy;
 
-use lameboy::debug::about::about_window;
-use lameboy::debug::breakpoints::breakpoint_windows;
-use lameboy::debug::emulator::emulator_window;
-use lameboy::debug::menu::build_menu;
+use crate::lameboy::debug::about::about_window;
+use crate::lameboy::debug::breakpoints::breakpoint_windows;
+use crate::lameboy::debug::emulator::emulator_window;
+use crate::lameboy::debug::menu::build_menu;
 
 mod about;
 mod breakpoints;

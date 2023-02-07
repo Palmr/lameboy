@@ -1,7 +1,7 @@
-use lameboy::mmu::mmuobject::MmuObject;
-use lameboy::ppu::Ppu;
+use crate::lameboy::mmu::mmuobject::MmuObject;
+use crate::lameboy::ppu::Ppu;
 
-use lameboy::ppu::palette::ObjectPalette;
+use crate::lameboy::ppu::palette::ObjectPalette;
 
 bitflags! {
     struct SpriteFlags: u8 {

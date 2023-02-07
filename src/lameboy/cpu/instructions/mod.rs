@@ -1,4 +1,4 @@
-use lameboy::cpu::registers::{Flags, Reg16, Reg8, Register};
+use crate::lameboy::cpu::registers::{Flags, Reg16, Reg8, Register};
 
 pub mod bit_opcodes;
 pub mod calls;
@@ -44,7 +44,7 @@ fn opcode_flag_test(opcode: u8, flags: Flags) -> bool {
 #[cfg(test)]
 mod tests {
     use super::opcode_flag_test;
-    use lameboy::cpu::registers::Flags;
+    use crate::lameboy::cpu::registers::Flags;
 
     #[test]
     fn check_opcode_flag_nz() {
@@ -118,16 +118,16 @@ fn register_from_opcode(opcode: u8) -> Register {
         0b100 => Register::Reg8(Reg8::H),
         0b101 => Register::Reg8(Reg8::L),
         0b110 => Register::Reg16(Reg16::HL),
-        _ => panic!("Unhandled register bit pattern: 0b{:08b}", register),
+        _ => panic!("Unhandled register bit pattern: 0b{register:08b}"),
     }
 }
 
 #[cfg(test)]
 mod tests_register_from_opcode {
     use super::register_from_opcode;
-    use lameboy::cpu::registers::Reg16::HL;
-    use lameboy::cpu::registers::Reg8::{A, B, C, D, E, H, L};
-    use lameboy::cpu::registers::Register::{Reg16, Reg8};
+    use crate::lameboy::cpu::registers::Reg16::HL;
+    use crate::lameboy::cpu::registers::Reg8::{A, B, C, D, E, H, L};
+    use crate::lameboy::cpu::registers::Register::{Reg16, Reg8};
 
     #[test]
     fn test_register_from_opcode() {

@@ -1,7 +1,7 @@
-use lameboy::cart::Cart;
-use lameboy::joypad::Joypad;
-use lameboy::mmu::mmuobject::MmuObject;
-use lameboy::ppu::Ppu;
+use crate::lameboy::cart::Cart;
+use crate::lameboy::joypad::Joypad;
+use crate::lameboy::mmu::mmuobject::MmuObject;
+use crate::lameboy::ppu::Ppu;
 
 pub mod mmuobject;
 
@@ -144,10 +144,7 @@ impl Mmu {
                 0xFF00 => self.joypad.read8(addr),
                 0xFF40..=0xFF4B => self.ppu.read8(addr),
                 0xFF01..=0xFF3F | 0xFF4C..=0xFF7F => self.io[(addr as usize) & 0x00FF],
-                _ => panic!(
-                    "Attempted to access [RD] memory from an invalid address: {:#X}",
-                    addr
-                ),
+                _ => panic!("Attempted to access [RD] memory from an invalid address: {addr:#X}"),
             },
             HIGH_RAM_START..=HIGH_RAM_END => self.hram[((addr as usize) & 0x00FF) - 0x0080],
             INTERRUPT_ENABLE_REGISTER => self.ier,
@@ -195,10 +192,9 @@ impl Mmu {
                     }
                     0xFF40..=0xFF45 | 0xFF47..=0xFF4B => self.ppu.write8(addr, data),
                     0xFF01..=0xFF3F | 0xFF4C..=0xFF7F => self.io[(addr as usize) & 0x00FF] = data,
-                    _ => panic!(
-                        "Attempted to access [WR] memory from an invalid address: {:#X}",
-                        addr
-                    ),
+                    _ => {
+                        panic!("Attempted to access [WR] memory from an invalid address: {addr:#X}")
+                    }
                 }
             }
             HIGH_RAM_START..=HIGH_RAM_END => self.hram[((addr as usize) & 0x00FF) - 0x0080] = data,

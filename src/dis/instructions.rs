@@ -1,6 +1,6 @@
-use dis::Instruction;
-use dis::InstructionArg::{Data16, Data8};
-use lameboy::mmu::Mmu;
+use crate::dis::Instruction;
+use crate::dis::InstructionArg::{Data16, Data8};
+use crate::lameboy::mmu::Mmu;
 
 pub fn decode_instruction(instruction_addr: u16, mmu: &Mmu) -> Instruction {
     let opcode = mmu.read8_safe(instruction_addr);

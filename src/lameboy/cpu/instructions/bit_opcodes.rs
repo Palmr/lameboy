@@ -1,6 +1,6 @@
-use lameboy::cpu::instructions::{bit_index_from_opcode, register_from_opcode};
-use lameboy::cpu::registers::{Flags, Reg16, Reg8, Register};
-use lameboy::cpu::Cpu;
+use crate::lameboy::cpu::instructions::{bit_index_from_opcode, register_from_opcode};
+use crate::lameboy::cpu::registers::{Flags, Reg16, Reg8, Register};
+use crate::lameboy::cpu::Cpu;
 
 /// Put the complement of an 8-bit values single bit into the RegisterFlags::ZERO flag.
 ///
@@ -24,7 +24,7 @@ pub fn bit_test(cpu: &mut Cpu, opcode: u8) -> u8 {
         0b100 => (cpu.registers.read8(&Reg8::H), 8),
         0b101 => (cpu.registers.read8(&Reg8::L), 8),
         0b110 => (cpu.mmu.read8(cpu.registers.read16(&Reg16::HL)), 16),
-        _ => panic!("Unhandled register bit pattern: 0b{:08b}", register),
+        _ => panic!("Unhandled register bit pattern: 0b{register:08b}"),
     };
 
     let tested_value = value & (0x01 << bit_index);

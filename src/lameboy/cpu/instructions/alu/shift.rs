@@ -1,4 +1,4 @@
-use lameboy::cpu::registers::Flags;
+use crate::lameboy::cpu::registers::Flags;
 
 /// Shift an 8-bit value to the left.
 ///
@@ -18,7 +18,7 @@ pub fn alu_shift_left(d8: u8, flags: Flags) -> (u8, Flags) {
 #[cfg(test)]
 mod test_alu_shift_left {
     use super::alu_shift_left;
-    use lameboy::cpu::registers::Flags;
+    use crate::lameboy::cpu::registers::Flags;
 
     #[test]
     fn check_basic() {
@@ -81,7 +81,7 @@ pub fn alu_shift_right(d8: u8, flags: Flags, reset_high_bit: bool) -> (u8, Flags
 #[cfg(test)]
 mod test_alu_shift_right {
     use super::alu_shift_right;
-    use lameboy::cpu::registers::Flags;
+    use crate::lameboy::cpu::registers::Flags;
 
     #[test]
     fn check_basic() {

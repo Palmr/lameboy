@@ -1,8 +1,8 @@
-use imgui::{Condition, Ui, Window};
+use imgui::{Condition, Ui};
 
-use gui::imgui_debug_state::ImguiDebugState;
-use gui::imgui_debuggable::ImguiDebuggable;
-use lameboy::mmu::mmuobject::MmuObject;
+use crate::gui::imgui_debug_state::ImguiDebugState;
+use crate::gui::imgui_debuggable::ImguiDebuggable;
+use crate::lameboy::mmu::mmuobject::MmuObject;
 
 const LOW_NIBBLE_MASK: u8 = 0x0F;
 const COLUMN_MASK: u8 = 0b0011_0000;
@@ -83,10 +83,7 @@ impl MmuObject for Joypad {
                 COLUMN_DIRECTION_KEYS => 0xC0 | self.selected_column | self.direction_byte(),
                 _ => 0xC0 | self.selected_column | LOW_NIBBLE_MASK,
             },
-            _ => panic!(
-                "Attempted to access [RD] Joypad from an invalid address: {:#X}",
-                addr
-            ),
+            _ => panic!("Attempted to access [RD] Joypad from an invalid address: {addr:#X}"),
         }
     }
 
@@ -95,33 +92,30 @@ impl MmuObject for Joypad {
             0xFF00 => {
                 self.selected_column = data & COLUMN_MASK;
             }
-            _ => panic!(
-                "Attempted to access [WR] Joypad from an invalid address: {:#X}",
-                addr
-            ),
+            _ => panic!("Attempted to access [WR] Joypad from an invalid address: {addr:#X}"),
         }
     }
 }
 
 impl ImguiDebuggable for Joypad {
     fn imgui_display(&mut self, ui: &Ui, _imgui_debug: &mut ImguiDebugState) {
-        Window::new(im_str!("Joypad"))
+        ui.window("Joypad")
             .size([150.0, 115.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(ui, || {
-                ui.text(im_str!("A = {}", self.a));
-                ui.text(im_str!("B = {}", self.b));
-                ui.text(im_str!("Select = {}", self.select));
-                ui.text(im_str!("Start = {}", self.start));
-                ui.text(im_str!("JOYP = 0B{:04b}", self.button_byte()));
+            .build(|| {
+                ui.text(format!("A = {}", self.a));
+                ui.text(format!("B = {}", self.b));
+                ui.text(format!("Select = {}", self.select));
+                ui.text(format!("Start = {}", self.start));
+                ui.text(format!("JOYP = 0B{:04b}", self.button_byte()));
 
                 ui.separator();
 
-                ui.text(im_str!("Right = {}", self.right));
-                ui.text(im_str!("Left = {}", self.left));
-                ui.text(im_str!("Up = {}", self.up));
-                ui.text(im_str!("Down = {}", self.down));
-                ui.text(im_str!("JOYP = 0B{:04b}", self.direction_byte()));
+                ui.text(format!("Right = {}", self.right));
+                ui.text(format!("Left = {}", self.left));
+                ui.text(format!("Up = {}", self.up));
+                ui.text(format!("Down = {}", self.down));
+                ui.text(format!("JOYP = 0B{:04b}", self.direction_byte()));
             });
     }
 }

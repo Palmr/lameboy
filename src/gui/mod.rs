@@ -9,7 +9,7 @@ use imgui::{Context, FontConfig, FontSource, Style};
 use imgui_glium_renderer::Renderer;
 use imgui_winit_support::{HiDpiMode, WinitPlatform};
 
-use lameboy::Lameboy;
+use crate::lameboy::Lameboy;
 
 pub mod imgui_debug_state;
 pub mod imgui_debuggable;
@@ -88,7 +88,7 @@ impl Gui {
         event_loop.run(move |event, _, control_flow| match event {
             Event::NewEvents(_) => {
                 let now = Instant::now();
-                imgui.io_mut().update_delta_time(last_frame);
+                imgui.io_mut().update_delta_time(last_frame.elapsed());
                 last_frame = now;
             }
             Event::MainEventsCleared => {
@@ -109,20 +109,20 @@ impl Gui {
                     background_colour.2,
                     background_colour.3,
                 );
-                platform.prepare_render(&ui, gl_window.window());
+                platform.prepare_render(ui, gl_window.window());
 
                 if lameboy.is_running() {
                     lameboy.run_frame();
                 }
 
                 lameboy.get_ppu().draw(&mut target);
-                lameboy.imgui_display(&ui);
+                lameboy.imgui_display(ui);
 
                 if !lameboy.active {
                     *control_flow = ControlFlow::Exit;
                 }
 
-                let draw_data = ui.render();
+                let draw_data = imgui.render();
                 renderer
                     .render(&mut target, draw_data)
                     .expect("Rendering failed");

@@ -1,5 +1,5 @@
-use lameboy::cpu::registers::{Flags, Reg16};
-use lameboy::cpu::Cpu;
+use crate::lameboy::cpu::registers::{Flags, Reg16};
+use crate::lameboy::cpu::Cpu;
 
 /// ADD 16-bit register with register HL, storing the result in HL.
 ///

@@ -1,9 +1,9 @@
-use lameboy::cpu::debug::registers::registers_window;
-use lameboy::cpu::debug::stack::stack_window;
-use lameboy::cpu::Cpu;
+use crate::lameboy::cpu::debug::registers::registers_window;
+use crate::lameboy::cpu::debug::stack::stack_window;
+use crate::lameboy::cpu::Cpu;
 
-use gui::imgui_debug_state::ImguiDebugState;
-use gui::imgui_debuggable::ImguiDebuggable;
+use crate::gui::imgui_debug_state::ImguiDebugState;
+use crate::gui::imgui_debuggable::ImguiDebuggable;
 use imgui::Ui;
 
 mod registers;

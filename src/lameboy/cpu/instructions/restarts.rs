@@ -1,5 +1,5 @@
-use lameboy::cpu::instructions::stack::push_stack_d16;
-use lameboy::cpu::Cpu;
+use crate::lameboy::cpu::instructions::stack::push_stack_d16;
+use crate::lameboy::cpu::Cpu;
 
 /// Push the current PC to the stack and then jump to one of 8 positions in the zero page.
 ///

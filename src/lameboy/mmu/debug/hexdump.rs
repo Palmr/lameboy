@@ -1,15 +1,15 @@
-use gui::imgui_debug_state::ImguiDebugState;
-use imgui::{Condition, Selectable, StyleColor, Ui, Window};
-use lameboy::mmu::Mmu;
+use crate::gui::imgui_debug_state::ImguiDebugState;
+use crate::lameboy::mmu::Mmu;
+use imgui::{Condition, StyleColor, Ui};
 
 pub fn hexdump_window(mmu: &Mmu, ui: &Ui, imgui_debug: &mut ImguiDebugState) {
-    Window::new(im_str!("MMU - dump"))
+    ui.window("MMU - dump")
         .size([260.0, 140.0], Condition::FirstUseEver)
         .resizable(true)
-        .build(ui, || {
-            ui.checkbox(im_str!("Lock to PC"), &mut imgui_debug.dump_memory_pc_lock);
-            ui.same_line(0.0);
-            ui.input_int(im_str!("Addr"), &mut imgui_debug.dump_memory_addr)
+        .build(|| {
+            ui.checkbox("Lock to PC", &mut imgui_debug.dump_memory_pc_lock);
+            ui.same_line();
+            ui.input_int("Addr", &mut imgui_debug.dump_memory_addr)
                 .chars_hexadecimal(true)
                 .build();
             ui.separator();
@@ -36,7 +36,7 @@ pub fn hexdump_window(mmu: &Mmu, ui: &Ui, imgui_debug: &mut ImguiDebugState) {
             for row in 0..=(context_size * 2) {
                 let row_addr = memory_addr_low + row * bytes_per_row;
 
-                ui.text_colored([0.7, 0.7, 0.7, 1.0], im_str!("[0x{:04X}]", row_addr));
+                ui.text_colored([0.7, 0.7, 0.7, 1.0], format!("[0x{row_addr:04X}]"));
 
                 for offset in 0..bytes_per_row {
                     let mem_ptr = row_addr + offset;
@@ -48,16 +48,17 @@ pub fn hexdump_window(mmu: &Mmu, ui: &Ui, imgui_debug: &mut ImguiDebugState) {
                         [0.8, 0.8, 0.8, 1.0]
                     };
 
-                    ui.same_line(0.0);
+                    ui.same_line();
 
                     let style = ui.push_style_color(StyleColor::Text, colour);
-                    if Selectable::new(&im_str!("{:02X}", mmu.read8_safe(mem_ptr)))
+                    if ui
+                        .selectable_config(format!("{:02X}", mmu.read8_safe(mem_ptr)))
                         .size([11.0, 11.0])
-                        .build(ui)
+                        .build()
                     {
                         selected_mem_ptr = Some(mem_ptr);
                     }
-                    style.pop(ui);
+                    style.pop();
                 }
             }
 

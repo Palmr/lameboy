@@ -1,4 +1,4 @@
-use lameboy::cpu::registers::Flags;
+use crate::lameboy::cpu::registers::Flags;
 
 /// Add 8-bit value with register A, storing the result in A.
 /// If use_carry is true this will add the content of the carry flag along with the value and take
@@ -47,7 +47,7 @@ pub fn alu_add_8bit(accumulator: u8, flags: Flags, d8: u8, use_carry: bool) -> (
 #[cfg(test)]
 mod test_alu_add_8bit {
     use super::alu_add_8bit;
-    use lameboy::cpu::registers::Flags;
+    use crate::lameboy::cpu::registers::Flags;
 
     #[test]
     fn check_basic() {

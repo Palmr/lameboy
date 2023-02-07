@@ -1,4 +1,4 @@
-use lameboy::cpu::registers::Flags;
+use crate::lameboy::cpu::registers::Flags;
 
 /// Swap upper and lower nibbles of an 8-bit value.
 ///
@@ -35,7 +35,7 @@ pub fn alu_swap_8bit(d8: u8, flags: Flags) -> (u8, Flags) {
 #[cfg(test)]
 mod test_alu_swap_8bit {
     use super::alu_swap_8bit;
-    use lameboy::cpu::registers::Flags;
+    use crate::lameboy::cpu::registers::Flags;
 
     #[test]
     fn check_basic() {

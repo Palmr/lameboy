@@ -1,5 +1,5 @@
-use lameboy::mmu::mmuobject::MmuObject;
-use lameboy::ppu::Ppu;
+use crate::lameboy::mmu::mmuobject::MmuObject;
+use crate::lameboy::ppu::Ppu;
 
 pub struct Tile {
     pub rows: [[u8; 8]; 8],

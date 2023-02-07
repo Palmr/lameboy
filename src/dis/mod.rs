@@ -1,5 +1,5 @@
-pub use dis::instructions::decode_instruction;
-pub use dis::memory_locations::get_memory_comment;
+pub use crate::dis::instructions::decode_instruction;
+pub use crate::dis::memory_locations::get_memory_comment;
 use std::fmt;
 
 mod instructions;

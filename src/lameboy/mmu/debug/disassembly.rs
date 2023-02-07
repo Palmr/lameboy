@@ -1,22 +1,19 @@
-use dis;
-use dis::{Instruction, InstructionArg};
-use gui::imgui_debug_state::ImguiDebugState;
-use imgui::{Condition, Selectable, StyleColor, Ui, Window};
-use lameboy::mmu::Mmu;
+use crate::dis;
+use crate::dis::{Instruction, InstructionArg};
+use crate::gui::imgui_debug_state::ImguiDebugState;
+use crate::lameboy::mmu::Mmu;
+use imgui::{Condition, StyleColor, Ui};
 
 pub fn disassembly_window(mmu: &Mmu, ui: &Ui, imgui_debug: &mut ImguiDebugState) {
-    Window::new(im_str!("Disassembled code"))
+    ui.window("Disassembled code")
         .size([260.0, 140.0], Condition::FirstUseEver)
         .resizable(true)
-        .build(ui, || {
-            ui.checkbox(
-                im_str!("Lock to PC"),
-                &mut imgui_debug.disassemble_memory_pc_lock,
-            );
-            ui.same_line(0.0);
-            ui.checkbox(im_str!("Read Args"), &mut imgui_debug.disassemble_read_args);
+        .build(|| {
+            ui.checkbox("Lock to PC", &mut imgui_debug.disassemble_memory_pc_lock);
+            ui.same_line();
+            ui.checkbox("Read Args", &mut imgui_debug.disassemble_read_args);
 
-            ui.input_int(im_str!("Addr"), &mut imgui_debug.disassemble_memory_addr)
+            ui.input_int("Addr", &mut imgui_debug.disassemble_memory_addr)
                 .chars_hexadecimal(true)
                 .build();
             ui.separator();
@@ -42,21 +39,19 @@ pub fn disassembly_window(mmu: &Mmu, ui: &Ui, imgui_debug: &mut ImguiDebugState)
                     instruction_addr,
                 );
 
-                let addr_string = im_str!("[0x{:04X}]", instruction_addr);
-                let disassembly_string = im_str!(
-                    "{: <14} | {}",
-                    raw_instruction_debug_string,
-                    instruction_debug_str
-                );
+                let addr_string = format!("[0x{instruction_addr:04X}]");
+                let disassembly_string =
+                    format!("{raw_instruction_debug_string: <14} | {instruction_debug_str}");
 
                 let style = if imgui_debug.breakpoints.contains(&instruction_addr) {
                     ui.push_style_color(StyleColor::Text, [1.0, 0.4, 0.4, 1.0])
                 } else {
                     ui.push_style_color(StyleColor::Text, [0.7, 0.7, 0.7, 1.0])
                 };
-                if Selectable::new(&addr_string)
+                if ui
+                    .selectable_config(&addr_string)
                     .selected(instruction_addr == imgui_debug.program_counter)
-                    .build(ui)
+                    .build()
                 {
                     match imgui_debug
                         .breakpoints
@@ -71,15 +66,15 @@ pub fn disassembly_window(mmu: &Mmu, ui: &Ui, imgui_debug: &mut ImguiDebugState)
                         }
                     }
                 }
-                style.pop(ui);
+                style.pop();
 
-                ui.same_line(0.0);
+                ui.same_line();
 
                 ui.text(disassembly_string);
 
                 if let Some(memory_comment) = dis::get_memory_comment(instruction_addr) {
-                    ui.same_line(0.0);
-                    ui.text_colored([0.5, 0.5, 0.5, 1.0], im_str!(" ; {}", memory_comment));
+                    ui.same_line();
+                    ui.text_colored([0.5, 0.5, 0.5, 1.0], format!(" ; {memory_comment}"));
                 }
 
                 instruction_addr =

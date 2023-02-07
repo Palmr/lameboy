@@ -1,4 +1,4 @@
-use lameboy::cpu::Cpu;
+use crate::lameboy::cpu::Cpu;
 
 /// Push an 8-bit value to the stack.
 /// Decrements the stack pointer and then writes the 8-bit value using the new stack pointer value.

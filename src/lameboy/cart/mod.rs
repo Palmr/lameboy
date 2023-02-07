@@ -1,5 +1,5 @@
-use lameboy::cart::mbc::{get_mbc, DebuggableMBC};
-use lameboy::mmu::mmuobject::MmuObject;
+use crate::lameboy::cart::mbc::{get_mbc, DebuggableMBC};
+use crate::lameboy::mmu::mmuobject::MmuObject;
 
 mod debug;
 mod mbc;

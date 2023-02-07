@@ -1,8 +1,8 @@
-use lameboy::cart::Cart;
-use lameboy::cpu::Cpu;
-use lameboy::joypad::Joypad;
-use lameboy::mmu::Mmu;
-use lameboy::ppu::Ppu;
+use crate::lameboy::cart::Cart;
+use crate::lameboy::cpu::Cpu;
+use crate::lameboy::joypad::Joypad;
+use crate::lameboy::mmu::Mmu;
+use crate::lameboy::ppu::Ppu;
 
 pub mod cart;
 pub mod cpu;
@@ -13,8 +13,8 @@ pub mod ppu;
 
 mod debug;
 
-use gui::imgui_debug_state::ImguiDebugState;
-use gui::Gui;
+use crate::gui::imgui_debug_state::ImguiDebugState;
+use crate::gui::Gui;
 
 pub struct Lameboy {
     pub active: bool,

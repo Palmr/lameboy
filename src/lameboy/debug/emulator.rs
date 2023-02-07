@@ -1,27 +1,27 @@
-use imgui::{Condition, Ui, Window};
-use lameboy::Lameboy;
+use crate::lameboy::Lameboy;
+use imgui::{Condition, Ui};
 
 pub fn emulator_window(lameboy: &mut Lameboy, ui: &Ui) {
-    Window::new(im_str!("Emulator"))
+    ui.window("Emulator")
         .size([255.0, 75.0], Condition::FirstUseEver)
         .resizable(true)
-        .build(ui, || {
-            if ui.button(im_str!("Reset"), [0.0, 0.0]) {
+        .build(|| {
+            if ui.button("Reset") {
                 lameboy.reset();
             }
-            ui.same_line(0.0);
-            if ui.button(im_str!("Step"), [0.0, 0.0]) {
+            ui.same_line();
+            if ui.button("Step") {
                 lameboy.step();
             }
-            ui.same_line(0.0);
-            if ui.button(im_str!("Continue"), [0.0, 0.0]) {
+            ui.same_line();
+            if ui.button("Continue") {
                 lameboy.step();
                 lameboy.running = true;
             }
-            ui.same_line(0.0);
-            ui.checkbox(im_str!("running"), &mut lameboy.running);
+            ui.same_line();
+            ui.checkbox("running", &mut lameboy.running);
 
-            if ui.button(im_str!("Dump PC history"), [0.0, 0.0]) {
+            if ui.button("Dump PC history") {
                 info!("Dumping PC history");
                 for i in 0..lameboy.get_cpu().pc_history.len() {
                     let hp = lameboy.get_cpu().pc_history_pointer.wrapping_add(i)
@@ -30,7 +30,7 @@ pub fn emulator_window(lameboy: &mut Lameboy, ui: &Ui) {
                 }
             }
 
-            ui.input_int(im_str!("Trace Count"), &mut lameboy.trace_count)
+            ui.input_int("Trace Count", &mut lameboy.trace_count)
                 .chars_decimal(true)
                 .build();
         });

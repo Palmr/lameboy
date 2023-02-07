@@ -1,6 +1,6 @@
-use lameboy::cpu::instructions::opcode_flag_test;
-use lameboy::cpu::registers::Reg16;
-use lameboy::cpu::Cpu;
+use crate::lameboy::cpu::instructions::opcode_flag_test;
+use crate::lameboy::cpu::registers::Reg16;
+use crate::lameboy::cpu::Cpu;
 
 /// Jump to a different address using 16-bit data as an address.
 ///

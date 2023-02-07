@@ -1,6 +1,6 @@
-use lameboy::cpu::instructions::alu::alu_swap_8bit;
-use lameboy::cpu::registers::{Flags, Reg16, Reg8};
-use lameboy::cpu::{Cpu, InterruptFlagDelayStatus};
+use crate::lameboy::cpu::instructions::alu::alu_swap_8bit;
+use crate::lameboy::cpu::registers::{Flags, Reg16, Reg8};
+use crate::lameboy::cpu::{Cpu, InterruptFlagDelayStatus};
 
 /// Swap high and low bits of an 8-bit register.
 ///

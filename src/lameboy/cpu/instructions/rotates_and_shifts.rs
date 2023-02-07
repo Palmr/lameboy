@@ -1,8 +1,8 @@
-use lameboy::cpu::instructions::alu::{
+use crate::lameboy::cpu::instructions::alu::{
     alu_rotate_left, alu_rotate_right, alu_shift_left, alu_shift_right,
 };
-use lameboy::cpu::registers::{Flags, Reg16, Reg8};
-use lameboy::cpu::Cpu;
+use crate::lameboy::cpu::registers::{Flags, Reg16, Reg8};
+use crate::lameboy::cpu::Cpu;
 
 /// Rotate an 8-bit register to the left.
 ///

@@ -1,5 +1,5 @@
-use lameboy::cpu::registers::{Reg16, Reg8};
-use lameboy::cpu::Cpu;
+use crate::lameboy::cpu::registers::{Reg16, Reg8};
+use crate::lameboy::cpu::Cpu;
 
 /// Load an 8-bit value into a 8-bit register.
 ///

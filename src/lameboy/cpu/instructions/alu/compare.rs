@@ -1,4 +1,4 @@
-use lameboy::cpu::registers::Flags;
+use crate::lameboy::cpu::registers::Flags;
 
 /// Compare an 8-bit value with register A by subtracting the two but not storing the result, only
 /// the flags.
@@ -36,7 +36,7 @@ pub fn alu_cp_8bit(accumulator: u8, flags: Flags, d8: u8) -> Flags {
 #[cfg(test)]
 mod test_alu_cp_8bit {
     use super::alu_cp_8bit;
-    use lameboy::cpu::registers::Flags;
+    use crate::lameboy::cpu::registers::Flags;
 
     #[test]
     fn check_basic() {

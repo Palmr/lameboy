@@ -1,10 +1,10 @@
-use core::fmt;
-use lameboy::cart::mbc::{DebuggableMBC, Mbc};
-use lameboy::cart::parse_rom_size;
-use lameboy::mmu::{
+use crate::lameboy::cart::mbc::{DebuggableMBC, Mbc};
+use crate::lameboy::cart::parse_rom_size;
+use crate::lameboy::mmu::{
     CART_RAM_BANK_X_END, CART_RAM_BANK_X_START, CART_ROM_BANK_0_END, CART_ROM_BANK_0_START,
     CART_ROM_BANK_X_END, CART_ROM_BANK_X_START,
 };
+use core::fmt;
 
 pub struct NoMBC {
     rom_data: Vec<u8>,
@@ -29,10 +29,7 @@ impl Mbc for NoMBC {
             CART_ROM_BANK_0_START..=CART_ROM_BANK_0_END
             | CART_ROM_BANK_X_START..=CART_ROM_BANK_X_END => self.rom_data[addr as usize],
             CART_RAM_BANK_X_START..=CART_RAM_BANK_X_END => 0xFF,
-            _ => panic!(
-                "Attempted to access cart [READ] invalid address: {:#X}",
-                addr
-            ),
+            _ => panic!("Attempted to access cart [READ] invalid address: {addr:#X}"),
         }
     }
 

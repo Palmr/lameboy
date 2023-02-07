@@ -1,6 +1,6 @@
-use lameboy::cpu::instructions::opcode_flag_test;
-use lameboy::cpu::instructions::stack::push_stack_d16;
-use lameboy::cpu::Cpu;
+use crate::lameboy::cpu::instructions::opcode_flag_test;
+use crate::lameboy::cpu::instructions::stack::push_stack_d16;
+use crate::lameboy::cpu::Cpu;
 
 /// Jump to a different address using 16-bit data as an address after first pushing the current PC
 /// to the stack.

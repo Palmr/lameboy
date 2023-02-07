@@ -1,19 +1,19 @@
-use gui::imgui_debug_state::ImguiDebugState;
-use gui::imgui_debuggable::ImguiDebuggable;
-use imgui::{Condition, Ui, Window};
-use lameboy::cart::Cart;
+use crate::gui::imgui_debug_state::ImguiDebugState;
+use crate::gui::imgui_debuggable::ImguiDebuggable;
+use crate::lameboy::cart::Cart;
+use imgui::{Condition, Ui};
 
 impl ImguiDebuggable for Cart {
-    fn imgui_display<'a>(&mut self, ui: &Ui<'_>, _: &mut ImguiDebugState) {
-        Window::new(im_str!("Cart"))
+    fn imgui_display(&mut self, ui: &Ui, _: &mut ImguiDebugState) {
+        ui.window("Cart")
             .size([180.0, 127.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(ui, || {
-                ui.text(im_str!("Title: {}", self.title));
-                ui.text(im_str!("Type: {}", self.cart_type));
-                ui.text(im_str!("ROM Size: {}", self.rom_size));
-                ui.text(im_str!("RAM Size: {}", self.ram_size));
-                ui.text(im_str!(
+            .build(|| {
+                ui.text(format!("Title: {}", self.title));
+                ui.text(format!("Type: {}", self.cart_type));
+                ui.text(format!("ROM Size: {}", self.rom_size));
+                ui.text(format!("RAM Size: {}", self.ram_size));
+                ui.text(format!(
                     "Checksum: {}",
                     if self.valid_checksum {
                         "VALID"

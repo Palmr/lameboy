@@ -7,7 +7,7 @@ use glium::uniforms::*;
 use glium::{IndexBuffer, Program, Surface, VertexBuffer};
 use nalgebra::Matrix4;
 
-use lameboy::ppu::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use crate::lameboy::ppu::{SCREEN_HEIGHT, SCREEN_WIDTH};
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -80,12 +80,12 @@ impl Gpu {
 
         let vertex_buffer = match VertexBuffer::immutable(display, &vertexes) {
             Ok(vb) => vb,
-            Err(e) => panic!("Failed to create OpenGL Vertex Buffer {}", e),
+            Err(e) => panic!("Failed to create OpenGL Vertex Buffer {e}"),
         };
         let index_buffer =
             match IndexBuffer::immutable(display, PrimitiveType::TriangleStrip, &[1u16, 2, 0, 3]) {
                 Ok(ib) => ib,
-                Err(e) => panic!("Failed to create OpenGL Index Buffer {}", e),
+                Err(e) => panic!("Failed to create OpenGL Index Buffer {e}"),
             };
 
         let program = match glium::Program::from_source(
@@ -95,7 +95,7 @@ impl Gpu {
             None,
         ) {
             Ok(p) => p,
-            Err(e) => panic!("Failed to create OpenGL Program {}", e),
+            Err(e) => panic!("Failed to create OpenGL Program {e}"),
         };
 
         let pixel_buffer = PixelBuffer::new_empty(display, SCREEN_WIDTH * SCREEN_HEIGHT);
@@ -110,7 +110,7 @@ impl Gpu {
             144,
         ) {
             Ok(t) => t,
-            Err(e) => panic!("Failed to create OpenGL Texture {}", e),
+            Err(e) => panic!("Failed to create OpenGL Texture {e}"),
         };
 
         // Initialise texture with empty buffer

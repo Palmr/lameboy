@@ -1,15 +1,15 @@
 use glium::backend::Facade;
 use glium::Surface;
 
-use lameboy::interrupts::{INT_LCD_STAT, INT_VBLANK};
-use lameboy::mmu::mmuobject::MmuObject;
-use lameboy::ppu::gpu::*;
-use lameboy::ppu::palette::*;
-use lameboy::ppu::registers::ControlFlags;
-use lameboy::ppu::registers::Registers;
-use lameboy::ppu::registers::StatusInterruptFlags;
-use lameboy::ppu::sprite::{Sprite, SpritePriority};
-use lameboy::ppu::tile::Tile;
+use crate::lameboy::interrupts::{INT_LCD_STAT, INT_VBLANK};
+use crate::lameboy::mmu::mmuobject::MmuObject;
+use crate::lameboy::ppu::gpu::*;
+use crate::lameboy::ppu::palette::*;
+use crate::lameboy::ppu::registers::ControlFlags;
+use crate::lameboy::ppu::registers::Registers;
+use crate::lameboy::ppu::registers::StatusInterruptFlags;
+use crate::lameboy::ppu::sprite::{Sprite, SpritePriority};
+use crate::lameboy::ppu::tile::Tile;
 
 mod debug;
 pub mod gpu;
@@ -339,10 +339,7 @@ impl MmuObject for Ppu {
             0xFF49 => self.registers.obj1_palette,
             0xFF4A => self.registers.window_y,
             0xFF4B => self.registers.window_x,
-            _ => panic!(
-                "Attempted to access [RD] PPU memory from an invalid address: {:#X}",
-                addr
-            ),
+            _ => panic!("Attempted to access [RD] PPU memory from an invalid address: {addr:#X}"),
         }
     }
 
@@ -363,10 +360,7 @@ impl MmuObject for Ppu {
             0xFF49 => self.registers.obj1_palette = data,
             0xFF4A => self.registers.window_y = data,
             0xFF4B => self.registers.window_x = data,
-            _ => panic!(
-                "Attempted to access [WR] PPU memory from an invalid address: {:#X}",
-                addr
-            ),
+            _ => panic!("Attempted to access [WR] PPU memory from an invalid address: {addr:#X}"),
         }
     }
 }

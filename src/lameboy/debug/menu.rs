@@ -1,37 +1,38 @@
-use imgui::{MenuItem, Ui};
-use lameboy::Lameboy;
+use crate::lameboy::Lameboy;
+use imgui::Ui;
 
 pub fn build_menu(lameboy: &mut Lameboy, ui: &Ui) {
     if let Some(menu_bar) = ui.begin_main_menu_bar() {
-        if let Some(menu) = ui.begin_menu(im_str!("File"), true) {
-            MenuItem::new(im_str!("Open ROM")).build(ui);
-            MenuItem::new(im_str!("Reset")).build(ui);
+        if let Some(menu) = ui.begin_menu("File") {
+            ui.menu_item("Open ROM");
+            ui.menu_item("Reset");
             ui.separator();
 
-            lameboy.active = !MenuItem::new(im_str!("Exit")).build(ui);
+            lameboy.active = !ui.menu_item("Exit");
 
-            menu.end(ui);
+            menu.end()
         }
 
-        if let Some(menu) = ui.begin_menu(im_str!("Debug"), true) {
-            ui.checkbox(im_str!("Emulator"), &mut lameboy.debug.show_emulator);
-            ui.checkbox(im_str!("Memory"), &mut lameboy.debug.show_memory);
-            ui.checkbox(im_str!("CPU"), &mut lameboy.debug.show_cpu);
-            ui.checkbox(im_str!("PPU"), &mut lameboy.debug.show_ppu);
-            ui.checkbox(im_str!("Cart"), &mut lameboy.debug.show_cart);
-            ui.checkbox(im_str!("Joypad"), &mut lameboy.debug.show_joypad);
+        if let Some(menu) = ui.begin_menu("Debug") {
+            ui.checkbox("Emulator", &mut lameboy.debug.show_emulator);
+            ui.checkbox("Memory", &mut lameboy.debug.show_memory);
+            ui.checkbox("CPU", &mut lameboy.debug.show_cpu);
+            ui.checkbox("PPU", &mut lameboy.debug.show_ppu);
+            ui.checkbox("Cart", &mut lameboy.debug.show_cart);
+            ui.checkbox("Joypad", &mut lameboy.debug.show_joypad);
 
-            menu.end(ui);
+            menu.end();
         }
 
-        if let Some(menu) = ui.begin_menu(im_str!("Help"), true) {
-            MenuItem::new(im_str!("About")).build_with_ref(ui, &mut lameboy.debug.show_about);
-            MenuItem::new(im_str!("ImGUI Metrics"))
-                .build_with_ref(ui, &mut lameboy.debug.show_imgui_metrics);
+        if let Some(menu) = ui.begin_menu("Help") {
+            ui.menu_item_config("About")
+                .build_with_ref(&mut lameboy.debug.show_about);
+            ui.menu_item_config("ImGUI Metrics")
+                .build_with_ref(&mut lameboy.debug.show_imgui_metrics);
 
-            menu.end(ui);
+            menu.end();
         }
 
-        menu_bar.end(ui);
+        menu_bar.end();
     }
 }

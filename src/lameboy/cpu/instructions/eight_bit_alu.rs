@@ -1,9 +1,9 @@
-use lameboy::cpu::instructions::alu::{
+use crate::lameboy::cpu::instructions::alu::{
     alu_add_8bit, alu_and_8bit, alu_cp_8bit, alu_dec_8bit, alu_inc_8bit, alu_or_8bit, alu_sub_8bit,
     alu_xor_8bit,
 };
-use lameboy::cpu::registers::{Reg16, Reg8};
-use lameboy::cpu::Cpu;
+use crate::lameboy::cpu::registers::{Reg16, Reg8};
+use crate::lameboy::cpu::Cpu;
 
 /// ADD 8-bit register with register A, storing the result in A.
 ///

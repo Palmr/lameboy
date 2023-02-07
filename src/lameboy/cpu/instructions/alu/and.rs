@@ -1,4 +1,4 @@
-use lameboy::cpu::registers::Flags;
+use crate::lameboy::cpu::registers::Flags;
 
 /// Logically AND 8-bit value from register A, storing the result in A.
 ///
@@ -35,7 +35,7 @@ pub fn alu_and_8bit(accumulator: u8, flags: Flags, d8: u8) -> (u8, Flags) {
 #[cfg(test)]
 mod test_alu_and_8bit {
     use super::alu_and_8bit;
-    use lameboy::cpu::registers::Flags;
+    use crate::lameboy::cpu::registers::Flags;
 
     #[test]
     fn check_basic() {

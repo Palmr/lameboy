@@ -1,4 +1,4 @@
-use lameboy::cpu::registers::Flags;
+use crate::lameboy::cpu::registers::Flags;
 
 /// Rotate an 8-bit register to the left.
 ///
@@ -25,7 +25,7 @@ pub fn alu_rotate_left(d8: u8, flags: Flags, through_carry: bool) -> (u8, Flags)
 #[cfg(test)]
 mod test_alu_rotate_left {
     use super::alu_rotate_left;
-    use lameboy::cpu::registers::Flags;
+    use crate::lameboy::cpu::registers::Flags;
 
     #[test]
     fn check_basic() {
@@ -147,7 +147,7 @@ pub fn alu_rotate_right(d8: u8, flags: Flags, through_carry: bool) -> (u8, Flags
 #[cfg(test)]
 mod test_alu_rotate_right {
     use super::alu_rotate_right;
-    use lameboy::cpu::registers::Flags;
+    use crate::lameboy::cpu::registers::Flags;
 
     #[test]
     fn check_basic() {

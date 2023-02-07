@@ -1,4 +1,4 @@
-use gui::imgui_debug_state::ImguiDebugState;
+use crate::gui::imgui_debug_state::ImguiDebugState;
 use imgui::Ui;
 
 pub trait ImguiDebuggable {

@@ -1,4 +1,4 @@
-use lameboy::cpu::registers::Flags;
+use crate::lameboy::cpu::registers::Flags;
 
 /// Subtract 8-bit value from register A, storing the result in A.
 /// If use_carry is true this will subtract the content of the carry flag along with the value and
@@ -45,7 +45,7 @@ pub fn alu_sub_8bit(accumulator: u8, flags: Flags, d8: u8, use_carry: bool) -> (
 #[cfg(test)]
 mod test_alu_sub_8bit {
     use super::alu_sub_8bit;
-    use lameboy::cpu::registers::Flags;
+    use crate::lameboy::cpu::registers::Flags;
 
     #[test]
     fn check_basic() {

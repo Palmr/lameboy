@@ -1,21 +1,21 @@
-use gui::imgui_debug_state::ImguiDebugState;
-use gui::imgui_debuggable::ImguiDebuggable;
-use imgui::{Condition, Ui, Window};
-use lameboy::ppu::debug::oam::oam_window;
-use lameboy::ppu::debug::registers::registers_window;
-use lameboy::ppu::Ppu;
+use crate::gui::imgui_debug_state::ImguiDebugState;
+use crate::gui::imgui_debuggable::ImguiDebuggable;
+use crate::lameboy::ppu::debug::oam::oam_window;
+use crate::lameboy::ppu::debug::registers::registers_window;
+use crate::lameboy::ppu::Ppu;
+use imgui::{Condition, Ui};
 
 mod oam;
 mod registers;
 
 impl ImguiDebuggable for Ppu {
     fn imgui_display(&mut self, ui: &Ui, imgui_debug: &mut ImguiDebugState) {
-        Window::new(im_str!("PPU"))
+        ui.window("PPU")
             .size([180.0, 115.0], Condition::FirstUseEver)
             .resizable(true)
-            .build(ui, || {
-                ui.text(im_str!("Mode Clock: {:?}", self.mode_clock));
-                ui.text(im_str!("Mode: {:?}", self.mode));
+            .build(|| {
+                ui.text(format!("Mode Clock: {:?}", self.mode_clock));
+                ui.text(format!("Mode: {:?}", self.mode));
             });
 
         registers_window(self, ui);
